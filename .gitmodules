@@ -1,0 +1,6 @@
+[submodule "lib/binc"]
+	path = lib/binc
+	url = https://github.com/alexandrebouchard/binc.git
+[submodule "lib/briefj"]
+	path = lib/briefj
+	url = https://github.com/alexandrebouchard/briefj.git
