@@ -51,3 +51,10 @@ public void testParseWrite() throws java.io.IOException {
 }
 ```
 
+Bugs wrapper
+------------
+
+This module makes it easier to call JAGS.
+
+
+
