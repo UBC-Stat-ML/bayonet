@@ -17,6 +17,37 @@ Requires: gradle, git, eclipse
   - Move the executable ``bayonet`` to a PATH folder (or add this folder to PATH)
   to have access from anywhere
   - Changes done via eclipse will be reflected right away
+  
 
 
+
+Coda utils
+----------
+
+Coda is a format used by WinBugs and JAGS to store MCMC samples.
+``codaToCSV()`` converts to a simpler format, with each variable in a
+separate, self-explanatory csv file.
+
+
+```java
+
+@org.junit.Test
+public void testParseWrite() throws java.io.IOException {
+    java.io.File originalCodaIndex = new java.io.File("src/test/resources/CODAindex.txt");
+    java.io.File originalCoda = new java.io.File("src/test/resources/CODAchain1.txt");
+    java.io.File dest = com.google.common.io.Files.createTempDir();
+    bayonet.coda.CodaParser.codaToCSV(originalCodaIndex ,originalCoda ,dest);
+    java.io.File newCodaIndex = briefj.BriefIO.createTempFile();
+    java.io.File newCoda = briefj.BriefIO.createTempFile();
+    bayonet.coda.CodaParser.CSVToCoda(newCodaIndex ,newCoda ,dest);
+    java.io.File finalDest = com.google.common.io.Files.createTempDir();
+    bayonet.coda.CodaParser.codaToCSV(newCodaIndex ,newCoda ,finalDest);
+    org.junit.Assert.assertTrue(((briefj.BriefIO.ls(finalDest ,"csv").size()) == (briefj.BriefIO.ls(dest ,"csv").size())));
+    org.junit.Assert.assertTrue(!(briefj.BriefIO.ls(finalDest ,"csv").isEmpty()));
+    for (java.io.File f : briefj.BriefIO.ls(finalDest ,"csv")) {
+        java.io.File f2 = new java.io.File(dest , f.getName());
+        org.junit.Assert.assertTrue(((("Files do not match: " + f) + " vs ") + f2) ,com.google.common.io.Files.equal(f ,f2));
+    }
+}
+```
 

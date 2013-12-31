@@ -1,32 +1,37 @@
 package bayonet.coda;
 
+import static briefj.BriefIO.ls;
+import static briefj.BriefIO.output;
+import static briefj.BriefIO.readLines;
+
 import java.io.File;
 import java.io.PrintWriter;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Scanner;
-
-import static com.google.common.base.Splitter.*;
 
 import briefj.BriefIO;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
 
-import static briefj.BriefIO.*;
-
 
 
 public class CodaParser
 {
-  public static void fromCoda(File codaIndex, File codaContents, File destinationDirectory)
+  /**
+   * The files ``codaIndex`` and ``codaContents`` should point to CODA files.
+   * 
+   * The file ``destinationDirectory`` will be created as a directory in which
+   * one csv file will be created for each variable.
+   */
+  public static void codaToCSV(File codaIndex, File codaContents, File destinationDirectory)
   {
     BriefIO.createParentDirs(destinationDirectory);
     LinkedList<Block> blocks = readCodaIndex(codaIndex);
     
     // state of the writing process:
-    int nLinesLeftInBlock = 0;
+    int nLinesLeftInBlock = 0, mcmcIndex = 0;
     Block currentBlock = null;
     PrintWriter out = null;
     
@@ -37,6 +42,7 @@ public class CodaParser
         // a new block is starting
         Block newBlock = blocks.pollFirst();
         nLinesLeftInBlock = newBlock.nSamples;
+        mcmcIndex = 0;
         
         // only need to change the output file if starting (currentBlock == null)
         // or if the variable name changes (vs sometimes only the indices change)
@@ -44,26 +50,29 @@ public class CodaParser
         {
           if (out != null) out.close();
           out = output(new File(destinationDirectory, newBlock.variableName + ".csv"));
+          out.print("mcmcIter,");
+          for (int i = 0; i < newBlock.indices.length; i++)
+            out.print("index_" + i + ",");
+          out.println("sample");
         }
         
         currentBlock = newBlock;
       }
       
-      // parse one point
-//      Scanner lineScanner = new Scanner(line).useDelimiter("\\s+");
-//      @SuppressWarnings("unused")
-//      String iterationIndex = lineScanner.next(); // we do not need to use this field
+      out.print("" + mcmcIndex + ",");
+      
       String [] fields = line.split("\\s+");
       double value = Double.parseDouble(fields[1]);//lineScanner.nextDouble(); // payload
       for (int index : currentBlock.indices)
         out.print(index + ",");
       out.println(value);
       nLinesLeftInBlock--;
+      mcmcIndex++;
     }
     if (out != null) out.close();
   }
   
-  public static void toCoda(File codaIndex, File codaContents, File variableFilesDirectory)
+  public static void CSVToCoda(File codaIndex, File codaContents, File variableFilesDirectory)
   {
     PrintWriter codaIndexOut =  output(codaIndex);
     PrintWriter codaContentsOut=output(codaContents);
@@ -75,28 +84,30 @@ public class CodaParser
       String variableName = variableFile.getName().replace(".csv", "");
       List<String> previousIndices = null;
       int currentMCMCIter = 0;
-      for (List<String> fields : readLines(variableFile).splitCSV())
+      for (List<String> fields : readLines(variableFile).splitCSV().skip(1))
       {
-        List<String> currentIndices = fields.subList(0, Math.max(0, fields.size() - 2));
+        int nIndices = fields.size() - 2; // 1 for the value (last), 1 for the mcmcIndex (first)
+        List<String> currentIndices = fields.subList(1, fields.size() - 1);
         if (previousIndices == null) previousIndices = currentIndices;
         if (!previousIndices.equals(currentIndices))
         {
-          codaIndexOut.println(codeIndexLine(variableName, previousIndices, startOfBlockLine, currentLine - 1));
+          codaIndexOut.println(codaIndexLine(variableName, previousIndices, startOfBlockLine, currentLine - 1));
           previousIndices = currentIndices;
           startOfBlockLine = currentLine;
         }
-        codaContentsOut.println("" + (currentMCMCIter+1) + "  " + fields.get(fields.size() - 1));
+        codaContentsOut.println("" + (currentMCMCIter + 1) + "  " + fields.get(fields.size() - 1));
         currentLine++;
         currentMCMCIter++;
       }
-      codaIndexOut.println(codeIndexLine(variableName, previousIndices, startOfBlockLine, currentLine - 1));
+      codaIndexOut.println(codaIndexLine(variableName, previousIndices, startOfBlockLine, currentLine - 1));
+      startOfBlockLine = currentLine;
     }
     
     codaIndexOut.close();
     codaContentsOut.close();
   }
   
-  private static String codeIndexLine(String variableName, List<String> previousIndices, int startOfBlockLine, int endOfBlockLine)
+  private static String codaIndexLine(String variableName, List<String> previousIndices, int startOfBlockLine, int endOfBlockLine)
   {
     return "" + 
       variableName + 
@@ -148,18 +159,6 @@ public class CodaParser
     }
   }
   
-  public static void main(String [] args)
-  {
-    File originalCodaIndex = new File("/Users/bouchard/temp/CODAindex.txt");
-    File originalCoda = new File("/Users/bouchard/temp/CODAchain1.txt");
-    
-    File dest = new File("/Users/bouchard/temp/created");
-    
-    fromCoda(originalCodaIndex, originalCoda, dest);
-    
-    File newCodaIndex = new File("/Users/bouchard/temp/created2/CODAindex.txt");
-    File newCoda = new File("/Users/bouchard/temp/created2/CODAchain1.txt");
-    toCoda(newCodaIndex, newCoda, dest);
-  }
+
   
 }
