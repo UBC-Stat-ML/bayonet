@@ -53,7 +53,7 @@ public class CodaParser
           out.print("mcmcIter,");
           for (int i = 0; i < newBlock.indices.length; i++)
             out.print("index_" + i + ",");
-          out.println("sample");
+          out.println(currentBlock.variableName);
         }
         
         currentBlock = newBlock;
@@ -81,12 +81,13 @@ public class CodaParser
     int startOfBlockLine = 0;
     for (File variableFile : ls(variableFilesDirectory, "csv"))
     {
+      // TODO: variableName should be the name of the field instead
       String variableName = variableFile.getName().replace(".csv", "");
       List<String> previousIndices = null;
       int currentMCMCIter = 0;
       for (List<String> fields : readLines(variableFile).splitCSV().skip(1))
       {
-        int nIndices = fields.size() - 2; // 1 for the value (last), 1 for the mcmcIndex (first)
+//        int nIndices = fields.size() - 2; // 1 for the value (last), 1 for the mcmcIndex (first)
         List<String> currentIndices = fields.subList(1, fields.size() - 1);
         if (previousIndices == null) previousIndices = currentIndices;
         if (!previousIndices.equals(currentIndices))

@@ -8,17 +8,15 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.Writer;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.regex.Pattern;
 
 import org.apache.commons.io.FileUtils;
 
+import bayonet.coda.CodaParser;
 import binc.Command;
 import static briefj.BriefMaps.*;
 import briefj.BriefIO;
-import briefj.BriefStrings;
 
 import com.beust.jcommander.DynamicParameter;
 import com.beust.jcommander.Parameter;
@@ -26,7 +24,6 @@ import com.beust.jcommander.internal.Maps;
 import com.beust.jcommander.internal.Sets;
 import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
-import static com.google.common.base.Optional.*;
 import com.google.common.io.Files;
 
 
@@ -56,6 +53,9 @@ public class BugsWrapper implements Runnable
 
   @Parameter(names = "--nIterations")
   private int nIterations = 10000;
+  
+  @Parameter(names = "--destination")
+  private File destination = new File(".");
 
   @Override
   public void run()
@@ -67,7 +67,12 @@ public class BugsWrapper implements Runnable
     File scriptFile = createScript(dataFile);
     
     // run jags
-    call(jags.withArgs(scriptFile.getAbsolutePath()));
+    call(jags.withArgs(scriptFile.getAbsolutePath()).withStandardOutMirroring());
+    
+    // transform the output back to a reasonable format
+    File codaIndex = new File("CODAindex.txt");
+    File codaContents = new File("CODAchain1.txt");
+    CodaParser.codaToCSV(codaIndex, codaContents, destination);
     
   }
 
@@ -111,6 +116,7 @@ public class BugsWrapper implements Runnable
           variables.add(line.replaceFirst("^variable[:]\\s*", ""));
       
       // remove those that are observed.. No: what about missing value imputation?
+      // TODO: do something more intelligent here
 //      for (String key : data.keySet())
 //      {
 //        if (!variables.contains(key))
@@ -125,15 +131,12 @@ public class BugsWrapper implements Runnable
 
   private File createDataFile()
   {
-    Map<Variable, StringBuilder> outputMap = Maps.newHashMap();
-    Map<String,Integer> nCoordinates = Maps.newHashMap();
+    Map<String, StringBuilder> outputMap = Maps.newHashMap();
     for (Map<String,String> fields : BriefIO.readLines(data).indexCSV())
-      for (String _key : fields.keySet())
+      for (String key : fields.keySet())
       {
-        Variable variable = new Variable(_key);
-        StringBuilder currentStr = getOrPut(outputMap, variable, new StringBuilder());
-        currentStr.append((currentStr.length() > 0 ? ",\n" : "") + fields.get(variable));
-        nCoordinates.put(variable.name, 1 + fromNullable(nCoordinates.get(variable.name)).or(0));
+        StringBuilder currentStr = getOrPut(outputMap, key, new StringBuilder());
+        currentStr.append((currentStr.length() > 0 ? ",\n" : "") + fields.get(key));
       }
     
     File dataFile = new File("data.txt");
@@ -149,76 +152,4 @@ public class BugsWrapper implements Runnable
     return dataFile;
   }
   
-  
-  private static class Variable
-  {
-    private final boolean isMatrix;
-    private final String name;
-    private final int coordinate;
-    private Variable(String string)
-    {
-      isMatrix = MATRIX_PATTERN.matcher(string).matches();
-      if (isMatrix)
-      {
-        List<String> matches = BriefStrings.allGroupsFromFirstMatch(MATRIX_PATTERN, string);
-        if (matches.size() != 2) throw new RuntimeException();
-        this.name = matches.get(0);
-        this.coordinate = Integer.parseInt(matches.get(1));
-      }
-      else
-      {
-        this.name = string;
-        this.coordinate = 0;
-      }
-    }
-    private static final Pattern MATRIX_PATTERN = Pattern.compile("([^\\]]+)\\[([0-9]+)\\]");
-    
-    @Override
-    public int hashCode()
-    {
-      final int prime = 31;
-      int result = 1;
-      result = prime * result + coordinate;
-      result = prime * result + (isMatrix ? 1231 : 1237);
-      result = prime * result + ((name == null) ? 0 : name.hashCode());
-      return result;
-    }
-    @Override
-    public boolean equals(Object obj)
-    {
-      if (this == obj)
-        return true;
-      if (obj == null)
-        return false;
-      if (getClass() != obj.getClass())
-        return false;
-      Variable other = (Variable) obj;
-      if (coordinate != other.coordinate)
-        return false;
-      if (isMatrix != other.isMatrix)
-        return false;
-      if (name == null)
-      {
-        if (other.name != null)
-          return false;
-      } else if (!name.equals(other.name))
-        return false;
-      return true;
-    }
-    @Override
-    public String toString()
-    {
-      return "Variable [isMatrix=" + isMatrix + ", name=" + name
-          + ", coordinate=" + coordinate + "]";
-    }
-    
-    
-  }
-  
-  public static void main(String [] args)
-  {
-    String string = "var[17]";
-    System.out.println(new Variable(string));
-  }
-
 }
