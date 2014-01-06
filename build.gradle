@@ -23,7 +23,6 @@ eclipse {
 // 2: git submodule foreach git pull
 // 3: include manually the dependencies of the children subproject for now
 task pullsubmodules(type:Exec) {
-  commandLine 'git', 'submodule', 'foreach', 'git', 'checkout', 'master'
   commandLine 'git', 'submodule', 'foreach', 'git', 'pull'
 }
 compileJava.dependsOn pullsubmodules
