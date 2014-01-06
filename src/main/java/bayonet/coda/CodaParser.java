@@ -53,7 +53,7 @@ public class CodaParser
           out.print("mcmcIter,");
           for (int i = 0; i < newBlock.indices.length; i++)
             out.print("index_" + i + ",");
-          out.println(currentBlock.variableName);
+          out.println(newBlock.variableName);
         }
         
         currentBlock = newBlock;
