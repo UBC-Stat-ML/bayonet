@@ -12,6 +12,8 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.FilenameUtils;
+import org.junit.Test;
 
 import bayonet.coda.CodaParser;
 import binc.Command;
@@ -33,17 +35,20 @@ public class BugsWrapper implements Runnable
   
   
   
+  
+  private static final String VAGRANT_PREFIX = "/home/vagrant/.data/homework2/";
+
 //  @DynamicParameter(names = "--data.", description = "Variable conditioned on (CSV files)")
 //  private Map<String, String> data = new HashMap<String, String>();
   
   @DynamicParameter(names = "--constant.", description = "Constants")
   private Map<String, String> constants = new HashMap<String, String>();
   
-  @Parameter(names = "--data", description = "Path to the main data file in tidy format", required=true)
-  private String data;
+  @Parameter(names = "--data", description = "Path to the main data file in tidy format")
+  private String data = null;
 
-  @Parameter(names = "--model", description = "Path to the model", required=true)
-  private String model;
+  @Parameter(names = "--model", description = "Path to the model")
+  private String model = null;
 
   @Parameter(names = "--nBurnIterations")
   private int nBurnIterations = 1000;
@@ -60,6 +65,27 @@ public class BugsWrapper implements Runnable
   @Override
   public void run()
   {
+    if (model == null || !new File(model).exists())
+    {
+      System.err.println("A valid model file should be specified.");
+      System.exit(1);
+    }
+    
+    if (data == null)
+    {
+      // try to infer (file with csv)
+      // TODO: remove hard-coded paths?
+      String ext = FilenameUtils.getExtension(model);
+      String stem = ext.equals("") ? model : new File(model).getName().replaceFirst("[.]" + ext + "$", "");
+      data = VAGRANT_PREFIX + "/" + stem + ".csv";
+      System.out.println("Data: " + data);
+    }
+    if (!new File(data).exists())
+    {
+      System.err.println("A data file should be specified. By default, model.bugs should have a corresponding data.csv file.");
+      System.exit(1);
+    }
+    
     // create data file
     File dataFile = createDataFile();
     
@@ -100,6 +126,7 @@ public class BugsWrapper implements Runnable
     catch (IOException e) { throw new RuntimeException(e); }
   }
   
+  
   private final Command jags = cmd("jags");
   
   private Set<String> variables()
@@ -114,15 +141,6 @@ public class BugsWrapper implements Runnable
       for (String line : result.split("\n"))
         if (line.matches("^variable[:].*"))
           variables.add(line.replaceFirst("^variable[:]\\s*", ""));
-      
-      // remove those that are observed.. No: what about missing value imputation?
-      // TODO: do something more intelligent here
-//      for (String key : data.keySet())
-//      {
-//        if (!variables.contains(key))
-//          throw new RuntimeException("Looks like the modified JAGS is not being used. Observed variable not listed in variables.");
-//        variables.remove(key);
-//      }
           
       return variables;
     } 
@@ -139,7 +157,7 @@ public class BugsWrapper implements Runnable
         currentStr.append((currentStr.length() > 0 ? ",\n" : "") + fields.get(key));
       }
     
-    File dataFile = new File("data.txt");
+    File dataFile = BriefIO.createTempFile(); //new File("data.txt");
     PrintWriter out = BriefIO.output(dataFile);
     
     for (String key : outputMap.keySet())

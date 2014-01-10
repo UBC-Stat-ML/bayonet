@@ -9,7 +9,14 @@ public class Main
   
   public static void main(String [] args)
   {
-    start(new BugsWrapper(), args);
+    try 
+    {
+      start(new BugsWrapper(), args);
+    }
+    catch (Exception e)
+    {
+      System.err.println(e.getMessage());
+    }
   }
 
 }
