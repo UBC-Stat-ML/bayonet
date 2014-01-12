@@ -36,7 +36,7 @@ public class BugsWrapper implements Runnable
   
   
   
-  private static final String VAGRANT_PREFIX = "/home/vagrant/.data/homework2/";
+  public static final String VAGRANT_PREFIX = "/home/vagrant/.data/homework2/";
 
 //  @DynamicParameter(names = "--data.", description = "Variable conditioned on (CSV files)")
 //  private Map<String, String> data = new HashMap<String, String>();
