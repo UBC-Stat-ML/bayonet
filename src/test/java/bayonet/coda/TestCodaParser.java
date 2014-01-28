@@ -35,11 +35,15 @@ public class TestCodaParser
     File originalCodaIndex = new File("src/test/resources/CODAindex.txt");
     File originalCoda = new File("src/test/resources/CODAchain1.txt");
     
-    File dest = Files.createTempDir(); //new File("/Users/bouchard/temp/created");
+    File dest = 
+      Files.createTempDir(); 
+    //new File("/Users/bouchard/temp/created");
     
     codaToCSV(originalCodaIndex, originalCoda, dest);
     
-    File newCodaIndex = createTempFile(); //new File("/Users/bouchard/temp/created2/CODAindex.txt");
+    File newCodaIndex = 
+      createTempFile(); 
+      //new File("/Users/bouchard/temp/created2/CODAindex.txt");
     File newCoda = createTempFile(); //new File("/Users/bouchard/temp/created2/CODAchain1.txt");
     CSVToCoda(newCodaIndex, newCoda, dest);
     
