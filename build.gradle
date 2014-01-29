@@ -5,7 +5,7 @@ apply plugin: 'eclipse'
 uploadArchives {
   repositories.mavenDeployer {
     repository(url: "file:///Users/bouchard/Documents/web/public_html/maven/")
-    pom.version = "1.1.0"
+    pom.version = "1.1.1"
     pom.artifactId = "bayonet"
     pom.groupId = "com.3rdf"
   }
@@ -35,7 +35,7 @@ dependencies {
   testCompile group: 'junit', name: 'junit', version: '4.11'
   compile group: 'junit', name: 'junit', version: '4.11'
   compile group: 'com.beust', name: 'jcommander', version: '1.30'
-  compile group: 'com.3rdf', name: 'tutorialj', version: '2.+'
+  compile group: 'com.3rdf', name: 'tutorialj', version: '2.0.0'
   compile group: 'com.3rdf', name: 'briefj', version: '1.4.1'
   compile group: 'com.3rdf', name: 'binc', version: '1.1'
   compile group: 'rcaller', name: 'RCaller', version: '2.1.1'
@@ -54,6 +54,23 @@ task(tutorialj, dependsOn: ['build','testClasses'], type: JavaExec) {
   	sourceSets.test.runtimeClasspath
   }
 }
+
+task sourcesJar(type: Jar, dependsOn: classes) {
+    classifier = 'sources'
+    from sourceSets.main.allSource
+}
+
+task javadocJar(type: Jar, dependsOn: javadoc) {
+    classifier = 'javadoc'
+    from 'build/docs/javadoc'
+}
+
+artifacts {
+    archives jar
+    archives sourcesJar
+    archives javadocJar
+}
+
 
 // http://www.gradle.org/docs/current/userguide/application_plugin.html
 // use 'gradle startScripts' to create script
