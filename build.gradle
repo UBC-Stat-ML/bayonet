@@ -5,7 +5,7 @@ apply plugin: 'eclipse'
 uploadArchives {
   repositories.mavenDeployer {
     repository(url: "file:///Users/bouchard/Documents/web/public_html/maven/")
-    pom.version = "1.0.0"
+    pom.version = "1.1.0"
     pom.artifactId = "bayonet"
     pom.groupId = "com.3rdf"
   }
@@ -17,23 +17,7 @@ eclipse {
   }
 }
 
-// To include submodules:
-// 0: mkdir lib
-// 1: git submodule add https://abouchard@bitbucket.org/abouchard/binc.git  lib/binc
-// 2: git submodule foreach git pull
-// 3: include manually the dependencies of the children subproject for now
-task pullsubmodules(type:Exec) {
-  commandLine 'git', 'submodule', 'foreach', 'git', 'pull', 'origin', 'master'
-}
-compileJava.dependsOn pullsubmodules
-sourceSets {
-  main {
-    java {
-      srcDir 'lib/binc/src/main/java'
-      srcDir 'lib/briefj/src/main/java'
-    }
-  }
-}
+
 
 repositories {
   mavenCentral()
@@ -52,6 +36,8 @@ dependencies {
   compile group: 'junit', name: 'junit', version: '4.11'
   compile group: 'com.beust', name: 'jcommander', version: '1.30'
   compile group: 'com.3rdf', name: 'tutorialj', version: '2.+'
+  compile group: 'com.3rdf', name: 'briefj', version: '1.4.1'
+  compile group: 'com.3rdf', name: 'binc', version: '1.1'
   compile group: 'rcaller', name: 'RCaller', version: '2.1.1'
   compile 'net.sf.opencsv:opencsv:2.3'
   compile 'com.googlecode.efficient-java-matrix-library:ejml:0.23'
