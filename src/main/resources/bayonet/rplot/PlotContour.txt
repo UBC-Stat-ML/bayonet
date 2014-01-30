@@ -1,0 +1,10 @@
+pdf('@{getOutput()}')
+    
+x  <- @{javaDoublesToRVector(x)}
+y  <- @{javaDoublesToRVector(y)}
+z  <- @{javaDoublesToRMatrix(z)}
+
+contour(x, y, z)
+filled.contour(x, y, z, color.palette=heat.colors)
+
+dev.off()

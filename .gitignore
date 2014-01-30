@@ -3,9 +3,6 @@
 .classpath
 .project
 bin
-bin/bayonet
-bin/bayonet/Main.class
 build
-bayonet
 .RData
 .Rhistory

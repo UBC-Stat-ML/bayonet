@@ -1,0 +1,11 @@
+pdf('@{getOutput()}')
+par(ps=30)
+    
+data  <- @{javaDoublesToRVector(getData())}
+hist(data, breaks="FD",ann=FALSE,probability=TRUE, col="gray", border="white")
+
+d <- density(data)
+lines(d, col="red", lwd=@{lineWidth})
+rug(data, col="red")
+
+dev.off()

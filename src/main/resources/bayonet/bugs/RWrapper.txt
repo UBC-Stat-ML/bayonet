@@ -1,0 +1,7 @@
+#suppressWarnings(library(ggplot2))
+#suppressWarnings(library(rjags))
+#suppressWarnings(library(rstan))
+
+dataPath <- "@{getDataFilePath()}"
+
+@{getModelFileContents()}

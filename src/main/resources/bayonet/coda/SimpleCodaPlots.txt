@@ -1,0 +1,8 @@
+library(coda)
+
+pdf('@{getOutput()}')
+    
+res = read.coda('@{getInputChain()}', '@{getInputIndex()}')
+plot(res)
+
+dev.off()
