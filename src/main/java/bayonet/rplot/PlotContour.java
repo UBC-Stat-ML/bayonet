@@ -95,7 +95,7 @@ public class PlotContour extends RJavaBridge
   private File output;
   public String getOutput()
   {
-    return output.getAbsolutePath();
+    return RUtils.escapeQuote(output.getAbsolutePath());
   }
   
 

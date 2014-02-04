@@ -42,7 +42,7 @@ public class PlotHistogram extends RJavaBridge
 
   public String getOutput()
   {
-    return output.getAbsolutePath();
+    return RUtils.escapeQuote(output.getAbsolutePath());
   }
   public double[] getData()
   {
