@@ -1,6 +1,5 @@
 package bayonet.math;
 
-import java.util.Locale;
 
 import org.ejml.simple.SimpleMatrix;
 
@@ -10,6 +9,12 @@ import briefj.BriefIO;
 
 public class EJMLUtils
 {
+  /**
+   * TODO: rename to l2NormSquared
+   * TODO: check EJML does not already include that
+   * @param vector
+   * @return
+   */
   public static double norm(SimpleMatrix vector)
   {
     if (vector.numCols() > 1) throw new RuntimeException();

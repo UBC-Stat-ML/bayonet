@@ -51,6 +51,7 @@ public class PlotContour extends RJavaBridge
   }
   
   private final MultivariateFunction function;
+  private String message = null;
   
   /**
    * 
@@ -70,7 +71,15 @@ public class PlotContour extends RJavaBridge
   {
     create();
     this.output = output;
-    RUtils.callRBridge(this);
+    message  = RUtils.callRBridge(this);
+  }
+  
+  /**
+   * @return The message returned by last call to R
+   */
+  public String getMessage()
+  {
+    return message;
   }
   
   private void create()
