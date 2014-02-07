@@ -5,7 +5,7 @@ apply plugin: 'eclipse'
 uploadArchives {
   repositories.mavenDeployer {
     repository(url: "file:///Users/bouchard/Documents/web/public_html/maven/")
-    pom.version = "1.1.3"
+    pom.version = "1.2.0"
     pom.artifactId = "bayonet"
     pom.groupId = "com.3rdf"
   }
@@ -17,13 +17,11 @@ eclipse {
   }
 }
 
-
-
 repositories {
   mavenCentral()
   jcenter()
   maven {
-  	url "file:///Users/bouchard/Documents/web/public_html/maven/"
+    url "file:///Users/bouchard/Documents/web/public_html/maven/"
   }
   maven {
     url "http://www.stat.ubc.ca/~bouchard/maven/"
@@ -70,11 +68,3 @@ artifacts {
     archives sourcesJar
     archives javadocJar
 }
-
-
-// http://www.gradle.org/docs/current/userguide/application_plugin.html
-// use 'gradle startScripts' to create script
-// use 'gradle distZip' to create deployable zip
-// use 'gradle installApp' to copy it somewhere
-apply plugin:'application'  
-mainClassName = "bayonet.Main"
