@@ -1,0 +1,86 @@
+Development notes
+-----------------
+
+
+Bayonet.mcmc provides useful ways of creating probabilistic models and for doing mcmc inference on them.
+
+The models are assumed to be factor graphs with arbitrary arities and data types.
+
+Factor graphs are bipartite undirected graphs with two types of nodes: factors and variables. Each factor computes onbe factor in a target unnormalized density broken into a product of factors. Each variable holds one coordinate of a state.
+
+Each variable can be an object of any type. There are no types requirement. Variables are to be updated in place, so they are not immutable. While this is generally not a good programming practice, MCMC imposes performance constraints that support this design decision. 
+
+Each variable should also override .equals() and .hashCode() to take into account the current internal state of the variable.
+
+Factors are defined as classes that implement the interface ``Factor``. A factor should contain one or several references to variables. Each such reference should be marked using the annotation @FactorArgument. The rationale for this is explained below.
+
+Implementing ``Factor`` only requires being able to compute the log of the factor density for the current configuration of the variables. 
+
+While Factors keep pointers to variables, note that Variables should not keep pointers to factors. The rationale is that one type of variable (e.g. RealVariable) can be connected to a wide range of types of factors (not only univariate distribution, for example, a RealVariable could be a concentration parameter on a Dirichlet Process prior).
+
+At the same time, when building MCMC moves it is often useful to access all the factors connected to a given variable. In order to make this easier, the pointers to variables held by factors are annotated so that the probability model can automatically determine the relevant back pointers, via the method ``ProbabilityModel.neightbors(Object variable)``.
+
+A ProbabilityModel is built by adding Factors. Variables are automatically added by following the annotated fields in Factors.
+
+Note that the probability model maintains various status information for each Variable. Only a subset of the variables discovered via the @FactorArgument annotation are stochastic. The other ones can be thought as hyper-parameters. 
+
+By default, variables are not stochastic. To change this, set a parameter in the variable annotation: ``@FactorArgument(makeStochastic = true)``. Here is an example of the most common case: if a factor f encodes a relation of the form f(x,y) = p(x|y), then x would have the makeStochastic parameter set to true in the declaration of x in f, but not y.
+
+A subset of the stochastic variables can be set as observed. A stochastic variable can be set to observed via ``ProbabilityModel.setObserved(variable)``. Stochastic variables that are not observed are called latent. Only the latent stochastic variables are sampled in an MCMC algorithm.
+
+
+
+### Where does internal caching go?
+
+- variable? - yeah, why not --  in phylo case, need access to factors
+- factors? - ok, but note that need listener pattern for variable changes
+		instead of listeners, use hashcode/equal
+
+- moves: probably not
+
+### Making sure we do break if equal has been overwridden!
+
+Easy: but IMPORTANT: use identity hash map implementations
+or, wrap variable/factor into node
+
+question: should we manage the 
+
+
+### Plan to handle deterministic relations:
+
+create potential between the pair of node
+introduce specialized sampler
+
+
+### Plan for verification
+
+check likelihood gets back to original value
+getting it right
+
+### Plan for checkpoints
+
+will need some care when reading to recreate object structure 
+from graph
+default is json in zip file, add other hooks later
+
+### Annotation-based creation of models
+
+Introduce @AddToModel annotation
+
+### Caching
+
+(later)
+
+### Bounds
+
+(later)
+Have factors and/or variables declare bounds, have samplers look for them
+
+### Initialize with forward sim
+
+### Check values of @FactorArgument are not primitives
+
+
+### Naming
+
+Use the name of the field, for which it is not defined if possible?
