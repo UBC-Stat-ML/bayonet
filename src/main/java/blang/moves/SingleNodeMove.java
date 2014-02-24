@@ -1,4 +1,4 @@
-package bayonet.blang.moves;
+package blang.moves;
 
 import java.util.Collections;
 import java.util.List;

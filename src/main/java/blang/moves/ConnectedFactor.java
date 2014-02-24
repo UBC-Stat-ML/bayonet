@@ -1,4 +1,4 @@
-package bayonet.blang;
+package blang.moves;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -7,10 +7,8 @@ import java.lang.annotation.Target;
 
 
 @Retention(RetentionPolicy.RUNTIME)
-@Target({ElementType.TYPE})
-public @interface DefaultSamplers
+@Target({ElementType.FIELD})
+public @interface ConnectedFactor
 {
-  
-  
-  public Class<?>[] value();
+
 }

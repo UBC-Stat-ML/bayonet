@@ -1,6 +1,6 @@
-package bayonet.blang;
+package blang;
 
-import bayonet.blang.moves.RealVariableMHProposal;
+import blang.moves.RealVariableMHProposal;
 
 
 
@@ -72,7 +72,7 @@ public class RealVariable
   @Override
   public String toString()
   {
-    return super.toString() + "[value=" + value + "]";
+    return "real(" + value + ")";
   }
   
 }

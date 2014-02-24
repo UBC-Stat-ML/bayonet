@@ -1,4 +1,4 @@
-package bayonet.blang.moves;
+package blang.moves;
 
 import java.util.Random;
 

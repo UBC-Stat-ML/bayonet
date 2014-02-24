@@ -1,10 +1,10 @@
-package bayonet.blang.dist;
+package bayonet.distributions;
 
-import bayonet.blang.FactorArgument;
-import bayonet.blang.RealVariable;
-import bayonet.blang.factors.Factor;
+import blang.FactorArgument;
+import blang.RealVariable;
+import blang.factors.Factor;
 
-import static bayonet.blang.RealVariable.real;
+import static blang.RealVariable.real;
 
 
 /**

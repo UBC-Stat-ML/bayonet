@@ -1,4 +1,4 @@
-package bayonet.blang.moves;
+package blang.moves;
 
 import java.lang.reflect.Field;
 import java.util.Collections;
@@ -6,10 +6,10 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 
-import bayonet.blang.DefaultSamplers;
-import bayonet.blang.MoveFactory;
-import bayonet.blang.ProbabilityModel;
-import bayonet.blang.factors.Factor;
+import blang.DefaultSamplers;
+import blang.MoveFactory;
+import blang.ProbabilityModel;
+import blang.factors.Factor;
 import briefj.ReflexionUtils;
 
 

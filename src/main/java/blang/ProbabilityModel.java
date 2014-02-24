@@ -1,9 +1,9 @@
-package bayonet.blang;
+package blang;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
+import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import org.jgrapht.Graphs;
@@ -11,14 +11,16 @@ import org.jgrapht.UndirectedGraph;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
-import bayonet.blang.factors.Factor;
 import bayonet.graphs.GraphUtils;
+import blang.factors.Factor;
+import blang.parsing.Node;
+import blang.parsing.VariableNames;
+import briefj.BriefStrings;
 import briefj.ReflexionUtils;
 
-
+import static blang.parsing.Node.*;
 
 /**
  * A semi-automatic MCMC framework focused on extensibility to 
@@ -71,107 +73,40 @@ public class ProbabilityModel
   
   private final VariableNames variableNames = new VariableNames();
   
+  @SuppressWarnings("unchecked")
   public ProbabilityModel(Object specification)
   {
-    parse(specification, "");
+    parse(specification, Collections.EMPTY_LIST);
   }
   
-  private static Node factorNode(Factor f) 
-  {
-    return new Node(f, true);
-  }
-  
-  private static Node variableNode(Object variable)
-  {
-    return new Node(variable, false);
-  }
-  
-  /**
-   * 
-   * Contains either a factor or a variable. The main purpose of this union-like 
-   * datastructure is to bypass the variable's .equal and .hashCode: we do not
-   * want to consider two distinct variables to be the same even if they initially
-   * have the same value, because after resampling they might take on different 
-   * values.
-   * 
-   * At the same time, makes encapsulates the type heterogeity of the factor graph's
-   * vertices.
-   * 
-   * Note that in principle this could have been done using identity hash maps, except that this
-   * might have required modifying JGraphT's internals.
-   * 
-   * @author Alexandre Bouchard (alexandre.bouchard@gmail.com)
-   *
-   */
-  private static class Node
-  {
-    private final Object payload;
-    private final boolean isFactor;
-    
-    private Node(Object payload, boolean isFactor)
-    {
-      this.payload = payload;
-      this.isFactor = isFactor;
-    }
-
-    public Factor getAsFactor()
-    {
-      if (!isFactor)
-        throw new RuntimeException();
-      return (Factor) payload;
-    }
-    
-    public Object getAsVariable()
-    {
-      if (isFactor)
-        throw new RuntimeException();
-      return payload;
-    }
-    
-    /**
-     * Note: it is critical to keep equality/hashCode by
-     * identity here
-     */
-    @Override
-    public boolean equals(Object _other)
-    {
-      Node other = (Node) _other;
-      if (other.isFactor != this.isFactor)
-        return false;
-      return payload == other.payload;
-    }
-    
-    /**
-     * Note: it is critical to keep equality/hashCode by
-     * identity here
-     */
-    @Override
-    public int hashCode()
-    {
-      return System.identityHashCode(payload);
-    }
-  }
-  
-  public void parse(Object o, String prefix) 
+  public void parse(Object o, List<Field> fieldsPath) 
   { 
-    try {  _parse(o, prefix); } 
+    try {  _parse(o, fieldsPath); } 
     catch (Exception e) { throw new RuntimeException(e); }
   }
   
-  public void addFactor(Factor f, String namePrefix)
+  public void addFactor(Factor f, List<Field> fieldsPath)
   {
     Node factorNode = factorNode(f);
     if (factors.contains(factorNode))
       throw new RuntimeException("Trying to insert the same factor twice");
     factors.add(factorNode);
     graph.addVertex(factorNode);
-    addLinks(f, f, namePrefix);
+    addLinks(f, f, fieldsPath);
     if (Graphs.neighborListOf(graph, factorNode(f)).isEmpty())
-      throw new RuntimeException("Problem in " + namePrefix + ": a factor should contain at least one FactorArgument " +
+      throw new RuntimeException("Problem in " + fieldsPathToString(fieldsPath) + ": a factor should contain at least one FactorArgument " +
       		"defining a random variable, or at least one FactorComponent recursively satisfying that property. " +
       		"See FactorArgument.makeStochastic()");
   }
   
+  public static String fieldsPathToString(List<Field> fieldsPath)
+  {
+    List<String> result = Lists.newArrayList();
+    for (Field f : fieldsPath)
+      result.add(f.getName());
+    return Joiner.on(".").join(result);
+  }
+
   public String getName(Object variable)
   {
     return variableNames.get(variableNode(variable));
@@ -227,7 +162,7 @@ public class ProbabilityModel
     return result;
   }
   
-  private void addLinks(Factor f, Object o, String namePrefix)
+  private void addLinks(Factor f, Object o, List<Field> fieldsPath)
   {
     for (Field argumentField : ReflexionUtils.getAnnotatedDeclaredFields(o.getClass(), FactorArgument.class, true))
     {
@@ -238,7 +173,7 @@ public class ProbabilityModel
       {
         if (argumentField.getAnnotation(FactorArgument.class).makeStochastic())
           stochasticVariables.add(variableNode(variable));
-        ensureVariableAdded(variable, namePrefix, argumentField.getName());
+        ensureVariableAdded(variable, growList(fieldsPath, argumentField)); 
         graph.addEdge(variableNode(variable), factorNode(f));
       }
     }
@@ -248,86 +183,75 @@ public class ProbabilityModel
         throw new RuntimeException("Fields annotated with FactorComponent should be final.");
       Object value = ReflexionUtils.getFieldValue(componentField, o);
       if (value != null)
-        addLinks(f, value, growPrefix(namePrefix, componentField.getName()));
+        addLinks(f, value, growList(fieldsPath, componentField)); 
     }
   }
   
-  private void ensureVariableAdded(Object variable, String prefix, String name)
+  private void ensureVariableAdded(Object variable, List<Field> fieldsPath)
   {
     if (graph.containsVertex(variableNode(variable))) 
       return;
     graph.addVertex(variableNode(variable));
-    variableNames.add(variableNode(variable), name, growPrefix(prefix, name));
+    variableNames.add(variableNode(variable), fieldsPath); 
   }
   
-  private static String growPrefix(String oldPrefix, String toAdd)
+  private static <T> List<T> growList(List<T> old, T newItem)
   {
-    return oldPrefix.isEmpty() ? toAdd : oldPrefix + "." + toAdd;
+    List<T> result = Lists.newArrayList(old);
+    result.add(newItem);
+    return result;
   }
+
   
-  private static class VariableNames
+  private void _parse(Object o, List<Field> fieldsPath) 
   {
-    private final Map<Node,String> shortNames = Maps.newHashMap();
-    private final Map<Node,String> longNames = Maps.newHashMap();
-    private final Set<String> 
-      allShortNames = Sets.newHashSet(),
-      collisions = Sets.newHashSet();   
-    
-    public void add(Node variable, String shortName, String longName)
-    {
-      if (variable.isFactor)
-        throw new RuntimeException();
-      if (allShortNames.contains(shortName))
-        collisions.add(shortName);
-      allShortNames.add(shortName);
-      shortNames.put(variable, shortName);
-      longNames.put(variable, longName);
-    }
-    
-    public String get(Node variable)
-    {
-      String shortName = shortNames.get(variable);
-      if (collisions.contains(shortName))
-        return longNames.get(variable);
-      else
-        return shortName;
-    }
-  }
-  
-  
-  
-  private void _parse(Object o, String prefix) 
-  {
-    for (Field field : ReflexionUtils.getDeclaredFields(o.getClass(), true))
+    for (Field field : ReflexionUtils.getAnnotatedDeclaredFields(o.getClass(), Let.class, true))
     {
       Object toAdd = ReflexionUtils.getFieldValue(field, o);
       if (toAdd == null) continue;
       boolean isFactor = toAdd instanceof Factor;
-      if (isFactor)
-        addFactor((Factor) toAdd, growPrefix(prefix, field.getName()));
+      if (!isFactor)
+        throw new RuntimeException("@Factor annotation only permitted on objects of type of Factor");
+        
+      addFactor((Factor) toAdd, growList(fieldsPath, field));
       
-      if (field.isAnnotationPresent(SubModel.class))
-        _parse(toAdd, growPrefix(prefix, field.getName()));
+      _parse(toAdd, growList(fieldsPath, field)); 
     }
   }
-//  
-//  public String getStochNameOrFixedValue(Object variable)
-//  {
-//    Node node = variableNode(variable);
-//    if (stochasticVariables.contains(node))
-//      return ;
-//    else
-//      return node.getAsVariable().toString();
-//  }
   
   public String toString(Factor f)
   {
-    List<String> assignments = Lists.newArrayList();
-    for (Object variable : neighborVariables(f))
-      assignments.add(variableNames.get(variableNode(variable)));
-    return f.toString() + "(" + Joiner.on(", ").join(assignments) + ")";
+    return f.getClass().getSimpleName() + "(\n" + BriefStrings.indent(argumentsAndComponentsToString(f)) + "\n)"; //+ Joiner.on(", ").join(assignments) + ")";
   }
   
+  private String argumentsAndComponentsToString(Object f)
+  {
+    List<String> result = Lists.newArrayList();
+    for (Field arg : ReflexionUtils.getAnnotatedDeclaredFields(f.getClass(), FactorArgument.class, true))
+      result.add(arg.getName() + " = " + variableToString(variableNode(ReflexionUtils.getFieldValue(arg, f))));
+    for (Field comp : ReflexionUtils.getAnnotatedDeclaredFields(f.getClass(), FactorComponent.class, true))
+    {
+      Object componentInstance = ReflexionUtils.getFieldValue(comp, f);
+      result.add(comp.getName() + " = " + componentInstance.getClass().getSimpleName() + "(\n" +
+          BriefStrings.indent(argumentsAndComponentsToString(componentInstance)) + "\n)");
+    }
+    return Joiner.on("\n").join(result);
+  }
+
+  private String variableToString(Node variableNode)
+  {
+    if (stochasticVariables.contains(variableNode))
+    {
+      String result = "${" + variableNames.get(variableNode) + "}";
+      if (observedVariables.contains(variableNode))
+        result = "observed[" + result + " = " + variableNode.getPayload().toString() + "]";
+      return result;
+    }
+    else
+      return variableNode.getPayload().toString();
+  }
+  
+  @Override
   public String toString()
   {
     StringBuilder result = new StringBuilder();
@@ -336,22 +260,4 @@ public class ProbabilityModel
     return result.toString();
   }
 
-
-  
-//  private boolean _parse(Object o) throws IllegalArgumentException, IllegalAccessException  
-//  {
-//    List<Field> fields = ReflexionUtils.getAnnotatedDeclaredFields(o.getClass(), AddToModel.class, true);
-//    for (Field field : fields)
-//    {
-//      Object toAdd = field.get(o); 
-//      boolean isFactor = toAdd instanceof Factor;
-//      if (isFactor)
-//        addRelation((Factor) toAdd);
-//      boolean recDidSomething = _parse(toAdd);
-//      if (!isFactor && !recDidSomething)
-//        throw new RuntimeException("An annotation @AddToModel should be on a field of type Factor, or " +
-//            "should recursively contain fields with the same annotation and that property.");
-//    }
-//    return !fields.isEmpty();
-//  }
 }

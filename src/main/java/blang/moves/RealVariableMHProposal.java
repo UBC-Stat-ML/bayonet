@@ -1,10 +1,11 @@
-package bayonet.blang.moves;
+package blang.moves;
 
 import java.util.List;
 import java.util.Random;
 
-import bayonet.blang.RealVariable;
-import bayonet.blang.factors.Factor;
+import blang.RealVariable;
+import blang.factors.Factor;
+import blang.factors.StandardFactor;
 
 
 
@@ -12,7 +13,7 @@ public class RealVariableMHProposal implements MHProposalDistribution
 {
   @SampledVariable RealVariable variable;
   
-  @ConnectedFactor List<Factor> connectedFactors;
+  @ConnectedFactor List<StandardFactor> connectedFactors;
 
   // TODO: implement some adaptation/optimization
   

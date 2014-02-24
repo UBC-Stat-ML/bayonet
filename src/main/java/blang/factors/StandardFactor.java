@@ -1,4 +1,4 @@
-package bayonet.blang.factors;
+package blang.factors;
 
 
 

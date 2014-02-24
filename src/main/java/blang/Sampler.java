@@ -1,4 +1,4 @@
-package bayonet.blang;
+package blang;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -6,7 +6,7 @@ import java.util.List;
 import java.util.Random;
 import java.util.Set;
 
-import bayonet.blang.moves.Move;
+import blang.moves.Move;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;

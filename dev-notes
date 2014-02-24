@@ -145,8 +145,8 @@ Next changes
 ============
 
 X Better Factor hierarchy (still keep root)
-- Introduce @Factor, automatically recurse
-- Create moves via constructors, 
+X Introduce @Factor, automatically recurse
+X Create moves via constructors, NO, current version just fine
 X @RandomVariable -> @DefaultSamplers(..)
 - Refactor dist, observation generation stuff
 
@@ -165,3 +165,6 @@ X @RandomVariable -> @DefaultSamplers(..)
 - logging, nice plotting, etc
 - refactor ProbabilityModel/keep Field objects around/better wrapping of variable?
 - facilities for check point
+- deterministic sampling stuff
+
+- create other distributions

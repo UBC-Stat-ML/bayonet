@@ -1,12 +1,12 @@
-package bayonet.blang.moves;
+package blang.moves;
 
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 
-import bayonet.blang.factors.Factor;
-import bayonet.blang.moves.MHProposalDistribution.Proposal;
+import blang.factors.Factor;
+import blang.moves.MHProposalDistribution.Proposal;
 
 
 /**

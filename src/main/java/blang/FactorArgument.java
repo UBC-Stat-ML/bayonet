@@ -1,4 +1,4 @@
-package bayonet.blang;
+package blang;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
