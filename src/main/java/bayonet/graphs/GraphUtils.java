@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Set;
 
 import org.apache.commons.lang3.tuple.Pair;
+import org.jgrapht.EdgeFactory;
 import org.jgrapht.Graphs;
 import org.jgrapht.UndirectedGraph;
 import org.jgrapht.alg.ConnectivityInspector;
@@ -18,14 +19,34 @@ import org.jgrapht.traverse.DepthFirstIterator;
 
 import com.google.common.collect.Lists;
 
+import fig.basic.UnorderedPair;
+
 
 
 
 public class GraphUtils 
 {
-  public static <V> UndirectedGraph<V,DefaultEdge> newUndirectedGraph()
+  public static <V> UndirectedGraph<V,UnorderedPair<V, V>> newUndirectedGraph()
   {
-    return new SimpleGraph<V, DefaultEdge>(DefaultEdge.class);
+    EdgeFactory<V, UnorderedPair<V, V>> factory = undirectedEdgeFactory();
+    return new SimpleGraph<V, UnorderedPair<V, V>>(factory);
+  }
+  
+  public static <V> UnorderedPair<V, V> undirectedEdge(V first, V second)
+  {
+    return new UnorderedPair<V, V>(first, second);
+  }
+  
+  private static <V> EdgeFactory<V, UnorderedPair<V, V>> undirectedEdgeFactory()
+  {
+    return new EdgeFactory<V, UnorderedPair<V,V>>() {
+
+      @Override
+      public UnorderedPair<V, V> createEdge(V sourceVertex, V targetVertex)
+      {
+        return undirectedEdge(sourceVertex, targetVertex);
+      }
+    };
   }
   
   public static <V,E> ArrayList<V> postorder(UndirectedGraph<V, E> graph, final V root)

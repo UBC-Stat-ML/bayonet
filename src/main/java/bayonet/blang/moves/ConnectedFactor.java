@@ -1,4 +1,4 @@
-package bayonet.mcmc.moves;
+package bayonet.blang.moves;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;

@@ -1,4 +1,4 @@
-package bayonet.mcmc;
+package bayonet.blang;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -17,18 +17,12 @@ import java.lang.annotation.Target;
 public @interface FactorArgument 
 {
   /**
-   * Whether this argument is part of the variable being
-   * defined.
-   * 
-   * In other words, if X | Y ~ f(Y),
+   * If X | Y ~ f(Y),
    * then both X and Y will be arguments of f, but only
-   * X is being defined by f
+   * X is made stochastic by f (Y could potentially be deterministic/
+   * hyperparameter)
    * 
    * @return
    */
   public boolean makeStochastic() default false; 
-  // TODO: add observed static fct/fct in model base class : Factor -> Factor
-  // @Option RealVariable observed;
-  // Exponential likelihood = observed(Exponential.on(observed));
-  // Gamma prior = Gamma.on(likelihood.realization);
 }

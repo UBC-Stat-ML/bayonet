@@ -1,4 +1,4 @@
-package bayonet.mcmc.moves;
+package bayonet.blang.moves;
 
 import java.util.Collections;
 import java.util.List;

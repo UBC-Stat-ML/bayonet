@@ -1,11 +1,12 @@
-package bayonet.mcmc.moves;
+package bayonet.blang.moves;
 
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 
-import bayonet.mcmc.Factor;
+import bayonet.blang.factors.Factor;
+import bayonet.blang.moves.MHProposalDistribution.Proposal;
 
 
 /**
@@ -32,11 +33,11 @@ public class MHMove implements Move
 //  };
 
   //  final SummaryStatistics acceptanceProbabilities = new SummaryStatistics();
-  private final MHProposal proposal;
+  private final MHProposalDistribution proposal;
   private final Collection<Factor> connectedFactors;
   private final List<?> variables;
   
-  public MHMove(MHProposal proposal,
+  public MHMove(MHProposalDistribution proposal,
       Collection<Factor> connectedFactors,
       List<?> variables)
   {
@@ -49,11 +50,13 @@ public class MHMove implements Move
   public void execute(Random rand)
   {
     final double logDensityBefore = computeLogUnnormalizedPotentials();
-    final double propRatio = proposal.proposeInPlace(rand);
+    Proposal proposalRealization = proposal.propose(rand);
+    final double propRatio = proposalRealization.logProposalRatio(); //proposal.proposeInPlace(rand);
     final double logDensityAfter = computeLogUnnormalizedPotentials();
     final double ratio = Math.exp(propRatio + logDensityAfter - logDensityBefore);
     final boolean accept = rand.nextDouble() < ratio;
-    proposal.acceptRejectInPlace(accept);
+    proposalRealization.acceptReject(accept);
+//    proposal.acceptRejectInPlace(accept);
 //    acceptanceProbabilities.addValue(accept ? 1.0 : 0.0);
   }
   

@@ -1,10 +1,10 @@
-package bayonet.mcmc.dist;
+package bayonet.blang.dist;
 
-import bayonet.mcmc.Factor;
-import bayonet.mcmc.FactorArgument;
-import bayonet.mcmc.RealVariable;
+import bayonet.blang.FactorArgument;
+import bayonet.blang.RealVariable;
+import bayonet.blang.factors.Factor;
 
-import static bayonet.mcmc.RealVariable.real;
+import static bayonet.blang.RealVariable.real;
 
 
 /**

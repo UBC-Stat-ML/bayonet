@@ -1,4 +1,4 @@
-package bayonet.mcmc.moves;
+package bayonet.blang;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -8,7 +8,7 @@ import java.lang.annotation.Target;
 
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.FIELD})
-public @interface SampledVariable
+public @interface SubModel
 {
 
 }

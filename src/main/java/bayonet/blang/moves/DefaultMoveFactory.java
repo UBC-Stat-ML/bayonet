@@ -1,4 +1,4 @@
-package bayonet.mcmc.moves;
+package bayonet.blang.moves;
 
 import java.lang.reflect.Field;
 import java.util.Collections;
@@ -6,10 +6,10 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 
-import bayonet.mcmc.Factor;
-import bayonet.mcmc.MoveFactory;
-import bayonet.mcmc.ProbabilityModel;
-import bayonet.mcmc.RandomVariable;
+import bayonet.blang.DefaultSamplers;
+import bayonet.blang.MoveFactory;
+import bayonet.blang.ProbabilityModel;
+import bayonet.blang.factors.Factor;
 import briefj.ReflexionUtils;
 
 
@@ -24,14 +24,14 @@ public class DefaultMoveFactory implements MoveFactory
 
     for (Object variable : model.getLatentVariables())
     {
-      RandomVariable annotation = variable.getClass().getAnnotation(RandomVariable.class);
+      DefaultSamplers annotation = variable.getClass().getAnnotation(DefaultSamplers.class);
       
       if (annotation == null)
         throw new RuntimeException("All the types of the latent variables in the model should " +
-        		"have a @" + RandomVariable.class.getSimpleName() + " annotation. This is missing for " + 
+        		"have a @" + DefaultSamplers.class.getSimpleName() + " annotation. This is missing for " + 
         		variable.getClass().getName());
       
-      Class<?> [] moveTypes = annotation.mcmcMoves();
+      Class<?> [] moveTypes = annotation.value();
       List<Factor> factors = model.neighborFactors(variable);
     
       for (Class<?> moveType : moveTypes)
@@ -49,16 +49,16 @@ public class DefaultMoveFactory implements MoveFactory
           Utils.assignVariable(instantiated, variable);
           
           // check if MHProposal or Move, act accordingly; make sure it is not both
-          boolean isMHProposal = instantiated instanceof MHProposal;
+          boolean isMHProposal = instantiated instanceof MHProposalDistribution;
           boolean isSingleNodeMove = instantiated instanceof SingleNodeMove;
           
           if ((isMHProposal && isSingleNodeMove) || (!isMHProposal && !isSingleNodeMove))
             throw new RuntimeException("" + moveType.getSimpleName() + " should be exactly one of " 
-                + MHProposal.class.getSimpleName() + " or " + SingleNodeMove.class.getSimpleName());
+                + MHProposalDistribution.class.getSimpleName() + " or " + SingleNodeMove.class.getSimpleName());
           
           if (isMHProposal)
           {
-            MHProposal proposal = (MHProposal) instantiated;
+            MHProposalDistribution proposal = (MHProposalDistribution) instantiated;
             result.add(new MHMove(proposal, factors, Collections.singletonList(variable)));
           }
           else if (isSingleNodeMove)

@@ -1,4 +1,4 @@
-package bayonet.mcmc.moves;
+package bayonet.blang.moves;
 
 import java.util.List;
 import java.util.Random;

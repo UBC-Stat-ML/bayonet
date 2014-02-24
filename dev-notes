@@ -12,6 +12,8 @@ Each variable can be an object of any type. There are no types requirement. Vari
 
 Each variable should also override .equals() and .hashCode() to take into account the current internal state of the variable.
 
+ACTUALLY: can probably use hashcode as a hashcode for testing
+
 Factors are defined as classes that implement the interface ``Factor``. A factor should contain one or several references to variables. Each such reference should be marked using the annotation @FactorArgument. The rationale for this is explained below.
 
 Implementing ``Factor`` only requires being able to compute the log of the factor density for the current configuration of the variables. 
@@ -27,6 +29,27 @@ Note that the probability model maintains various status information for each Va
 By default, variables are not stochastic. To change this, set a parameter in the variable annotation: ``@FactorArgument(makeStochastic = true)``. Here is an example of the most common case: if a factor f encodes a relation of the form f(x,y) = p(x|y), then x would have the makeStochastic parameter set to true in the declaration of x in f, but not y.
 
 A subset of the stochastic variables can be set as observed. A stochastic variable can be set to observed via ``ProbabilityModel.setObserved(variable)``. Stochastic variables that are not observed are called latent. Only the latent stochastic variables are sampled in an MCMC algorithm.
+
+
+### Notes for exercise 4
+
+- Practical question: implement sum product
+- Theoretical question: show sum product computes the correct normalization
+
+- Theoretical question: show reversibility implies arbitrary rooting is ok
+- Theoretical question: show irreducibility of simple move set
+- Theoretical question?: accept ratio of branch resampling?
+- Practical question: tree MCMC
+
+- ?? Theoretical question with Blang
+- ?? Practical question with Blang
+
+###
+
+TODO:
+
+- Finish phylogenetic skeleton
+- Blang: refactor of the Factor machinery
 
 
 
@@ -84,3 +107,61 @@ Have factors and/or variables declare bounds, have samplers look for them
 ### Naming
 
 Use the name of the field, for which it is not defined if possible?
+
+
+=======
+
+Old model
+=========
+
+Creating models
+---------------
+
+@Submodel
+Factor
+
+Creating factors
+----------------
+
+@FactorArgument
+@FactorArgument(makeStochastic=true)
+Factor.getLogDensity()
+@FactorComponent
+
+Creating moves
+--------------
+
+@RandomVariable(mcmcMoves = {..})
+@SampledVariable
+@ConnectedFactor
+
+Creating variables
+------------------
+
+Main things to do is creating move
+
+
+Next changes
+============
+
+X Better Factor hierarchy (still keep root)
+- Introduce @Factor, automatically recurse
+- Create moves via constructors, 
+X @RandomVariable -> @DefaultSamplers(..)
+- Refactor dist, observation generation stuff
+
+
+- start doc for blang
+
+- need some test cases:
+  - generation tricks [for full and subsets; use last digits of hashcode?? and/or loglikelihood]
+  - randomness fixing test
+  - in MH, check rejection give back the same score
+  - later, when save/retreive, check score is the same
+  - Checking that different moves do the same thing
+
+
+- create abstract base class
+- logging, nice plotting, etc
+- refactor ProbabilityModel/keep Field objects around/better wrapping of variable?
+- facilities for check point

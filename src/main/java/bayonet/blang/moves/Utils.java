@@ -1,4 +1,4 @@
-package bayonet.mcmc.moves;
+package bayonet.blang.moves;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.ParameterizedType;
@@ -9,8 +9,8 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 
-import bayonet.mcmc.Factor;
-import bayonet.mcmc.dist.Exponential;
+import bayonet.blang.dist.Exponential;
+import bayonet.blang.factors.Factor;
 import briefj.BriefCollections;
 import briefj.BriefLists;
 import briefj.ReflexionUtils;

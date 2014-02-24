@@ -1,6 +1,6 @@
-package bayonet.mcmc;
+package bayonet.blang;
 
-import bayonet.mcmc.moves.RealVariableMHProposal;
+import bayonet.blang.moves.RealVariableMHProposal;
 
 
 
@@ -10,7 +10,7 @@ import bayonet.mcmc.moves.RealVariableMHProposal;
  * @author Alexandre Bouchard (alexandre.bouchard@gmail.com)
  *
  */
-@RandomVariable(mcmcMoves = {RealVariableMHProposal.class})
+@DefaultSamplers({RealVariableMHProposal.class})
 public class RealVariable 
 {
   private double value;

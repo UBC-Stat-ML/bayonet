@@ -1,4 +1,4 @@
-package bayonet.mcmc;
+package bayonet.blang;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
@@ -14,6 +14,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
+import bayonet.blang.factors.Factor;
 import bayonet.graphs.GraphUtils;
 import briefj.ReflexionUtils;
 
@@ -34,7 +35,13 @@ import briefj.ReflexionUtils;
  */
 public class ProbabilityModel
 {
-  // TODO: always wrap variables in a variable object (for pretty printing, etc)
+  
+  // TODO: test case: randomness fixing
+  // TODO: test case, several move sets doing the same
+  // TODO: test case, test reject proposal by recomputing ll and comparing
+  
+  // TODO: always wrap variables in a variable object? (for pretty printing, etc) - probably not, more annoying than anything
+  // unless can identify clear cases - e.g. when listing nodes without samplers should use class names instead anyways
   
   // TODO: need to clean this up, e.g. parsing should be in separate class
   
@@ -46,7 +53,7 @@ public class ProbabilityModel
   // - moves ask the model to reverse the pointers of a given node
   
   // TODO: save:
-  // visit variables, create one file for each name
+  // visit variables, create one file for each name (can make test using likelihood)
   // TODO: load:
   // - first, create the graph using the existing model code
   // - the, for each variable:
@@ -153,8 +160,11 @@ public class ProbabilityModel
   
   public void addFactor(Factor f, String namePrefix)
   {
-    factors.add(factorNode(f));
-    graph.addVertex(factorNode(f));
+    Node factorNode = factorNode(f);
+    if (factors.contains(factorNode))
+      throw new RuntimeException("Trying to insert the same factor twice");
+    factors.add(factorNode);
+    graph.addVertex(factorNode);
     addLinks(f, f, namePrefix);
     if (Graphs.neighborListOf(graph, factorNode(f)).isEmpty())
       throw new RuntimeException("Problem in " + namePrefix + ": a factor should contain at least one FactorArgument " +

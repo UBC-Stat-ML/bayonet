@@ -1,6 +1,6 @@
-package bayonet.mcmc.moves;
+package bayonet.blang.moves;
 
-import bayonet.mcmc.ProbabilityModel;
+import bayonet.blang.ProbabilityModel;
 
 
 

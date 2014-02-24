@@ -1,4 +1,4 @@
-package bayonet.mcmc;
+package bayonet.blang;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;

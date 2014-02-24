@@ -1,4 +1,4 @@
-package bayonet.mcmc;
+package bayonet.blang;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -6,10 +6,11 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 
-
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.TYPE})
-public @interface RandomVariable
+public @interface DefaultSamplers
 {
-  public Class<?>[] mcmcMoves();
+  
+  
+  public Class<?>[] value();
 }

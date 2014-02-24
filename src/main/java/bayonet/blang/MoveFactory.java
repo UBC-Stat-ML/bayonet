@@ -1,8 +1,8 @@
-package bayonet.mcmc;
+package bayonet.blang;
 
 import java.util.List;
 
-import bayonet.mcmc.moves.Move;
+import bayonet.blang.moves.Move;
 
 
 
