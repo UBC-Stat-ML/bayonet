@@ -1,10 +1,10 @@
-package blang.moves;
+package blang.mcmc;
 
 import java.util.Random;
 
 
 
-public interface MHProposalDistribution
+public interface MHProposalDistribution extends Operator
 {
   /**
    * 

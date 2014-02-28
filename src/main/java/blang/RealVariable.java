@@ -1,6 +1,7 @@
 package blang;
 
-import blang.moves.RealVariableMHProposal;
+import blang.annotations.Samplers;
+import blang.mcmc.RealVariableMHProposal;
 
 
 
@@ -10,7 +11,7 @@ import blang.moves.RealVariableMHProposal;
  * @author Alexandre Bouchard (alexandre.bouchard@gmail.com)
  *
  */
-@DefaultSamplers({RealVariableMHProposal.class})
+@Samplers({RealVariableMHProposal.class})
 public class RealVariable 
 {
   private double value;

@@ -1,16 +1,16 @@
-package blang;
+package blang.annotations;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
+import blang.processing.Processor;
+
 
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.TYPE})
-public @interface DefaultSamplers
+public @interface Processors
 {
-  
-  
-  public Class<?>[] value();
+  public Class<? extends Processor>[] value();
 }

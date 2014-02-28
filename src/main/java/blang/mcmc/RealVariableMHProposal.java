@@ -1,10 +1,9 @@
-package blang.moves;
+package blang.mcmc;
 
 import java.util.List;
 import java.util.Random;
 
 import blang.RealVariable;
-import blang.factors.Factor;
 import blang.factors.StandardFactor;
 
 
@@ -17,15 +16,15 @@ public class RealVariableMHProposal implements MHProposalDistribution
 
   // TODO: implement some adaptation/optimization
   
-  private double old = Double.NaN;
+  private double savedValue = Double.NaN;
   
   @Override
   public Proposal propose(Random rand)
   {
-    if (!Double.isNaN(old))
+    if (!Double.isNaN(savedValue))
       throw new RuntimeException();
-    old = variable.getValue();
-    final double newValue = old + rand.nextGaussian();
+    savedValue = variable.getValue();
+    final double newValue = savedValue + rand.nextGaussian();
     variable.setValue(newValue);
     return new ProposalRealization();
   }
@@ -40,8 +39,8 @@ public class RealVariableMHProposal implements MHProposalDistribution
     public void acceptReject(boolean accept)
     {
       if (!accept)
-        variable.setValue(old);
-      old = Double.NaN;
+        variable.setValue(savedValue);
+      savedValue = Double.NaN;
     }
   }
   

@@ -1,11 +1,11 @@
-package blang.moves;
+package blang.mcmc;
 
 import java.util.Collections;
 import java.util.List;
 
 
 
-public abstract class SingleNodeMove implements Move
+public abstract class NodeMove implements Move
 {
 
   private Object variable = null;

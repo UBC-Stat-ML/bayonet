@@ -1,4 +1,4 @@
-package blang.moves;
+package blang.mcmc;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.ParameterizedType;
@@ -30,7 +30,7 @@ public class Utils
     return assignFactorConnections(null, factors, fieldsToPopulate, true);
   }
   
-  public static void assignFactorConnections(Object mcmcMoveInstance, 
+  public static void assignFactorConnections(Operator mcmcMoveInstance, 
       List<? extends Factor> factors, 
       List<Field> fieldsToPopulate)
   {
@@ -40,7 +40,7 @@ public class Utils
   }
   
   private static boolean assignFactorConnections(
-      Object mcmcMoveInstance, 
+      Operator mcmcMoveInstance, 
       List<? extends Factor> factors, 
       List<Field> fieldsToPopulate,
       boolean onlyPeek)
@@ -55,7 +55,7 @@ public class Utils
     return factors.isEmpty();
   }
   
-  private static void assignSingleConnection(Object mcmcMoveInstance, Field field, List<? extends Factor> factors, boolean onlyPeek)
+  private static void assignSingleConnection(Operator mcmcMoveInstance, Field field, List<? extends Factor> factors, boolean onlyPeek)
   {
     Iterator<? extends Factor> iterator = factors.iterator();
     while (iterator.hasNext())
@@ -71,17 +71,22 @@ public class Utils
     }
   }
 
-  public static void assignVariable(Object mcmcMoveInstance, Object variable)
+  public static void assignVariable(Operator mcmcMoveInstance, Object variable)
   {
-    List<Field> matches = ReflexionUtils.getAnnotatedDeclaredFields(mcmcMoveInstance.getClass(), SampledVariable.class, true);
-    if (matches.size() != 1)
-      throw new RuntimeException("There should be exactly one @" + SampledVariable.class.getSimpleName() + " annotated field" +
-      		" in " + mcmcMoveInstance.getClass());
-    Field field = BriefCollections.pick(matches);
+    Field field = getSampledVariableField(mcmcMoveInstance.getClass());
     ReflexionUtils.setFieldValue(field, mcmcMoveInstance, variable);
   }
+  
+  public static Field getSampledVariableField(Class<? extends Operator> moveType)
+  {
+    List<Field> matches = ReflexionUtils.getAnnotatedDeclaredFields(moveType, SampledVariable.class, true);
+    if (matches.size() != 1)
+      throw new RuntimeException("There should be exactly one @" + SampledVariable.class.getSimpleName() + " annotated field" +
+          " in " + moveType);
+    return BriefCollections.pick(matches);
+  }
 
-  private static void assignListConnection(Object mcmcMoveInstance, Field field, List<? extends Factor> factors, boolean onlyPeek)
+  private static void assignListConnection(Operator mcmcMoveInstance, Field field, List<? extends Factor> factors, boolean onlyPeek)
   {
     List<? super Factor> fieldList = onlyPeek ? null : Lists.newArrayList();
     if (!onlyPeek)

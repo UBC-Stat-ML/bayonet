@@ -1,8 +1,8 @@
-package blang;
+package blang.mcmc;
 
 import java.util.List;
 
-import blang.moves.Move;
+import blang.ProbabilityModel;
 
 
 

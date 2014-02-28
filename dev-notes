@@ -31,6 +31,8 @@ By default, variables are not stochastic. To change this, set a parameter in the
 A subset of the stochastic variables can be set as observed. A stochastic variable can be set to observed via ``ProbabilityModel.setObserved(variable)``. Stochastic variables that are not observed are called latent. Only the latent stochastic variables are sampled in an MCMC algorithm.
 
 
+--- Design pattern when building factor: parameterization and generics
+
 ### Notes for exercise 4
 
 - Practical question: implement sum product
@@ -46,11 +48,37 @@ A subset of the stochastic variables can be set as observed. A stochastic variab
 
 ###
 
+deterministic functions: 2 cases
+
+- reparemetization: cleaner to handle with interfaces (makes code more readable, simplifies the framework)
+- obs is sum: use special samplers/factors for that
+
+Interesting case to think about: reversible, normalized rate matrix
+
+###
+
+Rate Matrix
+
+Issues: normalization/not normalized, reversible/not reversible
+
+interface RateMatrix:
+double [][] getRateMatrix
+
+interface ReversibleRateMatrix implements RateMatrix
+
+class LogLinearReversibleRateMatrix implemenets ReversibleRateMatrix
+
+
+####
+
 TODO:
 
 - Finish phylogenetic skeleton
 - Blang: refactor of the Factor machinery
 
+
+- resimplify Factor
+- reintroduce SubModel… maybe not, the bound idea was pretty good
 
 
 ### Where does internal caching go?

@@ -6,7 +6,8 @@ import java.util.List;
 import java.util.Random;
 import java.util.Set;
 
-import blang.moves.Move;
+import blang.mcmc.Move;
+import blang.mcmc.MoveFactory;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
@@ -15,17 +16,15 @@ import com.google.common.collect.Sets;
 
 
 
-public class Sampler
+public class PosteriorSampler
 {
   private final List<Move> moves;
   private final ProbabilityModel model;
   
-  
-  
-  public Sampler(ProbabilityModel model, MoveFactory ...factories)
+  public PosteriorSampler(ProbabilityModel model, List<MoveFactory> factories)
   {
     this.model = model;
-    this.moves = init(Arrays.asList(factories));
+    this.moves = init(factories);
   }
 
   @SuppressWarnings({ "rawtypes", "unchecked" })
@@ -44,10 +43,11 @@ public class Sampler
     
     if (!coveredNode.containsAll(model.getLatentVariables()))
     {
-      Set difference = Sets.newIdentityHashSet();
-      difference.addAll(model.getLatentVariables());
-      difference.removeAll(coveredNode);
-      throw new RuntimeException("Not all variables have a sampler. Those not covered are: " + Joiner.on(",").join(difference));
+      Set<String> missingNodeNames = Sets.newHashSet();
+      for (Object variable : model.getLatentVariables())
+        if (!coveredNode.contains(variable))
+          missingNodeNames.add(model.getName(variable));
+      throw new RuntimeException("Not all variables have a sampler. Those not covered are: " + Joiner.on(", ").join(missingNodeNames));
     }
     
     return result;

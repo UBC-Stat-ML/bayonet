@@ -1,4 +1,4 @@
-package blang.moves;
+package blang.mcmc;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -6,7 +6,7 @@ import java.util.List;
 import java.util.Random;
 
 import blang.factors.Factor;
-import blang.moves.MHProposalDistribution.Proposal;
+import blang.mcmc.MHProposalDistribution.Proposal;
 
 
 /**

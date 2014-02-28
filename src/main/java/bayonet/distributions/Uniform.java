@@ -1,7 +1,7 @@
 package bayonet.distributions;
 
-import blang.FactorArgument;
 import blang.RealVariable;
+import blang.annotations.FactorArgument;
 import blang.factors.Factor;
 
 import static blang.RealVariable.real;

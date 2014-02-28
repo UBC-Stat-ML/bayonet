@@ -4,9 +4,9 @@ import java.util.Random;
 
 import org.apache.commons.math3.distribution.ExponentialDistribution;
 
-import blang.FactorArgument;
-import blang.FactorComponent;
 import blang.RealVariable;
+import blang.annotations.FactorArgument;
+import blang.annotations.FactorComponent;
 import blang.factors.GenerativeFactor;
 import blang.factors.StandardFactor;
 
@@ -33,7 +33,6 @@ public class Exponential<P extends Exponential.Parameters> implements StandardFa
     ExponentialDistribution ed = new ExponentialDistribution(new Random2RandomGenerator(random), mean, ExponentialDistribution.DEFAULT_INVERSE_ABSOLUTE_ACCURACY);
     return ed.sample();
   }
-  
   
   @FactorArgument(makeStochastic=true)
   public final RealVariable realization;
