@@ -3,8 +3,6 @@ package blang.mcmc;
 import java.util.List;
 import java.util.Random;
 
-import nuts.io.IO;
-
 import bayonet.distributions.Uniform;
 import blang.factors.Factor;
 import blang.variables.RealVariable;
@@ -29,10 +27,6 @@ public class MultiplicativeRealVariableMHProposal implements MHProposalDistribut
   @Override
   public Proposal propose(Random rand)
   {
-    BriefLog.warnOnce("Warning: mult rv prop only works for pos");
-//    if (connectedFactors.size() == 1)
-//      return null;
-    IO.warnOnce("n conn = " + connectedFactors.size());
     if (!Double.isNaN(savedValue))
       throw new RuntimeException();
     savedValue = variable.getValue();

@@ -57,7 +57,7 @@ public class NodeMoveFactory implements MoveFactory
       
       // instantiate via empty constructor
       @SuppressWarnings("unchecked")
-      Operator instantiated = ReflexionUtils.instantiate(moveType);
+      Operator instantiated = (Operator) ReflexionUtils.instantiate(moveType);
       
       // fill the fields via annotations
       Utils.assignFactorConnections(instantiated, factors, fieldsToPopulate);

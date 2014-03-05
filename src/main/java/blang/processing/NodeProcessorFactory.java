@@ -45,7 +45,7 @@ public class NodeProcessorFactory implements ProcessorFactory
         Object initiator,
         Class productType)
     {
-      NodeProcessor initiated = ReflexionUtils.instantiate(productType);
+      NodeProcessor initiated = (NodeProcessor) ReflexionUtils.instantiate(productType);
       initiated.setReference(initiator);
       return initiated;
     }

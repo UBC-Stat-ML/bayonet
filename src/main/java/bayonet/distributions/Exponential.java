@@ -19,7 +19,7 @@ import blang.variables.RealVariable;
  * 
  * @author Alexandre Bouchard (alexandre.bouchard@gmail.com)
  */
-public class Exponential<P extends Exponential.Parameters> implements GenerativeFactor
+public class Exponential<P extends Exponential.Parameters> implements GenerativeFactor, UnivariateRealDistribution
 {
   /**
    * The variable on which this density is defined on.
@@ -129,7 +129,7 @@ public class Exponential<P extends Exponential.Parameters> implements Generative
     }
 
     /**
-     * @return The mean tranformed back into a rate.
+     * @return The mean transformed back into a rate.
      */
     @Override
     public double getRate()
@@ -201,5 +201,11 @@ public class Exponential<P extends Exponential.Parameters> implements Generative
   public Exponential<MeanParameterization> withMean(RealVariable mean)
   {
     return new Exponential<MeanParameterization>(realization, new MeanParameterization(mean));
+  }
+
+  @Override
+  public RealVariable getRealization()
+  {
+    return realization;
   }
 }

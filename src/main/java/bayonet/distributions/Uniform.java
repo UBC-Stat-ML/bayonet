@@ -18,7 +18,7 @@ import static blang.variables.RealVariable.real;
  * @author Alexandre Bouchard (alexandre.bouchard@gmail.com)
  *
  */
-public class Uniform<P extends Uniform.Parameters> implements GenerativeFactor
+public class Uniform<P extends Uniform.Parameters> implements GenerativeFactor, UnivariateRealDistribution
 {
   /**
    * The variable on which this density is defined on.
@@ -184,5 +184,11 @@ public class Uniform<P extends Uniform.Parameters> implements GenerativeFactor
   public Uniform<MinMaxParameterization> withBounds(RealVariable min, RealVariable max) 
   {
     return new Uniform<MinMaxParameterization>(realization, new MinMaxParameterization((min), (max)));
+  }
+
+  @Override
+  public RealVariable getRealization()
+  {
+    return realization;
   }
 }

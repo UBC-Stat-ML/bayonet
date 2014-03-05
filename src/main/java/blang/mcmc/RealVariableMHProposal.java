@@ -3,8 +3,6 @@ package blang.mcmc;
 import java.util.List;
 import java.util.Random;
 
-import nuts.io.IO;
-
 import blang.factors.Factor;
 import blang.variables.RealVariable;
 import briefj.BriefIO;
@@ -26,9 +24,6 @@ public class RealVariableMHProposal implements MHProposalDistribution
   @Override
   public Proposal propose(Random rand)
   {
-    BriefLog.warnOnce("Warning: RealVariableMHProposal might not be correct " +
-    		"for distributions that do not have support on the full real line");
-    IO.warnOnce("n conn = " + connectedFactors.size());
     if (!Double.isNaN(savedValue))
       throw new RuntimeException();
     savedValue = variable.getValue();

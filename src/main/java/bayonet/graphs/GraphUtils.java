@@ -95,7 +95,7 @@ public class GraphUtils
       iterator.next();
     
     if (result.size() != graph.vertexSet().size())
-      throw new RuntimeException();
+      throw new RuntimeException("" + result.size() + "!=" + graph.vertexSet().size());
     
     if (!result.get(result.size() -1).equals(root))
       throw new RuntimeException("bad index: " + result.indexOf(root) + " out of " + result.size() + ", isConn=" + new ConnectivityInspector<V, E>(graph).connectedSets().size());

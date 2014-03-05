@@ -91,21 +91,6 @@ public class MCMCFactory
     return processorFactories.standardFactory;
   }
 
-  /*
-     Note: the idea with the setup() method was to setup likelihood, additional samplers, etc
-     
-     However: it seems unnecessarily hard to control it is called exactly once.
-     
-     Instead: This behavior should just be in constructors of the descendant of ModelRunner.
-     
-        protected void setup()
-        {
-        }
-  */
-
-
-
-  
   public MCMCAlgorithm build(Object modelSpecification, boolean clone)
   {
     ProbabilityModel model = ProbabilityModel.parse(modelSpecification, clone);
@@ -120,20 +105,6 @@ public class MCMCFactory
     for (Processor p : processors)
       p.process(context);
   }
-  
-  /*
-     Removed this below: if really needed, just make it fit into a Processor
-  
-  /**
-   * Default behavior: no operation.
-   * 
-   * Extend for adding custom processing.
-   * 
-   * @param context
-   *
-  protected void process(ProcessorContext context) {}
-  
-  */
 
   public List<Processor> buildProcessors(ProbabilityModel model)
   {
