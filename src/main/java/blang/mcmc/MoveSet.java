@@ -1,13 +1,11 @@
-package blang;
+package blang.mcmc;
 
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 import java.util.Set;
 
-import blang.mcmc.Move;
-import blang.mcmc.MoveFactory;
+import blang.ProbabilityModel;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
@@ -16,12 +14,12 @@ import com.google.common.collect.Sets;
 
 
 
-public class PosteriorSampler
+public class MoveSet
 {
   private final List<Move> moves;
   private final ProbabilityModel model;
   
-  public PosteriorSampler(ProbabilityModel model, List<MoveFactory> factories)
+  public MoveSet(ProbabilityModel model, List<MoveFactory> factories)
   {
     this.model = model;
     this.moves = init(factories);
@@ -58,7 +56,5 @@ public class PosteriorSampler
     Collections.shuffle(moves, rand);
     for (Move move : moves)
       move.execute(rand);
-    
-    // TODO: some sort of logging/checkpointing
   }
 }

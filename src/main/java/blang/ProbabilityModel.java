@@ -1,6 +1,5 @@
 package blang;
 
-import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.util.Collections;
@@ -8,29 +7,31 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import javax.swing.plaf.ListUI;
-
 import org.apache.commons.lang3.tuple.Pair;
 import org.jgrapht.DirectedGraph;
 import org.jgrapht.Graphs;
 import org.jgrapht.UndirectedGraph;
-
-import com.esotericsoftware.kryo.Kryo;
-import com.google.common.base.Joiner;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
-
-import fig.basic.ListUtils;
+import org.jgrapht.graph.SimpleGraph;
 
 import bayonet.graphs.GraphUtils;
+import blang.MCMCFactory.Factories;
+import blang.MCMCFactory.MCMCOptions;
+import blang.annotations.DefineFactor;
 import blang.annotations.FactorArgument;
 import blang.annotations.FactorComponent;
-import blang.annotations.DefineFactor;
 import blang.factors.Factor;
 import briefj.BriefLists;
 import briefj.BriefStrings;
 import briefj.ReflexionUtils;
+
+//import com.esotericsoftware.kryo.Kryo;
+//import com.esotericsoftware.kryo.Registration;
+//import com.esotericsoftware.kryo.serializers.FieldSerializer;
+import com.google.common.base.Joiner;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
+import com.rits.cloning.Cloner;
 
 
 /**
@@ -45,6 +46,11 @@ import briefj.ReflexionUtils;
  */
 public class ProbabilityModel
 {
+  
+  /*
+     TODO: RandomVariable<T> instead of VariableNode
+   */
+  
   private final UndirectedGraph<Node,?> graph = GraphUtils.newUndirectedGraph();
   
   private final Set<Node> 
@@ -52,28 +58,67 @@ public class ProbabilityModel
     factors = Sets.newLinkedHashSet(),
     observedVariables = Sets.newLinkedHashSet();
   
+  private final Map<String,Node> variableName2Object;
+  
   private final VariableNames variableNames = new VariableNames();
   
   public ProbabilityModel(Object specification)
   {
     parse(specification, rootFieldPath);
+    variableName2Object = createVariableNameInverseMap(variableNames);
   }
-  
-  public ProbabilityModel() {}
-  
-  public ProbabilityModel deepCopy()
+
+
+  public static ProbabilityModel parse(Object modelSpecification)
   {
-    Kryo kryo = new Kryo();
-    ProbabilityModel copy = kryo.copy(this);
-    return copy;
+    return new ProbabilityModel(modelSpecification);
   }
   
-  public void parse(Object specification)
+  public static ProbabilityModel parse(Object modelSpecification, boolean clone)
   {
-    parse(specification, rootFieldPath);
+    if (clone)
+      return cloneAndParse(modelSpecification);
+    else
+      return new ProbabilityModel(modelSpecification);
   }
   
-  public void addFactor(Factor f, FieldPath fieldsPath)
+  public static ProbabilityModel cloneAndParse(Object specification)
+  {
+    /*
+     Note: we are not using Kryo because it requires no arg constructors
+           deep clone library (https://code.google.com/p/cloning/wiki/Usage) supports it through objenesis (http:objenesis.org/)
+    
+     Note: this issue is due to a limitation of the reflection API. objenesis is a workaround hack not fully JVM indep
+    
+     Addendum: actually, might need kryo/xstream anyways for check points/reload? deep clone lib does not do this
+               see https:github.com/eishay/jvm-serializers/wiki for speed comparison of different methods
+    
+     Problem with kryo: dumps are binary. some fast JSON are attractive but JSON does have limitations. probably too naive
+     use binary with good tooling (main issue is versioning)
+    
+     Kryo version:
+    
+          Kryo kryo = new Kryo();
+          FieldSerializer<ModelRunner> fs = new FieldSerializer<ModelRunner>(kryo,ModelRunner.class); 
+          for (Field f : ReflexionUtils.getDeclaredFields(ModelRunner.class, true))
+            fs.removeField(f.getName());
+           Use your specific serializer instance with an excluded field for the Bla class
+          kryo.register(ModelRunner.class, fs); 
+          Object clonedSpec = kryo.copy(specification);
+          return new ProbabilityModel(clonedSpec);
+    */
+    
+    Cloner cloner = new Cloner();
+    // avoid infinite loops if used in conjunction with the ModelRunner
+    cloner.setNullTransient(true);
+    cloner.nullInsteadOfClone(MCMCOptions.class);
+    cloner.nullInsteadOfClone(Factories.class);
+    Object clonedSpec = cloner.deepClone(specification);
+    // use the standard parser on the cloned specifications
+    return new ProbabilityModel(clonedSpec);
+  }
+  
+  private void addFactor(Factor f, FieldPath fieldsPath)
   {
     Node factorNode = factorNode(f);
     if (factors.contains(factorNode))
@@ -101,19 +146,41 @@ public class ProbabilityModel
     return result;
   }
   
-  public void setObserved(Object variable)
+//  public List<RandomVariable<?>> getLatentRandomVariables()
+//  {
+//    List<RandomVariable<?>> result = Lists.newArrayList();
+//    for (Node n : stochasticVariables)
+//      if (!observedVariables.contains(n))
+//        result.add(n);
+//    return result;
+//  }
+  
+  public List<String> getLatentVariableNames()
+  {
+    List<String> result = Lists.newArrayList();
+    for (Object o : getLatentVariables())
+      result.add(getName(o));
+    return result;
+  }
+  
+  public Object getVariableWithName(String string)
+  {
+    return variableName2Object.get(string).getAsVariable();
+  }
+  
+  private void setObserved(Object variable)
   {
     observedVariables.add(variableNode(variable));
   }
   
-  public void setVariablesInFactorAsObserved(Factor factor)
+  private void setVariablesInFactorAsObserved(Factor factor)
   {
     for (Pair<ProbabilityModel.FieldPath, Object> pair : listArguments(factor, ProbabilityModel.rootFieldPath))
     {
       Field field = pair.getLeft().getLastField();
       FactorArgument annotation = field.getAnnotation(FactorArgument.class);
       if (annotation.makeStochastic())
-        setObserved(ReflexionUtils.getFieldValue(field, pair.getRight()));
+        setObserved(pair.getRight());
     }
   }
   
@@ -122,16 +189,19 @@ public class ProbabilityModel
     return observedVariables.size();
   }
 
-  
-  @SuppressWarnings("unchecked")
   public <T> List<T> getLatentVariables(Class<T> ofType)
   {
-    List<T> result = Lists.newArrayList();
-    for (Object variable : getLatentVariables())
-      if (ofType.isAssignableFrom(variable.getClass())) // i.e. if variable extends/implements ofType
-        result.add((T) variable);
-    return result;
+    return ReflexionUtils.sublistOfGivenType(getLatentVariables(), ofType);
   }
+  
+//  public <T> List<RandomVariable<T>> getLatentRandomVariables(Class<T> ofType)
+//  {
+//    List<RandomVariable<T>> result = Lists.newArrayList();
+//    for (RandomVariable rv : getLatentRandomVariables())
+//      if (ofType.isAssignableFrom(rv.getRealization().getClass())) 
+//        result.add(rv);
+//    return result;
+//  }
   
   public List<Factor> linearizedFactors()
   {
@@ -258,7 +328,10 @@ public class ProbabilityModel
       if (!isFactor)
         throw new RuntimeException("@Factor annotation only permitted on objects of type of Factor");
         
-      addFactor((Factor) toAdd, fieldsPath.extendBy(field));
+      Factor factor = (Factor) toAdd;
+      addFactor(factor, fieldsPath.extendBy(field));
+      if (field.getAnnotation(DefineFactor.class).onObservations())
+        setVariablesInFactorAsObserved(factor);
       
       parse(toAdd, fieldsPath.extendBy(field));
     }
@@ -291,12 +364,12 @@ public class ProbabilityModel
       return variableNode.getPayload().toString();
   }
   
-  private static Node factorNode(Factor f) 
+  private Node factorNode(Factor f) 
   {
     return new Node(f, true);
   }
   
-  private static Node variableNode(Object variable)
+  private Node variableNode(Object variable)
   {
     return new Node(variable, false);
   }
@@ -306,6 +379,15 @@ public class ProbabilityModel
     List<Factor> result = Lists.newArrayList();
     for (Node n : factors)
       result.add(n.getAsFactor());
+    return result;
+  }
+  
+  private static Map<String, Node> createVariableNameInverseMap(
+      VariableNames variableNames)
+  {
+    Map<String,Node> result = Maps.newHashMap();
+    for (Node n : variableNames.longNames.keySet())
+      result.put(variableNames.get(n), n);
     return result;
   }
   
@@ -338,11 +420,10 @@ public class ProbabilityModel
    * @author Alexandre Bouchard (alexandre.bouchard@gmail.com)
    *
    */
-  private static class Node
+  private static class Node // implements RandomVariable
   {
     private final Object payload;
     private final boolean isFactor;
-    
 
     private Node(Object payload, boolean isFactor)
     {
@@ -396,7 +477,27 @@ public class ProbabilityModel
     {
       return payload;
     }
+
+//    @Override
+//    public Object getRealization()
+//    {
+//      return getAsVariable();
+//    }
+//    
+//    @Override
+//    public String toString()
+//    {
+//      if (isFactor)
+//        return payload.toString();
+//      else
+//        return getName(payload);
+//    }
   }
+  
+//  public static interface RandomVariable<T>
+//  {
+//    public T getRealization();
+//  }
   
   /**
    * Creates unique names for variables. If possible, use only the 
@@ -412,6 +513,7 @@ public class ProbabilityModel
   {
     private final Map<Node,String> shortNames = Maps.newHashMap();
     private final Map<Node,FieldPath> longNames = Maps.newHashMap();
+
     private final Set<String> 
       allShortNames = Sets.newHashSet(),
       collisions = Sets.newHashSet();   

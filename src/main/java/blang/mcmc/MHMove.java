@@ -51,9 +51,11 @@ public class MHMove implements Move
   {
     final double logDensityBefore = computeLogUnnormalizedPotentials();
     Proposal proposalRealization = proposal.propose(rand);
-    final double propRatio = proposalRealization.logProposalRatio(); //proposal.proposeInPlace(rand);
+    if (proposalRealization == null)
+      return;
+    final double propLogRatio = proposalRealization.logProposalRatio(); //proposal.proposeInPlace(rand);
     final double logDensityAfter = computeLogUnnormalizedPotentials();
-    final double ratio = Math.exp(propRatio + logDensityAfter - logDensityBefore);
+    final double ratio = Math.exp(propLogRatio + logDensityAfter - logDensityBefore);
     final boolean accept = rand.nextDouble() < ratio;
     proposalRealization.acceptReject(accept);
 //    proposal.acceptRejectInPlace(accept);

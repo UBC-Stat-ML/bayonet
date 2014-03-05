@@ -1,0 +1,29 @@
+What we have:
+
+
+- Tiny example where close form is known (Exp -> Uni)
+  - @DeclareFactor
+  - connecting stuff (references and reflection)
+  - setting things as observed
+  - running the sampler
+- How factors work (Gamma?)
+  - @FactorArgument, logDensity()
+  - @FactorComponent
+  - Generics
+- Testing
+  - GenerativeFactor
+  - CheckStationarity
+  - Unit testing
+- Building a new samplers for an existing datatype (positive length)
+  - @Samplers
+  - Factor matching strategy
+- Supporting new types of variables
+  - Walk through of the CRP
+- Processors
+
+---
+
+- Likelihood calculation
+- Tree move
+- Rate matrix
+- Putting it all together

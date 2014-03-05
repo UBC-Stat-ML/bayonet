@@ -17,11 +17,16 @@ public class NodeMoveFactory implements MoveFactory
 {
   public final AnnotationBasedFactory<Object, Samplers, Move> annotationBasedFactory;
   
-  public NodeMoveFactory(boolean useAnnotations) 
+  public NodeMoveFactory() 
   {
-    this.annotationBasedFactory = new AnnotationBasedFactory<Object, Samplers, Move>(useAnnotations, Samplers.class);
+    this.annotationBasedFactory = new AnnotationBasedFactory<Object, Samplers, Move>(Samplers.class);
   }
-
+  
+  public void setUseAnnotation(boolean use)
+  {
+    this.annotationBasedFactory.setUseAnnotation(use);
+  }
+  
   @Override
   public List<Move> build(ProbabilityModel model)
   {
@@ -38,10 +43,11 @@ public class NodeMoveFactory implements MoveFactory
       this.model = model;
     }
 
+    @SuppressWarnings("rawtypes")
     @Override
     public Move produce(
         Object variable,
-        Class<? extends Move> moveType)
+        Class moveType)
     {
       List<Factor> factors = model.neighborFactors(variable);
       
@@ -50,6 +56,7 @@ public class NodeMoveFactory implements MoveFactory
         return null;
       
       // instantiate via empty constructor
+      @SuppressWarnings("unchecked")
       Operator instantiated = ReflexionUtils.instantiate(moveType);
       
       // fill the fields via annotations

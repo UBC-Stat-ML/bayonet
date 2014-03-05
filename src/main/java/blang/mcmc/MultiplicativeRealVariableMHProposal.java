@@ -5,6 +5,7 @@ import java.util.Random;
 
 import nuts.io.IO;
 
+import bayonet.distributions.Uniform;
 import blang.factors.Factor;
 import blang.variables.RealVariable;
 import briefj.BriefIO;
@@ -13,7 +14,7 @@ import briefj.BriefStrings;
 
 
 
-public class RealVariableMHProposal implements MHProposalDistribution
+public class MultiplicativeRealVariableMHProposal implements MHProposalDistribution
 {
   @SampledVariable RealVariable variable;
   
@@ -23,27 +24,34 @@ public class RealVariableMHProposal implements MHProposalDistribution
   
   private double savedValue = Double.NaN;
   
+  private static final double lambda = 2.0 * Math.log(2.0);
+  
   @Override
   public Proposal propose(Random rand)
   {
-    BriefLog.warnOnce("Warning: RealVariableMHProposal might not be correct " +
-    		"for distributions that do not have support on the full real line");
+    BriefLog.warnOnce("Warning: mult rv prop only works for pos");
+//    if (connectedFactors.size() == 1)
+//      return null;
     IO.warnOnce("n conn = " + connectedFactors.size());
     if (!Double.isNaN(savedValue))
       throw new RuntimeException();
     savedValue = variable.getValue();
-    double nextGaussian = rand.nextGaussian();
+    double u = rand.nextDouble();
+    double m = Math.exp(lambda * (u - 0.5));//Uniform.generate(rand, 0.5, 2.0);
     
-    final double newValue = savedValue + nextGaussian;
+    final double newValue = savedValue * m;
     variable.setValue(newValue);
-    return new ProposalRealization();
+    return new ProposalRealization(Math.log(m));
   }
   
   private class ProposalRealization implements Proposal
   {
+    private final double logm;
+    
+    private ProposalRealization(double d) { logm = d; }
 
     @Override
-    public double logProposalRatio() { return 0.0; } // proposal log ratio is zero since Gaussian is symmetric
+    public double logProposalRatio() { return logm; } // proposal log ratio is zero since Gaussian is symmetric
 
     @Override
     public void acceptReject(boolean accept)

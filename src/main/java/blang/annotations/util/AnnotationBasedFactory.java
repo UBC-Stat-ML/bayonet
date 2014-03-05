@@ -7,6 +7,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import blang.annotations.Processors;
+import blang.annotations.Samplers;
 import briefj.BriefMaps;
 import briefj.ReflexionUtils;
 
@@ -27,20 +29,23 @@ import com.google.common.collect.Sets;
  */
 public class AnnotationBasedFactory<I,A extends Annotation,P>
 {
-  private final boolean useAnnotations;
+  private boolean useAnnotations = true;
   private final Class<A> annotationClass;
   
   public static interface Producer<I,P>
   {
-    public P produce(I initiator, Class<? extends P> productType);
+    public P produce(I initiator, Class productType);
   }
   
   public AnnotationBasedFactory(
-      boolean useAnnotations,
       Class<A> annotationClass)
   {
-    this.useAnnotations = useAnnotations;
     this.annotationClass = annotationClass;
+  }
+  
+  public void setUseAnnotation(boolean use)
+  {
+    this.useAnnotations = use;
   }
 
   private final Set<Class<? extends P>> 
@@ -54,7 +59,7 @@ public class AnnotationBasedFactory<I,A extends Annotation,P>
     exclusions.add(product);
   }
   
-  public void add(Class<? extends I> initiator, Class<? extends P> product)
+  public void add(Class<? extends I> initiator, Class product)
   {
     BriefMaps.getOrPutSet(inclusions, initiator).add(product);
   }
@@ -78,6 +83,7 @@ public class AnnotationBasedFactory<I,A extends Annotation,P>
    * @param producer
    * @return
    */
+  @SuppressWarnings({ "rawtypes", "unchecked" })
   public List<P> build(Collection<? extends I> initiators, Producer<I,P> producer)
   {
     List<P> result = Lists.newArrayList();
@@ -87,24 +93,24 @@ public class AnnotationBasedFactory<I,A extends Annotation,P>
       A annotation = initiator.getClass().getAnnotation(annotationClass);
       
       Set<Class<? extends P>> productTypes = inclusions.get(initiator.getClass());
+      if (productTypes == null)
+        productTypes = Sets.newHashSet();
       
-      if (annotation == null && productTypes == null)
+      if (annotation == null && productTypes.isEmpty())
         continue loop;
       
       if (useAnnotations)
       {
-        try
-        {
-          @SuppressWarnings("unchecked")
-          Class<? extends P> [] productTypesFromAnnotations = (Class<? extends P>[]) ReflexionUtils.callMethod(initiator, "value");
-          productTypes.addAll(Arrays.asList(productTypesFromAnnotations));
-        }
-        catch (Exception e)
-        {
-          throw new RuntimeException("Annotation " + annotationClass.getName() + " is assumed to contained  a function of type " +
-          		"public Class<? extends P>[] value(); note that this cannot be statically enforced because of a java language limitation " +
-          		"(annotation cannot implement interfaces as of Java 6.");
-        }
+        Class [] productTypesFromAnnotations;
+        
+        if (annotationClass == Samplers.class)
+          productTypesFromAnnotations = ((Samplers) annotation).value();
+        else if (annotationClass == Processors.class)
+          productTypesFromAnnotations = ((Processors) annotation).value();
+        else
+          throw new RuntimeException("Unknown type. Just fill in the boiler code in AnnotationBasedFactor.");
+
+        ((Set) productTypes).addAll(Arrays.asList(productTypesFromAnnotations));
       }
     
       for (Class<? extends P> productType : productTypes)

@@ -30,7 +30,7 @@ public class ForwardSampler
     {
       if (!(f instanceof GenerativeFactor))
         throw new RuntimeException("In order to generate data, all factors need to " +
-        		"implement " + GenerativeFactor.class.getName());
+        		"implement " + GenerativeFactor.class.getName() + ". This is not the case for " + f.getClass());
       ((GenerativeFactor) f).generate(rand);
     }
     

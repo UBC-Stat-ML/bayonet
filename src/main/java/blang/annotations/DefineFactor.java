@@ -17,5 +17,11 @@ import java.lang.annotation.Target;
 @Target({ElementType.FIELD})
 public @interface DefineFactor
 {
+  /**
+   * 
+   * @return Whether the nodes that are made stochastic by this factor
+   * are observed or not (default is false).
+   */
+  public boolean onObservations() default false;
 
 }

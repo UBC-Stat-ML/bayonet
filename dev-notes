@@ -6,13 +6,13 @@ Bayonet.mcmc provides useful ways of creating probabilistic models and for doing
 
 The models are assumed to be factor graphs with arbitrary arities and data types.
 
-Factor graphs are bipartite undirected graphs with two types of nodes: factors and variables. Each factor computes onbe factor in a target unnormalized density broken into a product of factors. Each variable holds one coordinate of a state.
+Factor graphs are bipartite undirected graphs with two types of nodes: factors and variables. Each factor computes one factor in a target unnormalized density broken into a product of factors. Each variable holds one coordinate of a state.
 
 Each variable can be an object of any type. There are no types requirement. Variables are to be updated in place, so they are not immutable. While this is generally not a good programming practice, MCMC imposes performance constraints that support this design decision. 
 
 Each variable should also override .equals() and .hashCode() to take into account the current internal state of the variable.
 
-ACTUALLY: can probably use hashcode as a hashcode for testing
+ACTUALLY: NO, not needed
 
 Factors are defined as classes that implement the interface ``Factor``. A factor should contain one or several references to variables. Each such reference should be marked using the annotation @FactorArgument. The rationale for this is explained below.
 
@@ -30,6 +30,9 @@ By default, variables are not stochastic. To change this, set a parameter in the
 
 A subset of the stochastic variables can be set as observed. A stochastic variable can be set to observed via ``ProbabilityModel.setObserved(variable)``. Stochastic variables that are not observed are called latent. Only the latent stochastic variables are sampled in an MCMC algorithm.
 
+
+--- Note: motivation for declaring factor rather than variable:
+more type contraints: there are many factors types on a given variable type, but less variable types on a given factor type
 
 --- Design pattern when building factor: parameterization and generics
 
@@ -196,3 +199,51 @@ X @RandomVariable -> @DefaultSamplers(..)
 - deterministic sampling stuff
 
 - create other distributions
+
+
+=====
+
+How to do loops
+- hierarchical models
+
+- time series
+
+Solution:
+
+Reintroduce @SubModel
+if implements ProceduralModel, call setup(ProbabilityModel instance)
+
+Then can do thing like
+
+class PlateContents
+{
+  @DeclareFactor MyLikelihood likelihood;
+  PlateContents(Data data) { setup likelihood using data.. }
+}
+
+class MainModel
+{
+  @Option File dataPath;
+  List<PlateContents> submodels = setupAllPlates(dataPath);
+  @SubModel Plate<PlateContents> likelihoods = Plate.of(submodels);
+  @DeclareFactor Exponential<?> sharedPrior = Exponential.on(likelihoods.
+}
+
+
+XXXX? instead: introduce @DeclareFactors
+
+ACTUALLY: might not even need any extra machinery: just recursing without assuming top level is of type Factor.. maybe some decoration to hide the internals of ArrayList.. actually, will boil down to arrays anyways
+
+@Option File data;
+@DeclareFactors List<Poisson<RateParam> likelihoods = likelihoods(data);
+@DeclareFactors List<Gamma<RateParam>> priors = priors(likelihoods);
+@DeclareFactor Gamma<?> hyperPrior = hyperPrior(priors);
+
+List<Gamma<RateParam>> priors(List<Poisson<RateParam>> likelihoods)
+{
+  RateParam shared = rateParam();
+  Gamma<RateParam> result = newArrayList();
+  for (Poisson<RateParam> likelihood : likelihoods)
+    result.add(Gamma.on(likelihood.rate).withRate(shared));
+  return result;
+}

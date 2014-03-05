@@ -44,7 +44,8 @@ dependencies {
   compile 'org.apache.commons:commons-math3:3.2'
   compile group: 'org.jgrapht', name: 'jgrapht-dist', version: '0.9.0'
   compile group: 'org.apache.commons', name: 'commons-lang3', version: '3.2.1'
-  compile 'com.esotericsoftware.kryo:kryo:2.22'
+  compile 'uk.com.robust-it:cloning:1.9.0'
+//  compile 'com.esotericsoftware.kryo:kryo:2.22'
 }
 
 task(tutorialj, dependsOn: ['build','testClasses'], type: JavaExec) {

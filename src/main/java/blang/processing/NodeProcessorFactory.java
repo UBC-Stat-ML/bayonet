@@ -16,17 +16,23 @@ public class NodeProcessorFactory implements ProcessorFactory
   public final AnnotationBasedFactory<Object,Processors,NodeProcessor> annotationBasedFactory;
 
   @SuppressWarnings("rawtypes")
-  public NodeProcessorFactory(boolean useAnnotations)
+  public NodeProcessorFactory()
   {
-    this.annotationBasedFactory = new AnnotationBasedFactory<Object, Processors, NodeProcessor>(useAnnotations, Processors.class);
+    this.annotationBasedFactory = new AnnotationBasedFactory<Object, Processors, NodeProcessor>(Processors.class);
+  }
+  
+  public void setUseAnnotation(boolean use)
+  {
+    this.annotationBasedFactory.setUseAnnotation(use);
   }
 
-  @SuppressWarnings("rawtypes")
+  @SuppressWarnings({ "rawtypes" })
   @Override
-  public List<NodeProcessor> build(ProbabilityModel model) 
+  public List<? extends Processor> build(ProbabilityModel model) 
   {
     ProcessorProducer producer = new ProcessorProducer();
-    return annotationBasedFactory.build(model.getLatentVariables(), producer);
+    List<NodeProcessor> result = annotationBasedFactory.build(model.getLatentVariables(), producer);
+    return result;
   }
   
   @SuppressWarnings("rawtypes")
@@ -37,7 +43,7 @@ public class NodeProcessorFactory implements ProcessorFactory
     @Override
     public NodeProcessor<Object> produce(
         Object initiator,
-        Class<? extends NodeProcessor> productType)
+        Class productType)
     {
       NodeProcessor initiated = ReflexionUtils.instantiate(productType);
       initiated.setReference(initiator);

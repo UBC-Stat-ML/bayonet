@@ -1,22 +1,21 @@
 package blang.factors;
 
 
-// TODO: other types of factors?
-// - derivative factor
-// - hessian factor
-// - interval factor
-// - deterministic factor which would not inherit Factor
-// actually: deterministic and stochastic factors as separate
-// (Factor: StochasticFactor,   
-
-// TODO: make the @SubModel recursion automatic on factors,
-// so that interval factors can be added within a factor (although may get tricky because of init order)
-
-// TODO: simplify back factors? there seems not real reason for this complexity
-
-// TODO: should we do plates? if so, how to do plates?
-
+/**
+ * A factor in a factor graph.
+ * 
+ * 
+ * @author Alexandre Bouchard (alexandre.bouchard@gmail.com)
+ *
+ */
 public interface Factor
 {
+  /**
+   * Note: the density should be normalized, and in log scale.
+   * 
+   * @return The log of the density for the current
+   *  assignment of parameters and realization.
+   *  
+   */
   public double logDensity();
 }
