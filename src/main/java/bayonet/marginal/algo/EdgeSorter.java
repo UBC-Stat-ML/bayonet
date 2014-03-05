@@ -13,13 +13,32 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
 
-
+/**
+ * Utilities to list edges of an undirected graph in a way 
+ * suitable for the sum product algorithm.
+ * 
+ * Also useful in other contexts where the edges of an undirected graph 
+ * needs to be oriented towards or away from a given node (directed
+ * views of an undirected graphs).
+ * 
+ * @author Alexandre Bouchard (alexandre.bouchard@gmail.com)
+ *
+ * @param <V>
+ */
 public class EdgeSorter<V>
 {
   private final Map<V, Integer> postorderMap;
   private final ArrayList<V> postorder;
   private final UndirectedGraph<V, ?> graph;
   
+  /**
+   * 
+   * @param <V>
+   * @param graph The undirected graph.
+   * @param lastForwardVertex One of the vertices with respect to
+   *   which the edges will be oriented.
+   * @return A new instance.
+   */
   public static <V> EdgeSorter<V> newEdgeSorter(
       UndirectedGraph<V, ?> graph,
       V lastForwardVertex)
@@ -31,11 +50,21 @@ public class EdgeSorter<V>
     return new EdgeSorter<V>(postorderMap, postorder, graph);
   }
   
+  /**
+   * 
+   * @param forward Should we list the edges in an order suitable for 
+   *   the forward or backward pass of sum product?
+   * @return
+   */
   public ArrayList<Pair<V,V>> messages(boolean forward)
   {
     return forward ? forwardMessages() : backwardMessages();
   }
   
+  /**
+   * List edges pointing towards the root in post-order.
+   * @return
+   */
   public ArrayList<Pair<V,V>> forwardMessages()
   {
     ArrayList<Pair<V,V>> result = Lists.newArrayList();
@@ -49,7 +78,12 @@ public class EdgeSorter<V>
     return result;
   }
   
-  // TODO change name of this to something more descriptive, in terms of orientation
+  /**
+   * List edges pointing away from the root. If the edges are 
+   * viewed as undirected, this method uses the reversal of the
+   * order used in forwardMessages().
+   * @return
+   */
   public ArrayList<Pair<V,V>> backwardMessages()
   {
     ArrayList<Pair<V,V>> result = Lists.newArrayList();
@@ -88,28 +122,4 @@ public class EdgeSorter<V>
     }
     return result;
   }
-  
-
-  
-//  public static void main(String [] args)
-//  {
-//    
-//    SimpleGraph<String,DefaultEdge>  graph = new SimpleGraph<String, DefaultEdge>(DefaultEdge.class);
-//    graph.addVertex("z");
-//    graph.addVertex("a");
-////    graph.addVertex("ab");
-////    graph.addVertex("ac");
-////    graph.addVertex("ad");
-////    graph.addVertex("aca");
-////    graph.addVertex("acb");
-//    graph.addEdge("z", "a");
-////    graph.addEdge("a", "ab");
-////    graph.addEdge("a", "ac");
-////    graph.addEdge("a", "ad");
-////    graph.addEdge("ac", "aca");
-////    graph.addEdge("ac", "acb");
-//    
-//    System.out.println(EdgeSorter.newEdgeSorter(graph, "a").forwardMessages());
-//    System.out.println(EdgeSorter.newEdgeSorter(graph, "a").backwardMessages());
-//  }
 }

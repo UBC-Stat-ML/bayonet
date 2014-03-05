@@ -15,20 +15,50 @@ import bayonet.marginal.UnaryFactor;
 import com.google.common.collect.Lists;
 
 
-
+/**
+ * A factor graph where the nodes are discrete random variables, and the factors
+ * are either unary or binary. In other words, a Markov random field or 
+ * undirected graphical model.
+ * 
+ * This implementation additionally efficiently supports case where
+ * we have several factor graphs, each with the same binary factors,
+ * but with different unary factors. This arises in phylogenetics, 
+ * where each site (location of the genome) carries different observations,
+ * but the evolution is assumed to happen on the same tree.
+ * We therefore use the terminology site for each of these independent 
+ * sub-factor graphs.
+ * 
+ * Warning: currently assumes that the unnormalized measure are sub-probability 
+ * distribution. This is the case for example when the factor graph comes from
+ * a directed graphical model with observations.
+ * 
+ * @author Alexandre Bouchard (alexandre.bouchard@gmail.com)
+ *
+ * @param <V> A datatype used to label the variables.
+ */
 public class DiscreteFactorGraph<V> extends BaseFactorGraph<V>
 {
+  /**
+   * 
+   * @param topology The undirected graphical model. Note that since
+   *   factor are at most binary, we represent the factor graph
+   *   with just connection among the variables.
+   */
   public DiscreteFactorGraph(UndirectedGraph<V, ?> topology)
   {
     super(topology);
   }
-
-  @Override
-  public FactorOperation<V> marginalizationOperation()
-  {
-    return discreteFactorGraphOperations;
-  }
   
+  /**
+   * Set a binary factor. 
+   * 
+   * @throws RuntimeException if the binary factor already exists 
+   * 
+   * @param mNode One variable label
+   * @param oNode Another variable label
+   * @param m2oPotentials A matrix encoding the binary factor shared by all sites,
+   *    where the rows index mNode's states, and columns index oNode's states
+   */
   public void setBinary(V mNode, V oNode, SimpleMatrix m2oPotentials)
   { 
     int nM = m2oPotentials.numRows();
@@ -37,24 +67,43 @@ public class DiscreteFactorGraph<V> extends BaseFactorGraph<V>
     setBinary(mNode, oNode, new DiscreteBinaryFactor<V>(m2oPotentials.transpose().getMatrix().data, mNode, oNode, nM, nO));
     setBinary(oNode, mNode, new DiscreteBinaryFactor<V>(m2oPotentials.getMatrix().data, oNode, mNode, nO, nM));
   }
-  
-  public void setUnary(V node, double [] values)
-  {
-    setUnaries(node, new SimpleMatrix(1, values.length, true, values));
-  }
-  
-  private int nSites = -1;
+
+  /**
+   * Set a unary factor.
+   * 
+   * @throws RuntimeException if the binary factor already exists 
+   * 
+   * @param node The variable label to which the factor will be attached to.
+   * @param site2ValuePotentials A matrix where the row index sites, and the columns index node's state.
+   */
   public void setUnaries(V node, SimpleMatrix site2ValuePotentials)
   {
     checkNSites(site2ValuePotentials.numRows());
     setUnary(node, createUnary(node, site2ValuePotentials));
   }
   
-  public static <V> UnaryFactor<V> createUnary(V node, SimpleMatrix site2ValuePotentials)
+  /**
+   * Set a unary factor in the special case where there is only one site.
+   * 
+   * Syntactic sugar around setUnaries(V, SimpleMatrix) where the array
+   * values is viewed as a 1 by array.length matrix.
+   * 
+   * @param node The variable label to which the factor will be attached to.
+   * @param values See description.
+   */
+  public void setUnary(V node, double [] values)
   {
-    return new DiscreteUnaryFactor<V>(node, site2ValuePotentials.getMatrix().data, new int[site2ValuePotentials.numRows()], site2ValuePotentials.numCols());
+    setUnaries(node, new SimpleMatrix(1, values.length, true, values));
   }
   
+  /**
+   * Modifies in place a unary, pointwise multiplying each entry with the provided values.
+   * 
+   * If no unary are currently set, set the unary to be the provided one.
+   * 
+   * @param node The label of the variable for which the unary will be updated in place.
+   * @param site2ValuePotentials A matrix where the row index sites, and the columns index node's state.
+   */
   @SuppressWarnings("unchecked")
   public void unariesTimesEqual(V node, SimpleMatrix site2ValuePotentials)
   {
@@ -66,6 +115,32 @@ public class DiscreteFactorGraph<V> extends BaseFactorGraph<V>
     else
       unaries.put(node, discreteFactorGraphOperations.pointwiseProduct(Arrays.asList(newOne, oldOne)));
   }
+  
+  /**
+   * Create a UnaryFactor.
+   * 
+   * @param <V> The type indexing variables.
+   * @param node The label of the variable to which this unary is planned to belong to.
+   * @param site2ValuePotentials A matrix where the row index sites, and the columns index node's state.
+   * @return
+   */
+  public static <V> UnaryFactor<V> createUnary(V node, SimpleMatrix site2ValuePotentials)
+  {
+    return new DiscreteUnaryFactor<V>(node, site2ValuePotentials.getMatrix().data, new int[site2ValuePotentials.numRows()], site2ValuePotentials.numCols());
+  }
+
+  /**
+   * Used by the sum product algorithm to determine how to do marginalization and pointwise products.
+   */
+  @Override
+  public FactorOperation<V> marginalizationOperation()
+  {
+    return discreteFactorGraphOperations;
+  }
+  
+  /* Inner working of the discrete factors (based on scalings) */
+  
+  private int nSites = -1;
   
   private void checkNSites(int tested)
   {
@@ -330,6 +405,7 @@ public class DiscreteFactorGraph<V> extends BaseFactorGraph<V>
 
     @Override public V connectedVariable() { return node; }
     
+    @SuppressWarnings("unused")
     private double logNormalization(int site)
     {
       return Math.log(norm(site)) - scales[site];

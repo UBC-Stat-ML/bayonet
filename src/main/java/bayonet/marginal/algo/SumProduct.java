@@ -20,19 +20,36 @@ import com.google.common.collect.Maps;
 
 
 
-
+/**
+ * A sum-product meta-implementation.
+ * 
+ * Takes care of the scheduling of the messages along a tree,
+ * but leaves the details of how messages are marginalized and 
+ * pointwise multiplied to an instance of FactorOperation.
+ * 
+ * @author Alexandre Bouchard (alexandre.bouchard@gmail.com)
+ *
+ * @param <V>
+ */
 public class SumProduct<V>
 {
   private final FactorGraph<V> factorGraph;
   private final Map<Pair<V, V>, UnaryFactor<V>> cachedMessages = Maps.newHashMap();
   private final FactorOperation<V> factorOperations;
   
+  /**
+   * @param factorGraph The model on which the sum product algorithm should be ran on.
+   */
   public SumProduct(FactorGraph<V> factorGraph)
   {
     this.factorGraph = factorGraph;
     this.factorOperations = factorGraph.marginalizationOperation();
   }
   
+  /**
+   * 
+   * @return The log normalization of the factor graph.
+   */
   public double logNormalization()
   {
     double sum = 0.0;
@@ -44,6 +61,12 @@ public class SumProduct<V>
     return sum;
   }
   
+  /**
+   * The node marginal at the queryNode variable.
+   * 
+   * @param queryNode
+   * @return
+   */
   public UnaryFactor<V> computeMarginal(V queryNode)
   {
     computeMessages(queryNode, true);
@@ -56,7 +79,7 @@ public class SumProduct<V>
     return factorOperations.pointwiseProduct(queryIncomingMsgs);
   }
   
-  public void computeMessages(V lastNode, boolean isForward)
+  private void computeMessages(V lastNode, boolean isForward)
   {
     if (allMessagesComputed())
       return;
