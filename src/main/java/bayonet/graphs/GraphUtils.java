@@ -20,9 +20,10 @@ import org.jgrapht.traverse.DepthFirstIterator;
 import org.jgrapht.traverse.GraphIterator;
 import org.jgrapht.traverse.TopologicalOrderIterator;
 
+import briefj.collections.UnorderedPair;
+
 import com.google.common.collect.Lists;
 
-import fig.basic.UnorderedPair;
 
 
 

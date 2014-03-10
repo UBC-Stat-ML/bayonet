@@ -3,11 +3,11 @@ package blang;
 import java.util.Collections;
 import java.util.List;
 
-import fig.basic.OptionSet;
 
 import blang.processing.Processor;
 import blang.processing.ProcessorContext;
 import blang.processing.ProcessorFactory;
+import briefj.opt.OptionSet;
 
 
 

@@ -14,11 +14,11 @@ import blang.processing.NodeProcessorFactory;
 import blang.processing.Processor;
 import blang.processing.ProcessorContext;
 import blang.processing.ProcessorFactory;
+import briefj.opt.Option;
+import briefj.opt.OptionSet;
 
 import com.google.common.collect.Lists;
 
-import fig.basic.Option;
-import fig.basic.OptionSet;
 
 
 
