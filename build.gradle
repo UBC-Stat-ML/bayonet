@@ -5,7 +5,7 @@ apply plugin: 'eclipse'
 uploadArchives {
   repositories.mavenDeployer {
     repository(url: "file:///Users/bouchard/Documents/web/public_html/maven/")
-    pom.version = "2.0.2"
+    pom.version = "2.0.3"
     pom.artifactId = "bayonet"
     pom.groupId = "com.3rdf"
   }
