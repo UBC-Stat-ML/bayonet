@@ -1,5 +1,7 @@
 package bayonet.math;
 
+import bayonet.distributions.Multinomial;
+
 
 /**
  * Utilities for various numerical computations.
@@ -9,6 +11,12 @@ package bayonet.math;
  */
 public class NumericalUtils
 {
+  /**
+   * A default threshold when checking if quantities match up to 
+   * numerical error.
+   */
+  public static double THRESHOLD = 1e-8;
+
   /**
    * 
    * @param d1
@@ -31,9 +39,13 @@ public class NumericalUtils
   public static final void checkIsClose(double d1, double d2, double threshold)
   {
     if (!isClose(d1, d2, threshold))
-      throw new RuntimeException("The numer " + d1 + " was expected to be close to " + d2 + " (+/- " + threshold + ")");
+      throw new RuntimeException("The number " + d1 + " was expected to be close to " + d2 + " (+/- " + threshold + ")");
   }
   
+  public static void checkIsClose(double d1, double d2)
+  {
+    checkIsClose(d1, d2, THRESHOLD);
+  }
   
   /**
    * Equivalent, but more numerically resilient to underflows and faster than:
@@ -61,5 +73,33 @@ public class NumericalUtils
     }
     return logX + java.lang.Math.log(1.0 + java.lang.Math.exp(negDiff));
   }
+  
+  /**
+   * Call checkIsTransitionMatrix(matrix,threshold) with the default threshold
+   * @param matrix
+   */
+  public static void checkIsTransitionMatrix(double[][] matrix)
+  {
+    checkIsTransitionMatrix(matrix, THRESHOLD);
+  }
+
+  /**
+   * Check that the sum of the entries in each row is numerically close to 1.0.
+   * @param matrix
+   * @param threshold
+   */
+  public static void checkIsTransitionMatrix(double[][] matrix, double threshold)
+  {
+    final int size = matrix.length;
+    for (int row = 0; row < size; row++)
+    {
+      if (matrix[row].length != size)
+        throw new RuntimeException();
+      double norm = Multinomial.getNormalization(matrix[row]);
+      checkIsClose(norm, 1.0, threshold);
+    }
+  }
+
+
   
 }

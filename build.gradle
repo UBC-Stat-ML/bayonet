@@ -38,7 +38,7 @@ dependencies {
   compile group: 'com.3rdf', name: 'binc', version: '1.1'
   compile group: 'rcaller', name: 'RCaller', version: '2.1.1'
   compile 'net.sf.opencsv:opencsv:2.3'
-  compile 'com.googlecode.efficient-java-matrix-library:ejml:0.23'
+  compile 'com.googlecode.efficient-java-matrix-library:ejml:0.24'
   compile 'commons-io:commons-io:2.4'
   compile 'org.mvel:mvel2:2.1.8.Final'
   compile 'org.apache.commons:commons-math3:3.2'

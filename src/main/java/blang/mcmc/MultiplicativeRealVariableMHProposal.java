@@ -31,7 +31,7 @@ public class MultiplicativeRealVariableMHProposal implements MHProposalDistribut
       throw new RuntimeException();
     savedValue = variable.getValue();
     double u = rand.nextDouble();
-    double m = Math.exp(lambda * (u - 0.5));//Uniform.generate(rand, 0.5, 2.0);
+    double m = Math.exp(lambda * (u - 0.5));
     
     final double newValue = savedValue * m;
     variable.setValue(newValue);

@@ -3,13 +3,16 @@ package bayonet.marginal.discrete;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Random;
 
 import org.ejml.simple.SimpleMatrix;
 import org.jgrapht.UndirectedGraph;
 
+import bayonet.distributions.Multinomial;
 import bayonet.marginal.BaseFactorGraph;
 import bayonet.marginal.BinaryFactor;
-import bayonet.marginal.FactorOperation;
+import bayonet.marginal.FactorOperations;
+import bayonet.marginal.Sampler;
 import bayonet.marginal.UnaryFactor;
 
 import com.google.common.collect.Lists;
@@ -22,15 +25,14 @@ import com.google.common.collect.Lists;
  * 
  * This implementation additionally efficiently supports case where
  * we have several factor graphs, each with the same binary factors,
- * but with different unary factors. This arises in phylogenetics, 
+ * but with different unary factors. This arises for example in phylogenetics, 
  * where each site (location of the genome) carries different observations,
  * but the evolution is assumed to happen on the same tree.
  * We therefore use the terminology site for each of these independent 
- * sub-factor graphs.
+ * sub factor graphs.
  * 
- * Warning: currently assumes that the unnormalized measure are sub-probability 
- * distribution. This is the case for example when the factor graph comes from
- * a directed graphical model with observations.
+ * Note that we represent only one unary per node, but if two are needed,
+ * use  unariesTimesEqual() to pointwise multiply them.
  * 
  * @author Alexandre Bouchard (alexandre.bouchard@gmail.com)
  *
@@ -67,6 +69,21 @@ public class DiscreteFactorGraph<V> extends BaseFactorGraph<V>
     setBinary(mNode, oNode, new DiscreteBinaryFactor<V>(m2oPotentials.transpose().getMatrix().data, mNode, oNode, nM, nO));
     setBinary(oNode, mNode, new DiscreteBinaryFactor<V>(m2oPotentials.getMatrix().data, oNode, mNode, nO, nM));
   }
+  
+  /**
+   * Set a binary factor. 
+   * 
+   * @throws RuntimeException if the binary factor already exists 
+   * 
+   * @param mNode One variable label
+   * @param oNode Another variable label
+   * @param m2oPotentials A matrix encoding the binary factor shared by all sites,
+   *    where the rows index mNode's states, and columns index oNode's states
+   */
+  public void setBinary(V mNode, V oNode, double [][] m2oPotentials)
+  { 
+    setBinary(mNode, oNode, new SimpleMatrix(m2oPotentials));
+  }
 
   /**
    * Set a unary factor.
@@ -80,6 +97,19 @@ public class DiscreteFactorGraph<V> extends BaseFactorGraph<V>
   {
     checkNSites(site2ValuePotentials.numRows());
     setUnary(node, createUnary(node, site2ValuePotentials));
+  }
+  
+  /**
+   * Set a unary factor.
+   * 
+   * @throws RuntimeException if the binary factor already exists 
+   * 
+   * @param node The variable label to which the factor will be attached to.
+   * @param site2ValuePotentials A 2d array where the row index sites, and the columns index node's state.
+   */
+  public void setUnaries(V node, double [][] site2ValuePotentials)
+  {
+    setUnaries(node, new SimpleMatrix(site2ValuePotentials));
   }
   
   /**
@@ -117,6 +147,19 @@ public class DiscreteFactorGraph<V> extends BaseFactorGraph<V>
   }
   
   /**
+   * Modifies in place a unary, pointwise multiplying each entry with the provided values.
+   * 
+   * If no unary are currently set, set the unary to be the provided one.
+   * 
+   * @param node The label of the variable for which the unary will be updated in place.
+   * @param site2ValuePotentials A 2d array where the row index sites, and the columns index node's state.
+   */
+  public void unariesTimesEqual(V node, double [][] site2ValuePotentials)
+  {
+    unariesTimesEqual(node, new SimpleMatrix(site2ValuePotentials));
+  }
+  
+  /**
    * Create a UnaryFactor.
    * 
    * @param <V> The type indexing variables.
@@ -128,20 +171,56 @@ public class DiscreteFactorGraph<V> extends BaseFactorGraph<V>
   {
     return new DiscreteUnaryFactor<V>(node, site2ValuePotentials.getMatrix().data, new int[site2ValuePotentials.numRows()], site2ValuePotentials.numCols());
   }
+  
+  /**
+   * Create a UnaryFactor.
+   * 
+   * @param <V> The type indexing variables.
+   * @param node The label of the variable to which this unary is planned to belong to.
+   * @param site2ValuePotentials A 2d array where the row index sites, and the columns index node's state.
+   * @return
+   */
+  public static <V> UnaryFactor<V> createUnary(V node, double [][] site2ValuePotentials)
+  {
+    return createUnary(node, new SimpleMatrix(site2ValuePotentials));
+  }
+  
+  /**
+   * @param <V>
+   * @param _factor
+   * @return An array indexed by (sites, state) with normalized probabilities
+   *         contained in the provided UnaryFactor (cast to DiscreteUnaryFactor)
+   */
+  public static <V> double[][] getNormalizedCopy(UnaryFactor<V> _factor)
+  {
+    @SuppressWarnings({ "rawtypes", "unchecked" })
+    DiscreteUnaryFactor<V> factor = (DiscreteUnaryFactor) _factor;
+    double [][] result = new double[factor.nSites][factor.nVariableValues];
+    for (int site = 0; site < factor.nSites; site++)
+      factor.copyNormalizedValues(result[site], site);
+    return result;
+  }
 
   /**
    * Used by the sum product algorithm to determine how to do marginalization and pointwise products.
    */
   @Override
-  public FactorOperation<V> marginalizationOperation()
+  public FactorOperations<V> factorOperations()
   {
     return discreteFactorGraphOperations;
   }
   
   /* Inner working of the discrete factors (based on scalings) */
   
+  /**
+   * The number of sites (indep copies of the graphical model)
+   */
   private int nSites = -1;
   
+  /**
+   * Used to check that the number of sites match across all nodes
+   * @param tested
+   */
   private void checkNSites(int tested)
   {
     if (nSites == -1)
@@ -150,7 +229,10 @@ public class DiscreteFactorGraph<V> extends BaseFactorGraph<V>
       throw new RuntimeException();
   }
 
-  private final FactorOperation<V> discreteFactorGraphOperations = new FactorOperation<V>() 
+  /**
+   * The algorithms used to do pointwise product and marginalization.
+   */
+  private final FactorOperations<V> discreteFactorGraphOperations = new FactorOperations<V>() 
   {
     @SuppressWarnings({ "rawtypes", "unchecked" })
     @Override
@@ -165,7 +247,7 @@ public class DiscreteFactorGraph<V> extends BaseFactorGraph<V>
       final int nVariableValues = cast[0].nVariableValues();
       
       final int [] newScales = new int[nSites];
-      final double [] newMatrix = new double[nSites * nVariableValues]; //new SimpleMatrix(nSites, nVariableValues);
+      final double [] newMatrix = new double[nSites * nVariableValues]; 
       
       for (int site = 0; site < nSites; site++)
       {
@@ -180,9 +262,8 @@ public class DiscreteFactorGraph<V> extends BaseFactorGraph<V>
         {
           double prodUnnorm = 1.0;
           for (int factor = 0; factor < nFactors; factor++)
-            prodUnnorm *= cast[factor].get(site, varValue);
+            prodUnnorm *= cast[factor].getRawValue(site, varValue);
           newMatrix[nVariableValues * site + varValue] = prodUnnorm;
-//          newMatrix.set(site, varValue, prodUnnorm);
         }
       
       return new DiscreteUnaryFactor(cast[0].node, newMatrix, newScales, nVariableValues);
@@ -194,6 +275,12 @@ public class DiscreteFactorGraph<V> extends BaseFactorGraph<V>
         final BinaryFactor<V> _binary,
         final List<UnaryFactor<V>> unariesOnMarginalized)
     {
+      /* This method supports up to two unaries on the node to be marginalized.
+       * 
+       * But if there are more, we call marginalizeOnReducedUnariesDegree()
+       * which in turns calls pointwise products. The latter is less efficient
+       * but ensure that we cover all the cases.
+       */
       final int maxDegree = 2;
       if (unariesOnMarginalized.size() <= maxDegree)
       {
@@ -208,9 +295,8 @@ public class DiscreteFactorGraph<V> extends BaseFactorGraph<V>
           scales1 = degree == 2 ? dbf1.scales : null;
         
         final DiscreteBinaryFactor<V> binary = (DiscreteBinaryFactor) _binary;
-//        final double [] o2mPotentials = binary.o2mPotentials;
         
-        final double [] newMatrix = new double[nSites * binary.nOtherVariableValues()]; //new SimpleMatrix(nSites, binary.nOtherVariableValues());
+        final double [] newMatrix = new double[nSites * binary.nOtherVariableValues()]; 
         final int [] newScales = new int[nSites];
         
         final int nOtherValues = binary.nOtherVariableValues();
@@ -228,8 +314,8 @@ public class DiscreteFactorGraph<V> extends BaseFactorGraph<V>
              {
                double sum = 0.0;
                for (int margIndex = 0; margIndex < nMarginalizedValues; margIndex++)
-                 sum += binary.get(otherIndex, margIndex); //o2mPotentials.get(otherIndex, margIndex);
-               newMatrix[site * nOtherValues + otherIndex] = sum; //newMatrix.set(site, otherIndex, sum);
+                 sum += binary.get(otherIndex, margIndex); 
+               newMatrix[site * nOtherValues + otherIndex] = sum; 
              }
          else if (degree == 1) 
            for (int site = 0; site < nSites; site++)
@@ -237,9 +323,9 @@ public class DiscreteFactorGraph<V> extends BaseFactorGraph<V>
              {
                double sum = 0.0;
                for (int margIndex = 0; margIndex < nMarginalizedValues; margIndex++)
-                 sum += binary.get(otherIndex, margIndex) //o2mPotentials.get(otherIndex, margIndex);
-                       * dbf0.get(site, margIndex); //site2valuePotentials0.get(site, margIndex);
-               newMatrix[site * nOtherValues + otherIndex] = sum; //newMatrix.set(site, otherIndex, sum);
+                 sum += binary.get(otherIndex, margIndex) 
+                       * dbf0.getRawValue(site, margIndex); 
+               newMatrix[site * nOtherValues + otherIndex] = sum; 
              }
          else 
            for (int site = 0; site < nSites; site++)
@@ -247,10 +333,10 @@ public class DiscreteFactorGraph<V> extends BaseFactorGraph<V>
              {
                double sum = 0.0;
                for (int margIndex = 0; margIndex < nMarginalizedValues; margIndex++)
-                 sum += binary.get(otherIndex, margIndex) //o2mPotentials.get(otherIndex, margIndex);
-                       * dbf0.get(site, margIndex) //site2valuePotentials0.get(site, margIndex);
-                       * dbf1.get(site, margIndex); //site2valuePotentials1.get(site, margIndex);
-               newMatrix[site * nOtherValues + otherIndex] = sum; //newMatrix.set(site, otherIndex, sum);
+                 sum += binary.get(otherIndex, margIndex) 
+                       * dbf0.getRawValue(site, margIndex) 
+                       * dbf1.getRawValue(site, margIndex); 
+               newMatrix[site * nOtherValues + otherIndex] = sum; 
              }
         
         return new DiscreteUnaryFactor<V>(binary.otherNode(), newMatrix, newScales, nOtherValues);
@@ -260,8 +346,49 @@ public class DiscreteFactorGraph<V> extends BaseFactorGraph<V>
     }
   };
   
+  /**
+   * 
+   * @return A sampling algorithm for discrete unary factors.
+   */
+  public Sampler<V> getSampler()
+  {
+    return sampler;
+  }
+  
+  private final Sampler<V> sampler = new Sampler<V>()
+  {
+
+    @Override
+    public UnaryFactor<V> sample(Random rand, UnaryFactor<V> _factor)
+    {
+      @SuppressWarnings({ "rawtypes", "unchecked" })
+      DiscreteUnaryFactor<V> factor = (DiscreteUnaryFactor) _factor;
+      final double [][] normalized = getNormalizedCopy(_factor);
+      for (int site = 0; site < factor.nSites; site++)
+      {
+        final double [] currentPrs = normalized[site];
+        int sampledIndex = Multinomial.sampleMultinomial(rand, currentPrs);
+        for (int state = 0 ; state < factor.nVariableValues; state++)
+          currentPrs[state] = (state == sampledIndex ? 1.0 : 0.0);
+      }
+      
+      return createUnary(factor.node, normalized);
+    }
+
+  };
+
+  /**
+   * Calls operation.pointwiseProduct on the list of unaries until
+   * there are maxDegree items in unariesOnMarginalized.
+   * @param <V>
+   * @param operation
+   * @param maxDegree
+   * @param binary
+   * @param unariesOnMarginalized
+   * @return
+   */
   private static <V> UnaryFactor<V> marginalizeOnReducedUnariesDegree(
-      FactorOperation<V> operation, 
+      FactorOperations<V> operation, 
       int maxDegree,
       final BinaryFactor<V> binary,
       final List<UnaryFactor<V>> unariesOnMarginalized)
@@ -279,12 +406,31 @@ public class DiscreteFactorGraph<V> extends BaseFactorGraph<V>
     return operation.marginalize(binary, reducedList);
   }
   
+  /**
+   * Simple binary potential where the same potential is shared across all sites
+   * (graphical models). 
+   * 
+   * @author Alexandre Bouchard (alexandre.bouchard@gmail.com)
+   *
+   * @param <V>
+   */
   private static final class DiscreteBinaryFactor<V> implements BinaryFactor<V>
   {
+    /**
+     * Packed array of transition. See get().
+     */
     private final double [] o2mPotentials;
     private final V m, o;
     private final int nM, nO;
     
+    /**
+     * 
+     * @param o2mPotentials
+     * @param m The node to be marginalized
+     * @param o The other node
+     * @param nM The number of states in node m 
+     * @param nO The number of states in node o
+     */
     private DiscreteBinaryFactor(double [] o2mPotentials, V m, V o, int nM, int nO)
     {
       this.nO = nO;
@@ -296,16 +442,29 @@ public class DiscreteFactorGraph<V> extends BaseFactorGraph<V>
       this.o = o;
     }
     
+    /**
+     * Get the value of the potential for the two state indices.
+     * 
+     * @param oIndex
+     * @param nIndex
+     * @return
+     */
     private double get(int oIndex, int nIndex)
     {
       return o2mPotentials[oIndex * nO + nIndex];
     }
 
+    /**
+     * @return Number of states for node o
+     */
     private int nOtherVariableValues()
     {
       return nO;
     }
     
+    /**
+     * @return Number of states for node m
+     */
     private int nMarginalizedVariableValues()
     {
       return nM;
@@ -315,23 +474,79 @@ public class DiscreteFactorGraph<V> extends BaseFactorGraph<V>
     @Override public V otherNode() { return o; }
   }
   
+  /**
+   * An efficient implementation of a collection of discrete positive measures.
+   * 
+   * The implementation is based on scalings. 
+   * 
+   * @author Alexandre Bouchard (alexandre.bouchard@gmail.com)
+   *
+   * @param <V>
+   */
   private static final class DiscreteUnaryFactor<V> implements UnaryFactor<V>
   {
+    /**
+     * When the normalization at a site is smaller than UNDERFLOW_THRESHOLD,
+     * we multiply all entries at that site by  UNDERFLOW_THRESHOLD_INVERSE, and 
+     * decrease the scale of this site by MIN_SCALE
+     */
     private static final int MIN_SCALE = -50;
     private static final double UNDERFLOW_THRESHOLD = Math.exp(MIN_SCALE);
     private static final double UNDERFLOW_THRESHOLD_INVERSE = Math.exp(-MIN_SCALE);
     
-//    private static final int MAX_SCALE = +50;
-//    private static final double OVERFLOW_THRESHOLD = Math.exp(MAX_SCALE);
-//    private static final double OVERFLOW_THRESHOLD_INVERSE = Math.exp(-MAX_SCALE);
+    /**
+     * Similar to above, but to prevent overflows this time.
+     */
+    private static final int MAX_SCALE = +50;
+    private static final double OVERFLOW_THRESHOLD = Math.exp(MAX_SCALE);
+    private static final double OVERFLOW_THRESHOLD_INVERSE = Math.exp(-MAX_SCALE);
     
+    /**
+     * Packed version containing values proportional to the measure at a given
+     * site and state. See getRawValue()
+     */
     private final double [] site2valuePotentials;
-    private final int [] scales; // base e
-    private final double logNormalization;
-    private final V node;
-    private final int nSites;
-    private final int nVariableValues;
     
+    /**
+     * Used as an intermediate quantity required to keep track of the 
+     * normalization of each site individually. 
+     * 
+     * Holds an exponent in base e
+     */
+    private final int [] scales; 
+    
+    /**
+     * The logNormalization of all sites.
+     * 
+     * Obtained by adding the logNormalization of each site.
+     * 
+     * The normalization of a site is just the sum of the values taken
+     * by the measure at that site for each state.
+     */
+    private final double logNormalization;
+    
+    /**
+     * The node to which this unary is attached to.
+     */
+    private final V node;
+    
+    /**
+     * The number of sites.
+     */
+    private final int nSites;
+    
+    /**
+     * The number of states (values) this variable can take on at each site.
+     */
+    private final int nVariableValues;
+
+    /**
+     * 
+     * @param node
+     * @param site2valuePotentials
+     * @param scales
+     * @param nVariableValues
+     */
     private DiscreteUnaryFactor(V node, double [] site2valuePotentials, int [] scales, int nVariableValues)
     {
       this.nSites = scales.length;
@@ -346,58 +561,96 @@ public class DiscreteFactorGraph<V> extends BaseFactorGraph<V>
       double tempProd = 1.0;
       for (int site = 0; site < nSites(); site++)
       {
-        double currentNorm = norm(site);
+        double currentNorm = rawNorm(site);
         final int currentScale = scales[site];
         
         // update normalization
         logNorm = logNorm - currentScale;
         tempProd *= currentNorm;
         
+        if (tempProd < 0)
+          throw new RuntimeException("DiscreteFactors should not have negative entries");
+        
+        // accumulate the normalization in log scale before it underflows
         while (tempProd > 0 && tempProd < UNDERFLOW_THRESHOLD)
         {
           tempProd *= UNDERFLOW_THRESHOLD_INVERSE;
           logNorm += MIN_SCALE;
         }
         
-        // rescale if needed
+        // rescale to prevent underflow if needed
         while (currentNorm > 0 && currentNorm < UNDERFLOW_THRESHOLD)
         {
           scales[site] = scales[site] - MIN_SCALE;
           for (int valueIndex = 0; valueIndex < nVariableValues(); valueIndex++)
-            set(site, valueIndex, get(site,valueIndex) * UNDERFLOW_THRESHOLD_INVERSE);
-          currentNorm = norm(site); 
+            setRawValue(site, valueIndex, getRawValue(site,valueIndex) * UNDERFLOW_THRESHOLD_INVERSE);
+          currentNorm = rawNorm(site); 
         }
         
-//        while (tempProd > OVERFLOW_THRESHOLD)
-//        {
-//          tempProd *= OVERFLOW_THRESHOLD_INVERSE;
-//          logNorm += MAX_SCALE;
-//        }
-//        
-//        // rescale if needed
-//        while (currentNorm > 0 && currentNorm > OVERFLOW_THRESHOLD)
-//        {
-//          scales[site] = scales[site] - MIN_SCALE;
-//          for (int valueIndex = 0; valueIndex < nVariableValues(); valueIndex++)
-//            set(site, valueIndex, get(site,valueIndex) * UNDERFLOW_THRESHOLD_INVERSE);
-//          currentNorm = norm(site); 
-//        }
+        // accumulate the normalization in log scale before it overflows
+        while (tempProd > OVERFLOW_THRESHOLD)
+        {
+          tempProd *= OVERFLOW_THRESHOLD_INVERSE;
+          logNorm += MAX_SCALE;
+        }
+        
+        // rescale to prevent overflow if needed
+        while (currentNorm > OVERFLOW_THRESHOLD)
+        {
+          scales[site] = scales[site] - MAX_SCALE;
+          for (int valueIndex = 0; valueIndex < nVariableValues(); valueIndex++)
+            setRawValue(site, valueIndex, getRawValue(site,valueIndex) * OVERFLOW_THRESHOLD_INVERSE);
+          currentNorm = rawNorm(site); 
+        }
       }
       logNorm += Math.log(tempProd);
       
       this.logNormalization = logNorm;
     }
     
-    private double get(final int site, final int valueIndex)
+    /**
+     * This value is proportional to the measure, but with an arbitrary 
+     * (but fixed) proportionality constant.
+     * 
+     * Internal. Not to be used by the end user.
+     * 
+     * @param site
+     * @param valueIndex
+     * @return
+     */
+    private double getRawValue(final int site, final int valueIndex)
     {
       return site2valuePotentials[site * nVariableValues + valueIndex];
     }
     
-    private void set(final int site, final int valueIndex, final double value)
+    /**
+     * Internal. Not to be used by the end user.
+     * 
+     * @param site
+     * @param valueIndex
+     * @param value
+     */
+    private void setRawValue(final int site, final int valueIndex, final double value)
     {
       site2valuePotentials[site * nVariableValues + valueIndex] = value;
     }
+    
+    /**
+     * 
+     * @param destination
+     * @param site
+     */
+    private void copyNormalizedValues(double [] destination, int site)
+    {
+      for (int state = 0; state < nVariableValues(); state++)
+        destination[state] = getRawValue(site, state);
+      Multinomial.normalize(destination);
+    }
 
+    /**
+     * 
+     * @return
+     */
     private int nVariableValues()
     {
       return nVariableValues;
@@ -405,31 +658,49 @@ public class DiscreteFactorGraph<V> extends BaseFactorGraph<V>
 
     @Override public V connectedVariable() { return node; }
     
+    /**
+     * The log normalization of a single site.
+     * 
+     * @param site
+     * @return
+     */
     @SuppressWarnings("unused")
     private double logNormalization(int site)
     {
-      return Math.log(norm(site)) - scales[site];
+      return Math.log(rawNorm(site)) - scales[site];
     }
     
-    private double norm(int site)
+    /**
+     * Internal. Not to be used by the end user.
+     * 
+     * @param site
+     * @return
+     */
+    private double rawNorm(int site)
     {
       double sum = 0.0;
       for (int valueIndex = 0; valueIndex < nVariableValues; valueIndex++)
-        sum += get(site, valueIndex);
+        sum += getRawValue(site, valueIndex);
       return sum;
     }
 
+    /**
+     * The overall logNormalization (across all sites).
+     */
     @Override
     public double logNormalization()
     {
       return logNormalization;
     }
 
+    /**
+     * 
+     * @return The number of sites.
+     */
     private int nSites()
     {
       return nSites;
     }
-    
   }
   
 //  public static void main(String [] args)

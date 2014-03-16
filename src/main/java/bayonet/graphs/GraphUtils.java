@@ -27,26 +27,52 @@ import com.google.common.collect.Lists;
 
 
 
-
+/**
+ * Utilities around functionalities in JGraphT.
+ * 
+ * Note: although some of the functionalities in JGraphT are based
+ * on hashes, the iterators are deterministic since the hashing structures
+ * are based on LinkedHashMap and LinkedHashSet.
+ * 
+ * @author Alexandre Bouchard (alexandre.bouchard@gmail.com)
+ *
+ */
 public class GraphUtils 
 {
+  /**
+   * A reasonable default implementation for undirected graphs.
+   * @param <V>
+   * @return
+   */
   public static <V> UndirectedGraph<V,UnorderedPair<V, V>> newUndirectedGraph()
   {
     EdgeFactory<V, UnorderedPair<V, V>> factory = undirectedEdgeFactory();
     return new SimpleGraph<V, UnorderedPair<V, V>>(factory);
   }
   
+  /**
+   * A reasonable default implementation for directed graphs..
+   * 
+   * @param <V>
+   * @return
+   */
   public static <V> DirectedGraph<V, Pair<V, V>> newDirectedGraph()
   {
     EdgeFactory<V, Pair<V, V>> factory = directedEdgeFactory();
     return new SimpleDirectedGraph<V, Pair<V,V>>(factory);
   }
   
+  /**
+   * An undirected edge, i.e. an UnorderedPair
+   * @param <V>
+   * @param first
+   * @param second
+   * @return
+   */
   public static <V> UnorderedPair<V, V> undirectedEdge(V first, V second)
   {
     return new UnorderedPair<V, V>(first, second);
   }
-  
 
   private static <V> EdgeFactory<V, UnorderedPair<V, V>> undirectedEdgeFactory()
   {
@@ -60,12 +86,18 @@ public class GraphUtils
     };
   }
   
+  /**
+   * A directed edge, i.e. a Pair
+   * @param <V>
+   * @param first
+   * @param second
+   * @return
+   */
   public static <V> Pair<V, V> directedEdge(V first, V second)
   {
     return Pair.of(first, second);
   }
   
-
   private static <V> EdgeFactory<V, Pair<V, V>> directedEdgeFactory()
   {
     return new EdgeFactory<V, Pair<V,V>>() {
@@ -78,6 +110,18 @@ public class GraphUtils
     };
   }
   
+  /**
+   * List nodes in post order.
+   * 
+   * Note: will only list vertices in the connected component of 
+   * the given vertex, i.e. lastForwardVertex.
+   * 
+   * @param <V> 
+   * @param <E>
+   * @param graph
+   * @param root
+   * @return
+   */
   public static <V,E> ArrayList<V> postorder(UndirectedGraph<V, E> graph, final V root)
   {
     final ArrayList<V> result = Lists.newArrayList();
@@ -104,6 +148,13 @@ public class GraphUtils
     return result;
   }
   
+  /**
+   * List the connected components. 
+   * @param <V>
+   * @param <E>
+   * @param graph
+   * @return
+   */
   public static <V,E> List<Set<V>> connectedComponents(UndirectedGraph<V, E> graph)
   {
     ConnectivityInspector<V, E> connComponentsCalculator = new ConnectivityInspector<V,E>(graph);
@@ -134,6 +185,14 @@ public class GraphUtils
     return result;
   }
   
+  /**
+   * Return the linearization or topological order of a given directed graph.
+   * 
+   * @param <V>
+   * @param <E>
+   * @param graph
+   * @return
+   */
   public static <V,E> List<V> linearization(
       DirectedGraph<V, E> graph)
   {

@@ -32,6 +32,8 @@ public class EdgeSorter<V>
   private final UndirectedGraph<V, ?> graph;
   
   /**
+   * Note: will only list edges in the connected component of 
+   * the given vertex, i.e. lastForwardVertex
    * 
    * @param <V>
    * @param graph The undirected graph.
@@ -79,9 +81,8 @@ public class EdgeSorter<V>
   }
   
   /**
-   * List edges pointing away from the root. If the edges are 
-   * viewed as undirected, this method uses the reversal of the
-   * order used in forwardMessages().
+   * List edges pointing away from the root. This method uses the reversal of the
+   * order used in forwardMessages() (and also reverse the direction of each edge).
    * @return
    */
   public ArrayList<Pair<V,V>> backwardMessages()

@@ -49,9 +49,12 @@ public abstract class BaseFactorGraph<V> implements FactorGraph<V>
   }
   
   /**
-   * Get the unary attached to the given node label
+   * Get the unary attached to the given node label, or null if none
+   * have been defined.
    * 
-   * @throws RuntimeException if there are no unaries at that node.
+   * @throws RuntimeException if the node is not defined in the graph.
+   * @param node
+   * @return The unary at that node
    */
   @Override
   public UnaryFactor<V> getUnary(V node)

@@ -6,6 +6,7 @@ import org.ejml.factory.DecompositionFactory;
 import org.ejml.factory.EigenDecomposition;
 import org.ejml.ops.EigenOps;
 import org.ejml.ops.EjmlUnitTests;
+import org.ejml.ops.MatrixVisualization;
 import org.ejml.simple.SimpleMatrix;
 
 import briefj.BriefIO;
@@ -41,14 +42,30 @@ public class EJMLUtils
     SimpleMatrix D = new SimpleMatrix(EigenOps.createMatrixD(eigenDecomp));
     SimpleMatrix V = new SimpleMatrix(EigenOps.createMatrixV(eigenDecomp));
     SimpleMatrix Vinverse = V.invert();
-    test(matrix,V,D,Vinverse, 1e-8);
+    test(matrix,V,D,Vinverse, NumericalUtils.THRESHOLD);
     return new SimpleEigenDecomposition(V, D, Vinverse);
+  }
+  
+  /**
+   * If Q is the matrix represented in the given decomposition, returns exp(scalar * Q),
+   * where exp(.) is the matrix exponential.
+   * @param decomposition
+   * @param scalar
+   * @return
+   */
+  public static SimpleMatrix matrixExponential(SimpleEigenDecomposition decomposition, double scalar)
+  {
+    final int size = decomposition.getMatrixSize();
+    SimpleMatrix expD = new SimpleMatrix(size, size);
+    for (int i = 0; i < size; i++)
+      expD.set(i, i, Math.exp(scalar * decomposition.getD().get(i,i)));
+    return multiply(decomposition.getV(), expD, decomposition.getVinverse());
   }
   
   private static void test(SimpleMatrix matrix, SimpleMatrix v, SimpleMatrix d,
       SimpleMatrix vinverse, double threshold)
   {
-    EjmlUnitTests.assertEquals(matrix.getMatrix(), multiply(v.getMatrix(),d.getMatrix(),vinverse.getMatrix()).getMatrix(), threshold);
+    EjmlUnitTests.assertEquals(matrix.getMatrix(), multiply(v,d,vinverse).getMatrix(), threshold);
   }
 
   /**
@@ -62,13 +79,9 @@ public class EJMLUtils
    * @param dense2 Another dense matrix
    * @return
    */
-  public static SimpleMatrix multiply(DenseMatrix64F dense1, DenseMatrix64F diag, DenseMatrix64F dense2)
+  public static SimpleMatrix multiply(SimpleMatrix dense1, SimpleMatrix diag, SimpleMatrix dense2)
   {
-    SimpleMatrix 
-      d1 = new SimpleMatrix(dense1),
-      d = new SimpleMatrix(diag),
-      d2 = new SimpleMatrix(dense2);
-    return d1.mult(d).mult(d2);
+    return dense1.mult(diag).mult(dense2);
   }
   
   /**
@@ -89,6 +102,11 @@ public class EJMLUtils
       V = v;
       D = d;
       Vinverse = vinverse;
+    }
+
+    public int getMatrixSize()
+    {
+      return D.numCols();
     }
 
     public SimpleMatrix getV()
@@ -118,6 +136,22 @@ public class EJMLUtils
   }
   
   /**
+   * Unpacks the provided matrix into an array of arrays.
+   * 
+   * Creates a fresh copy.
+   * @param matrix
+   * @return
+   */
+  public static double[][] copyMatrixToArray(SimpleMatrix matrix)
+  {
+    double [][] result = new double[matrix.numRows()][matrix.numCols()];
+    for (int row = 0; row < matrix.numRows(); row++)
+      for (int col = 0; col < matrix.numCols(); col++)
+        result[row][col] = matrix.get(row, col);
+    return result;
+  }
+  
+  /**
    * @param vector
    * @return
    */
@@ -140,9 +174,15 @@ public class EJMLUtils
   
   public static void main(String [] args)
   {
-    double [][] data = new double[][]{{1,1},{2,1}};
+    double [][] data = new double[][]{{-1,1},{2,-2}};
     SimpleMatrix test = new SimpleMatrix(data);
-    System.out.println(simpleEigenDecomposition(test));
+    double t = 0.01;
+    SimpleEigenDecomposition rateDecomp = simpleEigenDecomposition(test);
+    SimpleMatrix p = matrixExponential(rateDecomp,t);
+    System.out.println(toString(p));
+    System.out.println(simpleEigenDecomposition(p.transpose()));
+    System.out.println(toString(matrixExponential(rateDecomp, 100)));
+//    MatrixVisualization.show(test.getMatrix(), "test");
   }
 
 }

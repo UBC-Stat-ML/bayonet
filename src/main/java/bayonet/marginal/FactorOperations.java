@@ -12,7 +12,7 @@ import java.util.List;
  *
  * @param <V>
  */
-public interface FactorOperation<V>
+public interface FactorOperations<V>
 {
   /**
    * 

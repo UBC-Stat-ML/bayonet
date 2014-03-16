@@ -11,7 +11,8 @@ import org.jgrapht.Graphs;
 import bayonet.graphs.GraphUtils;
 import bayonet.marginal.BinaryFactor;
 import bayonet.marginal.FactorGraph;
-import bayonet.marginal.FactorOperation;
+import bayonet.marginal.FactorOperations;
+import bayonet.marginal.FactorUtils;
 import bayonet.marginal.UnaryFactor;
 import briefj.BriefCollections;
 
@@ -23,7 +24,8 @@ import com.google.common.collect.Maps;
 /**
  * A sum-product meta-implementation.
  * 
- * Takes care of the scheduling of the messages along a tree,
+ * Takes care of the scheduling of the messages along a tree 
+ * (actually support slightly more general forest (acyclic graph)),
  * but leaves the details of how messages are marginalized and 
  * pointwise multiplied to an instance of FactorOperation.
  * 
@@ -35,7 +37,7 @@ public class SumProduct<V>
 {
   private final FactorGraph<V> factorGraph;
   private final Map<Pair<V, V>, UnaryFactor<V>> cachedMessages = Maps.newHashMap();
-  private final FactorOperation<V> factorOperations;
+  private final FactorOperations<V> factorOperations;
   
   /**
    * @param factorGraph The model on which the sum product algorithm should be ran on.
@@ -43,10 +45,11 @@ public class SumProduct<V>
   public SumProduct(FactorGraph<V> factorGraph)
   {
     this.factorGraph = factorGraph;
-    this.factorOperations = factorGraph.marginalizationOperation();
+    this.factorOperations = factorGraph.factorOperations();
   }
   
   /**
+   * Computes the sum of the log normalization of each tree in the forest.
    * 
    * @return The log normalization of the factor graph.
    */
@@ -69,14 +72,37 @@ public class SumProduct<V>
    */
   public UnaryFactor<V> computeMarginal(V queryNode)
   {
+    return computeSubtreeMarginal(queryNode, null);
+  }
+  
+  /**
+   * The node marginal of the query node if we were to cut
+   * the edge (queryNode, excludedEdge).
+   * 
+   * @param queryNode
+   * @param excludedEdge
+   * @return
+   */
+  public UnaryFactor<V> computeSubtreeMarginal(V queryNode, V excludedEdge)
+  {
     computeMessages(queryNode, true);
     List<UnaryFactor<V>> queryIncomingMsgs = Lists.newArrayList();
     for (V neighbor : Graphs.neighborListOf(factorGraph.getTopology(), queryNode))
-      queryIncomingMsgs.add(getFromCache(Pair.of(neighbor, queryNode), false));
+      if (neighbor != excludedEdge)
+        queryIncomingMsgs.add(getFromCache(Pair.of(neighbor, queryNode), false));
     UnaryFactor<V> modelFactor = factorGraph.getUnary(queryNode);
     if (modelFactor != null)
       queryIncomingMsgs.add(modelFactor);
     return factorOperations.pointwiseProduct(queryIncomingMsgs);
+  }
+  
+  /**
+   * 
+   * @return The underlying factor graph on which sum product was ran on.
+   */
+  public FactorGraph<V> getFactorGraph()
+  {
+    return factorGraph;
   }
   
   private void computeMessages(V lastNode, boolean isForward)
@@ -115,22 +141,8 @@ public class SumProduct<V>
     
     // marginalize one node
     BinaryFactor<V> binaryFactor = factorGraph.getBinary(source, destination);
-    checkIntegrity(messageToCompute, binaryFactor, toMultiply);
+    FactorUtils.checkIntegrity(messageToCompute, binaryFactor, toMultiply);
     return factorOperations.marginalize(binaryFactor, toMultiply);
-  }
-
-  private void checkIntegrity(Pair<V, V> messageToCompute,
-      BinaryFactor<V> binaryFactor, List<UnaryFactor<V>> toMultiply)
-  {
-    V source = messageToCompute.getLeft(),
-    destination = messageToCompute.getRight();
-    if (!binaryFactor.marginalizedNode().equals(source))
-      throw new RuntimeException();
-    if (!binaryFactor.otherNode().equals(destination))
-      throw new RuntimeException();
-    for (UnaryFactor<V> factor : toMultiply)
-      if (!factor.connectedVariable().equals(source))
-        throw new RuntimeException();
   }
 
   private UnaryFactor<V> getFromCache(Pair<V,V> key, boolean allowNulls)

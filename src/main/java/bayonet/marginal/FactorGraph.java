@@ -26,9 +26,14 @@ public interface FactorGraph<V>
    * 
    * @return The algorithms that do marginalization and pointwise products.
    */
-  public FactorOperation<V> marginalizationOperation();
+  public FactorOperations<V> factorOperations();
   
   /**
+   * 
+   * Get the unary attached to the given node label, or null if none
+   * have been defined.
+   * 
+   * @throws RuntimeException if the node is not defined in the graph.
    * @param node
    * @return The unary at that node
    */

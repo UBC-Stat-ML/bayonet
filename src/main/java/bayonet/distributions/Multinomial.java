@@ -65,6 +65,10 @@ public class Multinomial
   public static double normalize(double[] data) 
   {
     double sum = getNormalization(data);
+    
+    if (sum == 0.0)
+      throw new RuntimeException("Normalization should be positive.");
+    
     if (sum != 1.0)
     {
       for(int i = 0; i < data.length; i++) 
@@ -74,7 +78,8 @@ public class Multinomial
   }
   
   /**
-   * 
+   * Get the normalization of the array.
+   * @throws RuntimeException if some of the entries are negative.
    * @param data
    * @return
    */

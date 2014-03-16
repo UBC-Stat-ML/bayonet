@@ -19,14 +19,14 @@ public class MoveSet
   private final List<Move> moves;
   private final ProbabilityModel model;
   
-  public MoveSet(ProbabilityModel model, List<MoveFactory> factories)
+  public MoveSet(ProbabilityModel model, List<MoveFactory> factories, boolean check)
   {
     this.model = model;
-    this.moves = init(factories);
+    this.moves = init(factories, check);
   }
 
   @SuppressWarnings({ "rawtypes", "unchecked" })
-  private List<Move> init(List<MoveFactory> factories)
+  private List<Move> init(List<MoveFactory> factories, boolean check)
   {
     List<Move> result = Lists.newArrayList();
     Set coveredNode = Sets.newIdentityHashSet();
@@ -39,14 +39,15 @@ public class MoveSet
       result.addAll(moves);
     }
     
-    if (!coveredNode.containsAll(model.getLatentVariables()))
-    {
-      Set<String> missingNodeNames = Sets.newHashSet();
-      for (Object variable : model.getLatentVariables())
-        if (!coveredNode.contains(variable))
-          missingNodeNames.add(model.getName(variable));
-      throw new RuntimeException("Not all variables have a sampler. Those not covered are: " + Joiner.on(", ").join(missingNodeNames));
-    }
+    if (check)
+      if (!coveredNode.containsAll(model.getLatentVariables()))
+      {
+        Set<String> missingNodeNames = Sets.newHashSet();
+        for (Object variable : model.getLatentVariables())
+          if (!coveredNode.contains(variable))
+            missingNodeNames.add(model.getName(variable));
+        throw new RuntimeException("Not all variables have a sampler. Those not covered are: " + Joiner.on(", ").join(missingNodeNames));
+      }
     
     return result;
   }
@@ -56,5 +57,13 @@ public class MoveSet
     Collections.shuffle(moves, rand);
     for (Move move : moves)
       move.execute(rand);
+  }
+  
+  public String toString()
+  {
+    StringBuilder result = new StringBuilder();
+    for (Move move : moves)
+      result.append(move + "\n");
+    return result.toString();
   }
 }

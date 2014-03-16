@@ -36,4 +36,16 @@ public class MCMCAlgorithm
         MCMCFactory.callProcessors(processors, new ProcessorContext(i, model));
     }
   }
+  @Override
+  public String toString()
+  {
+    StringBuilder result = new StringBuilder();
+    result.append("Summary of model\n");
+    result.append("----------------\n");
+    result.append(model + "\n");
+    result.append("Summary of samplers\n");
+    result.append("-------------------\n");
+    result.append("" + sampler);
+    return result.toString();
+  }
 }

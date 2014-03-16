@@ -34,6 +34,8 @@ public class MCMCFactory
   @OptionSet(name = "mcmc") 
   public MCMCOptions mcmcOptions = new MCMCOptions();
   
+  private boolean checkAllNodesCoveredByMCMCMoves = true;
+  
   public void addMoveFactory(MoveFactory factory)
   {
     moveFactories.factories.add(factory);
@@ -94,7 +96,7 @@ public class MCMCFactory
   public MCMCAlgorithm build(Object modelSpecification, boolean clone)
   {
     ProbabilityModel model = ProbabilityModel.parse(modelSpecification, clone);
-    MoveSet sampler = new MoveSet(model, moveFactories.factories);
+    MoveSet sampler = new MoveSet(model, moveFactories.factories, checkAllNodesCoveredByMCMCMoves);
     
     List<Processor> processors = buildProcessors(model);
     return new MCMCAlgorithm(model, sampler, processors, mcmcOptions);
@@ -112,6 +114,13 @@ public class MCMCFactory
     for (ProcessorFactory f : processorFactories.factories)
       result.addAll(f.build(model));
     return result;
+  }
+
+  
+  public void setCheckAllNodesCoveredByMCMCMoves(
+      boolean checkAllNodesCoveredByMCMCMoves)
+  {
+    this.checkAllNodesCoveredByMCMCMoves = checkAllNodesCoveredByMCMCMoves;
   }
 
 }

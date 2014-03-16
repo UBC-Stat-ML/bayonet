@@ -19,10 +19,6 @@ import blang.variables.RealVariable;
  * This can be viewed as an infinite mixture of Peskun-type 
  * Gibbs proposal.
  * 
- * We use this instead of the standard MH proposal since the 
- * latter has potential theoretical problems when the support is
- * not the full real line (the reverse move can become hard to compute).
- * 
  * @author Alexandre Bouchard (alexandre.bouchard@gmail.com)
  *
  */
@@ -98,4 +94,12 @@ public class RealVariablePeskunTypeMove extends NodeMove
       result += f.logDensity();
     return result;
   }
+
+  @Override
+  public String toString()
+  {
+    return "RealVariablePeskunTypeMove [variable=" + variable + "]";
+  }
+  
+  
 }

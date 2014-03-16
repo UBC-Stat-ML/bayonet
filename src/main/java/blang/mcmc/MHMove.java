@@ -18,19 +18,7 @@ import blang.mcmc.MHProposalDistribution.Proposal;
  */
 public class MHMove implements Move
 {
-//  public static final MoveFactory factory = new MoveFactory() {
-//    
-//    @Override
-//    public List<Move> build(ProbabilityModel model)
-//    {
-//      List<Move> result = Lists.newArrayList();
-//      
-//      for (MHProposal mv : model.getLatentVariables(MHProposal.class))
-//        result.add(new MHMove(mv, model.neighborFactors(mv), new MoveContext(model)));
-//      
-//      return result;
-//    }
-//  };
+
 
   //  final SummaryStatistics acceptanceProbabilities = new SummaryStatistics();
   private final MHProposalDistribution proposal;
@@ -80,5 +68,11 @@ public class MHMove implements Move
   public List<?> variablesCovered()
   {
     return Collections.unmodifiableList(variables);
+  }
+
+  @Override
+  public String toString()
+  {
+    return "MHMove [proposal=" + proposal + ", variables=" + variables + "]";
   }
 }

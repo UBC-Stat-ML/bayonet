@@ -12,6 +12,8 @@ import org.junit.Assert;
 
 import blang.ForwardSampler;
 import blang.MCMCAlgorithm;
+import blang.processing.Processor;
+import blang.processing.ProcessorContext;
 import blang.variables.RealValued;
 import briefj.BriefMaps;
 import briefj.BriefStrings;
@@ -346,6 +348,9 @@ public class CheckStationarity
   {
     for (RealValued realValuedVariable : mcmc.model.getLatentVariables(RealValued.class))
       BriefMaps.getOrPutList(values, mcmc.model.getName(realValuedVariable)).add(realValuedVariable.getValue());
+    
+    for (Processor processor : mcmc.processors)
+      processor.process(new ProcessorContext(mcmc.options.nMCMCSweeps - 1, mcmc.model));
     
     for (RealValued realValuedProcessor : ReflexionUtils.sublistOfGivenType(mcmc.processors, RealValued.class))
       BriefMaps.getOrPutList(values, realValuedProcessor).add(realValuedProcessor.getValue());
