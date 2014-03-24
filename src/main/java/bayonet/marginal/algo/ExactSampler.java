@@ -13,7 +13,6 @@ import com.google.common.collect.Maps;
 
 import bayonet.marginal.BinaryFactor;
 import bayonet.marginal.FactorGraph;
-import bayonet.marginal.FactorUtils;
 import bayonet.marginal.Sampler;
 import bayonet.marginal.UnaryFactor;
 
@@ -91,7 +90,6 @@ public class ExactSampler<V>
       UnaryFactor<V> dirac = result.get(source);
       BinaryFactor<V> binaryFactor = factorGraph.getBinary(source, destination);
       List<UnaryFactor<V>> diracSingleton = Collections.singletonList(dirac);
-      FactorUtils.checkIntegrity(messageToCompute, binaryFactor, diracSingleton);
       UnaryFactor<V> marginalized = factorGraph.factorOperations().marginalize(binaryFactor, diracSingleton);
       
       // pointwise product if posterior mode

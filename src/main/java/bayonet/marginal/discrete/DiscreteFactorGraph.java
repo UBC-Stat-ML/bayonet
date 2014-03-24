@@ -2,6 +2,7 @@ package bayonet.marginal.discrete;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 
@@ -56,18 +57,18 @@ public class DiscreteFactorGraph<V> extends BaseFactorGraph<V>
    * 
    * @throws RuntimeException if the binary factor already exists 
    * 
-   * @param mNode One variable label
-   * @param oNode Another variable label
-   * @param m2oPotentials A matrix encoding the binary factor shared by all sites,
-   *    where the rows index mNode's states, and columns index oNode's states
+   * @param firstNode One variable label
+   * @param secondNode Another variable label
+   * @param first2SecondPotentials A matrix encoding the binary factor shared by all sites,
+   *    where the rows index node1's states, and columns index node2's states
    */
-  public void setBinary(V mNode, V oNode, SimpleMatrix m2oPotentials)
+  public void setBinary(V firstNode, V secondNode, SimpleMatrix first2SecondPotentials)
   { 
-    int nM = m2oPotentials.numRows();
-    int nO = m2oPotentials.numCols();
+    int nM = first2SecondPotentials.numRows();
+    int nO = first2SecondPotentials.numCols();
     
-    setBinary(mNode, oNode, new DiscreteBinaryFactor<V>(m2oPotentials.transpose().getMatrix().data, mNode, oNode, nM, nO));
-    setBinary(oNode, mNode, new DiscreteBinaryFactor<V>(m2oPotentials.getMatrix().data, oNode, mNode, nO, nM));
+    setBinary(firstNode, secondNode, new DiscreteBinaryFactor<V>(first2SecondPotentials.transpose().getMatrix().data, nM, nO));
+    setBinary(secondNode, firstNode, new DiscreteBinaryFactor<V>(first2SecondPotentials.getMatrix().data, nO, nM));
   }
   
   /**
@@ -75,15 +76,24 @@ public class DiscreteFactorGraph<V> extends BaseFactorGraph<V>
    * 
    * @throws RuntimeException if the binary factor already exists 
    * 
-   * @param mNode One variable label
-   * @param oNode Another variable label
-   * @param m2oPotentials A matrix encoding the binary factor shared by all sites,
-   *    where the rows index mNode's states, and columns index oNode's states
+   * @param firstNode One variable label
+   * @param secondNode Another variable label
+   * @param first2SecondPotentials An array encoding the binary factor shared by all sites,
+   *    where the rows index node1's states, and columns index node2's states
    */
-  public void setBinary(V mNode, V oNode, double [][] m2oPotentials)
+  public void setBinary(V firstNode, V secondNode, double [][] first2SecondPotentials)
   { 
-    setBinary(mNode, oNode, new SimpleMatrix(m2oPotentials));
+    setBinary(firstNode, secondNode, new SimpleMatrix(first2SecondPotentials));
   }
+  
+  
+//  public BinaryFactor<V> createBinary(V mNode, V oNode, SimpleMatrix m2oPotentials)
+//  {
+//    int nM = m2oPotentials.numRows();
+//    int nO = m2oPotentials.numCols();
+//    
+//    return new DiscreteBinaryFactor<V>(m2oPotentials.getMatrix().data, oNode, mNode, nO, nM);
+//  }
 
   /**
    * Set a unary factor.
@@ -93,10 +103,11 @@ public class DiscreteFactorGraph<V> extends BaseFactorGraph<V>
    * @param node The variable label to which the factor will be attached to.
    * @param site2ValuePotentials A matrix where the row index sites, and the columns index node's state.
    */
-  public void setUnaries(V node, SimpleMatrix site2ValuePotentials)
+  public void setUnary(V node, SimpleMatrix site2ValuePotentials)
   {
     checkNSites(site2ValuePotentials.numRows());
-    setUnary(node, createUnary(node, site2ValuePotentials));
+    UnaryFactor<V> unary = createUnary(site2ValuePotentials);
+    setUnary(node, unary);
   }
   
   /**
@@ -107,23 +118,9 @@ public class DiscreteFactorGraph<V> extends BaseFactorGraph<V>
    * @param node The variable label to which the factor will be attached to.
    * @param site2ValuePotentials A 2d array where the row index sites, and the columns index node's state.
    */
-  public void setUnaries(V node, double [][] site2ValuePotentials)
+  public void setUnary(V node, double [][] site2ValuePotentials)
   {
-    setUnaries(node, new SimpleMatrix(site2ValuePotentials));
-  }
-  
-  /**
-   * Set a unary factor in the special case where there is only one site.
-   * 
-   * Syntactic sugar around setUnaries(V, SimpleMatrix) where the array
-   * values is viewed as a 1 by array.length matrix.
-   * 
-   * @param node The variable label to which the factor will be attached to.
-   * @param values See description.
-   */
-  public void setUnary(V node, double [] values)
-  {
-    setUnaries(node, new SimpleMatrix(1, values.length, true, values));
+    setUnary(node, new SimpleMatrix(site2ValuePotentials));
   }
   
   /**
@@ -134,16 +131,11 @@ public class DiscreteFactorGraph<V> extends BaseFactorGraph<V>
    * @param node The label of the variable for which the unary will be updated in place.
    * @param site2ValuePotentials A matrix where the row index sites, and the columns index node's state.
    */
-  @SuppressWarnings("unchecked")
-  public void unariesTimesEqual(V node, SimpleMatrix site2ValuePotentials)
+  public void unaryTimesEqual(V node, SimpleMatrix site2ValuePotentials)
   {
     checkNSites(site2ValuePotentials.numRows());
-    DiscreteUnaryFactor<V> newOne = new DiscreteUnaryFactor<V>(node, site2ValuePotentials.getMatrix().data, new int[site2ValuePotentials.numRows()], site2ValuePotentials.numCols());
-    DiscreteUnaryFactor<V> oldOne = (DiscreteUnaryFactor<V>) unaries.get(node);
-    if (oldOne == null)
-      unaries.put(node, newOne);
-    else
-      unaries.put(node, discreteFactorGraphOperations.pointwiseProduct(Arrays.asList(newOne, oldOne)));
+    DiscreteUnaryFactor<V> newOne = new DiscreteUnaryFactor<V>(site2ValuePotentials.getMatrix().data, new int[site2ValuePotentials.numRows()], site2ValuePotentials.numCols());
+    unaryTimesEqual(node, newOne);
   }
   
   /**
@@ -154,9 +146,9 @@ public class DiscreteFactorGraph<V> extends BaseFactorGraph<V>
    * @param node The label of the variable for which the unary will be updated in place.
    * @param site2ValuePotentials A 2d array where the row index sites, and the columns index node's state.
    */
-  public void unariesTimesEqual(V node, double [][] site2ValuePotentials)
+  public void unaryTimesEqual(V node, double [][] site2ValuePotentials)
   {
-    unariesTimesEqual(node, new SimpleMatrix(site2ValuePotentials));
+    unaryTimesEqual(node, new SimpleMatrix(site2ValuePotentials));
   }
   
   /**
@@ -167,9 +159,9 @@ public class DiscreteFactorGraph<V> extends BaseFactorGraph<V>
    * @param site2ValuePotentials A matrix where the row index sites, and the columns index node's state.
    * @return
    */
-  public static <V> UnaryFactor<V> createUnary(V node, SimpleMatrix site2ValuePotentials)
+  public static <V> UnaryFactor<V> createUnary(SimpleMatrix site2ValuePotentials)
   {
-    return new DiscreteUnaryFactor<V>(node, site2ValuePotentials.getMatrix().data, new int[site2ValuePotentials.numRows()], site2ValuePotentials.numCols());
+    return new DiscreteUnaryFactor<V>(site2ValuePotentials.getMatrix().data, new int[site2ValuePotentials.numRows()], site2ValuePotentials.numCols());
   }
   
   /**
@@ -180,10 +172,11 @@ public class DiscreteFactorGraph<V> extends BaseFactorGraph<V>
    * @param site2ValuePotentials A 2d array where the row index sites, and the columns index node's state.
    * @return
    */
-  public static <V> UnaryFactor<V> createUnary(V node, double [][] site2ValuePotentials)
+  public static <V> UnaryFactor<V> createUnary(double [][] site2ValuePotentials)
   {
-    return createUnary(node, new SimpleMatrix(site2ValuePotentials));
+    return createUnary(new SimpleMatrix(site2ValuePotentials));
   }
+  
   
   /**
    * @param <V>
@@ -228,123 +221,172 @@ public class DiscreteFactorGraph<V> extends BaseFactorGraph<V>
     else if (nSites != tested)
       throw new RuntimeException();
   }
+  
+  @SuppressWarnings({ "unchecked", "rawtypes" })
+  public static <V> double [] siteLogNormalizations(UnaryFactor<V> _factor)
+  {
+    DiscreteUnaryFactor<V> factor = (DiscreteUnaryFactor) _factor;
+    final int nSites = factor.nSites;
+    double [] result = new double[nSites];
+    for (int s = 0; s < nSites; s++)
+      result[s] = factor.logNormalization(s);
+    return result;
+  }
 
   /**
    * The algorithms used to do pointwise product and marginalization.
    */
   private final FactorOperations<V> discreteFactorGraphOperations = new FactorOperations<V>() 
   {
-    @SuppressWarnings({ "rawtypes", "unchecked" })
     @Override
     public UnaryFactor<V> pointwiseProduct(final List<? extends UnaryFactor<V>> unaries)
     {
-      final int nFactors = unaries.size();
-      final DiscreteUnaryFactor [] cast = new DiscreteUnaryFactor[nFactors];
-      for (int factorIndex = 0; factorIndex < nFactors; factorIndex++)
-        cast[factorIndex] = (DiscreteUnaryFactor) unaries.get(factorIndex);
-      
-      final int nSites = cast[0].nSites();
-      final int nVariableValues = cast[0].nVariableValues();
-      
-      final int [] newScales = new int[nSites];
-      final double [] newMatrix = new double[nSites * nVariableValues]; 
-      
-      for (int site = 0; site < nSites; site++)
-      {
-        int sumScales = 0;
-        for (int factor = 0; factor < nFactors; factor++)
-          sumScales += cast[factor].scales[site];
-        newScales[site] = sumScales;
-      }
-      
-      for (int site = 0; site < nSites; site++)
-        for (int varValue = 0; varValue < nVariableValues; varValue++)
-        {
-          double prodUnnorm = 1.0;
-          for (int factor = 0; factor < nFactors; factor++)
-            prodUnnorm *= cast[factor].getRawValue(site, varValue);
-          newMatrix[nVariableValues * site + varValue] = prodUnnorm;
-        }
-      
-      return new DiscreteUnaryFactor(cast[0].node, newMatrix, newScales, nVariableValues);
+      return DiscreteFactorGraph.this.pointwiseProduct(unaries);
     }
 
     @Override
-    @SuppressWarnings({ "unchecked", "rawtypes" })
     public UnaryFactor<V> marginalize(
         final BinaryFactor<V> _binary,
         final List<UnaryFactor<V>> unariesOnMarginalized)
     {
-      /* This method supports up to two unaries on the node to be marginalized.
-       * 
-       * But if there are more, we call marginalizeOnReducedUnariesDegree()
-       * which in turns calls pointwise products. The latter is less efficient
-       * but ensure that we cover all the cases.
-       */
-      final int maxDegree = 2;
-      if (unariesOnMarginalized.size() <= maxDegree)
-      {
-        final int nSites = DiscreteFactorGraph.this.nSites;
-        final int degree = unariesOnMarginalized.size();
-        final DiscreteUnaryFactor<V> 
-          dbf0 = degree >= 1 ? (DiscreteUnaryFactor) unariesOnMarginalized.get(0) : null,
-          dbf1 = degree == 2 ? (DiscreteUnaryFactor) unariesOnMarginalized.get(1) : null;
-          
-        final int [] 
-          scales0 = degree >= 1 ? dbf0.scales : null,
-          scales1 = degree == 2 ? dbf1.scales : null;
-        
-        final DiscreteBinaryFactor<V> binary = (DiscreteBinaryFactor) _binary;
-        
-        final double [] newMatrix = new double[nSites * binary.nOtherVariableValues()]; 
-        final int [] newScales = new int[nSites];
-        
-        final int nOtherValues = binary.nOtherVariableValues();
-        final int nMarginalizedValues = binary.nMarginalizedVariableValues();
-        
-        // Warning: this part of the code is less readable and easy to maintain
-        // because it is in the inner loop of phylogenetic computations
-             if (degree == 0) ;
-        else if (degree == 1) for (int site = 0; site < nSites; site++) newScales[site] = scales0[site];
-        else                  for (int site = 0; site < nSites; site++) newScales[site] = scales0[site] + scales1[site];
-             
-         if (degree == 0) 
-           for (int site = 0; site < nSites; site++)
-             for (int otherIndex = 0; otherIndex < nOtherValues; otherIndex++)
-             {
-               double sum = 0.0;
-               for (int margIndex = 0; margIndex < nMarginalizedValues; margIndex++)
-                 sum += binary.get(otherIndex, margIndex); 
-               newMatrix[site * nOtherValues + otherIndex] = sum; 
-             }
-         else if (degree == 1) 
-           for (int site = 0; site < nSites; site++)
-             for (int otherIndex = 0; otherIndex < nOtherValues; otherIndex++)
-             {
-               double sum = 0.0;
-               for (int margIndex = 0; margIndex < nMarginalizedValues; margIndex++)
-                 sum += binary.get(otherIndex, margIndex) 
-                       * dbf0.getRawValue(site, margIndex); 
-               newMatrix[site * nOtherValues + otherIndex] = sum; 
-             }
-         else 
-           for (int site = 0; site < nSites; site++)
-             for (int otherIndex = 0; otherIndex < nOtherValues; otherIndex++)
-             {
-               double sum = 0.0;
-               for (int margIndex = 0; margIndex < nMarginalizedValues; margIndex++)
-                 sum += binary.get(otherIndex, margIndex) 
-                       * dbf0.getRawValue(site, margIndex) 
-                       * dbf1.getRawValue(site, margIndex); 
-               newMatrix[site * nOtherValues + otherIndex] = sum; 
-             }
-        
-        return new DiscreteUnaryFactor<V>(binary.otherNode(), newMatrix, newScales, nOtherValues);
-      }
-      else
-        return marginalizeOnReducedUnariesDegree(this, maxDegree, _binary, unariesOnMarginalized);
+      return DiscreteFactorGraph.this.marginalize(_binary, unariesOnMarginalized);
     }
   };
+  
+  @SuppressWarnings({ "rawtypes", "unchecked" })
+  public UnaryFactor<V> pointwiseProduct(final List<? extends UnaryFactor<V>> unaries)
+  {
+    final int nFactors = unaries.size();
+    final DiscreteUnaryFactor [] cast = new DiscreteUnaryFactor[nFactors];
+    for (int factorIndex = 0; factorIndex < nFactors; factorIndex++)
+      cast[factorIndex] = (DiscreteUnaryFactor) unaries.get(factorIndex);
+    
+    final int nSites = cast[0].nSites();
+    final int nVariableValues = cast[0].nVariableValues();
+    
+    final int [] newScales = new int[nSites];
+    final double [] newMatrix = new double[nSites * nVariableValues]; 
+    
+    for (int site = 0; site < nSites; site++)
+    {
+      int sumScales = 0;
+      for (int factor = 0; factor < nFactors; factor++)
+        sumScales += cast[factor].scales[site];
+      newScales[site] = sumScales;
+    }
+    
+    for (int site = 0; site < nSites; site++)
+      for (int varValue = 0; varValue < nVariableValues; varValue++)
+      {
+        double prodUnnorm = 1.0;
+        for (int factor = 0; factor < nFactors; factor++)
+          prodUnnorm *= cast[factor].getRawValue(site, varValue);
+        newMatrix[nVariableValues * site + varValue] = prodUnnorm;
+      }
+    
+    return new DiscreteUnaryFactor(newMatrix, newScales, nVariableValues);
+  }
+  
+  /**
+   * Bivariate marginalization. Two nodes (variables) are involved: first and second.
+   * 
+   * - second is the one being marginalized.
+   * - factorOnSecond sits on second.
+   * - the results is a unaryfactor on first.
+   * 
+   * @param first2Second A matrix encoding the binary factor, where rows index the 
+   *        state of the first, and columns index the states of the second
+   * @param factorOnSecond
+   * @return A unary factor on first.
+   */
+  public UnaryFactor<V> marginalize(SimpleMatrix first2Second, UnaryFactor<V> factorOnSecond)
+  {
+    final int nO = first2Second.numRows();
+    final int nM = first2Second.numCols();
+    DiscreteBinaryFactor<V> binary = new DiscreteBinaryFactor<V>(first2Second.getMatrix().data, nM, nO);
+    return marginalize(binary, factorOnSecond);
+  }
+  
+  public UnaryFactor<V> marginalize(
+      final BinaryFactor<V> _binary,
+      final UnaryFactor<V> unaryOnMarginalized)
+  {
+    return marginalize(_binary, Collections.singletonList(unaryOnMarginalized));
+  }
+  
+  @SuppressWarnings({ "unchecked", "rawtypes" })
+  public UnaryFactor<V> marginalize(
+      final BinaryFactor<V> _binary,
+      final List<UnaryFactor<V>> unariesOnMarginalized)
+  {
+    /* This method supports up to two unaries on the node to be marginalized.
+     * 
+     * But if there are more, we call marginalizeOnReducedUnariesDegree()
+     * which in turns calls pointwise products. The latter is less efficient
+     * but ensure that we cover all the cases.
+     */
+    final int maxDegree = 2;
+    if (unariesOnMarginalized.size() <= maxDegree)
+    {
+      final int degree = unariesOnMarginalized.size();
+      final DiscreteUnaryFactor<V> 
+        dbf0 = degree >= 1 ? (DiscreteUnaryFactor) unariesOnMarginalized.get(0) : null,
+        dbf1 = degree == 2 ? (DiscreteUnaryFactor) unariesOnMarginalized.get(1) : null;
+        
+      final int [] 
+        scales0 = degree >= 1 ? dbf0.scales : null,
+        scales1 = degree == 2 ? dbf1.scales : null;
+      
+      final DiscreteBinaryFactor<V> binary = (DiscreteBinaryFactor) _binary;
+      
+      final double [] newMatrix = new double[nSites * binary.nOtherVariableValues()]; 
+      final int [] newScales = new int[nSites];
+      
+      final int nOtherValues = binary.nOtherVariableValues();
+      final int nMarginalizedValues = binary.nMarginalizedVariableValues();
+      
+      // Warning: this part of the code is less readable and easy to maintain
+      // because it is in the inner loop of phylogenetic computations
+           if (degree == 0) ;
+      else if (degree == 1) for (int site = 0; site < nSites; site++) newScales[site] = scales0[site];
+      else                  for (int site = 0; site < nSites; site++) newScales[site] = scales0[site] + scales1[site];
+           
+       if (degree == 0) 
+         for (int site = 0; site < nSites; site++)
+           for (int otherIndex = 0; otherIndex < nOtherValues; otherIndex++)
+           {
+             double sum = 0.0;
+             for (int margIndex = 0; margIndex < nMarginalizedValues; margIndex++)
+               sum += binary.get(otherIndex, margIndex); 
+             newMatrix[site * nOtherValues + otherIndex] = sum; 
+           }
+       else if (degree == 1) 
+         for (int site = 0; site < nSites; site++)
+           for (int otherIndex = 0; otherIndex < nOtherValues; otherIndex++)
+           {
+             double sum = 0.0;
+             for (int margIndex = 0; margIndex < nMarginalizedValues; margIndex++)
+               sum += binary.get(otherIndex, margIndex) 
+                     * dbf0.getRawValue(site, margIndex); 
+             newMatrix[site * nOtherValues + otherIndex] = sum; 
+           }
+       else 
+         for (int site = 0; site < nSites; site++)
+           for (int otherIndex = 0; otherIndex < nOtherValues; otherIndex++)
+           {
+             double sum = 0.0;
+             for (int margIndex = 0; margIndex < nMarginalizedValues; margIndex++)
+               sum += binary.get(otherIndex, margIndex) 
+                     * dbf0.getRawValue(site, margIndex) 
+                     * dbf1.getRawValue(site, margIndex); 
+             newMatrix[site * nOtherValues + otherIndex] = sum; 
+           }
+      
+      return new DiscreteUnaryFactor<V>(newMatrix, newScales, nOtherValues);
+    }
+    else
+      return marginalizeOnReducedUnariesDegree(discreteFactorGraphOperations, maxDegree, _binary, unariesOnMarginalized);
+  }
   
   /**
    * 
@@ -372,7 +414,7 @@ public class DiscreteFactorGraph<V> extends BaseFactorGraph<V>
           currentPrs[state] = (state == sampledIndex ? 1.0 : 0.0);
       }
       
-      return createUnary(factor.node, normalized);
+      return createUnary(normalized);
     }
 
   };
@@ -420,7 +462,6 @@ public class DiscreteFactorGraph<V> extends BaseFactorGraph<V>
      * Packed array of transition. See get().
      */
     private final double [] o2mPotentials;
-    private final V m, o;
     private final int nM, nO;
     
     /**
@@ -431,15 +472,13 @@ public class DiscreteFactorGraph<V> extends BaseFactorGraph<V>
      * @param nM The number of states in node m 
      * @param nO The number of states in node o
      */
-    private DiscreteBinaryFactor(double [] o2mPotentials, V m, V o, int nM, int nO)
+    private DiscreteBinaryFactor(double [] o2mPotentials, int nM, int nO)
     {
       this.nO = nO;
       this.nM = nM;
       if (nO * nM != o2mPotentials.length)
         throw new RuntimeException();
       this.o2mPotentials = o2mPotentials;
-      this.m = m;
-      this.o = o;
     }
     
     /**
@@ -470,8 +509,6 @@ public class DiscreteFactorGraph<V> extends BaseFactorGraph<V>
       return nM;
     }
 
-    @Override public V marginalizedNode() { return m; }
-    @Override public V otherNode() { return o; }
   }
   
   /**
@@ -525,10 +562,7 @@ public class DiscreteFactorGraph<V> extends BaseFactorGraph<V>
      */
     private final double logNormalization;
     
-    /**
-     * The node to which this unary is attached to.
-     */
-    private final V node;
+
     
     /**
      * The number of sites.
@@ -547,13 +581,12 @@ public class DiscreteFactorGraph<V> extends BaseFactorGraph<V>
      * @param scales
      * @param nVariableValues
      */
-    private DiscreteUnaryFactor(V node, double [] site2valuePotentials, int [] scales, int nVariableValues)
+    private DiscreteUnaryFactor(double [] site2valuePotentials, int [] scales, int nVariableValues)
     {
       this.nSites = scales.length;
       this.nVariableValues = nVariableValues;
       if (site2valuePotentials.length != nSites * nVariableValues)
         throw new RuntimeException();
-      this.node = node;
       this.site2valuePotentials = site2valuePotentials;
       this.scales = scales;
       
@@ -656,7 +689,6 @@ public class DiscreteFactorGraph<V> extends BaseFactorGraph<V>
       return nVariableValues;
     }
 
-    @Override public V connectedVariable() { return node; }
     
     /**
      * The log normalization of a single site.
@@ -664,7 +696,6 @@ public class DiscreteFactorGraph<V> extends BaseFactorGraph<V>
      * @param site
      * @return
      */
-    @SuppressWarnings("unused")
     private double logNormalization(int site)
     {
       return Math.log(rawNorm(site)) - scales[site];

@@ -179,6 +179,16 @@ public class Exponential<P extends Exponential.Parameters> implements Generative
   }
   
   /**
+   * Default rate/mean is set to 1.0.
+   * Default value is set to 1.0.
+   * @return
+   */
+  public static Exponential<RateParameterization> newExponential()
+  {
+    return new Exponential<RateParameterization>(new RealVariable(1.0), new RateParameterization(real(1.0)));
+  }
+  
+  /**
    * Alows writing Exponential.on(x).withRate(r)
    * @param rate
    * @return

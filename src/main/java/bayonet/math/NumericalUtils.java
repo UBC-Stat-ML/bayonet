@@ -50,28 +50,61 @@ public class NumericalUtils
   /**
    * Equivalent, but more numerically resilient to underflows and faster than:
    * 
-   * Math.log(Math.exp(logX) + Math.exp(logY));
+   * Math.log(Math.exp(x) + Math.exp(y));
    * 
-   * @param logX
-   * @param logY
+   * @param x A number (in log scale)
+   * @param y A number (in log scale)
    * @return logAdded value
    */
-  public static double logAdd(double logX, double logY) {
+  public static double logAdd(double x, double y) {
     // make a the max
-    if (logY > logX) {
-      double temp = logX;
-      logX = logY;
-      logY = temp;
+    if (y > x) {
+      double temp = x;
+      x = y;
+      y = temp;
     }
     // now a is bigger
-    if (logX == Double.NEGATIVE_INFINITY) {
-      return logX;
+    if (x == Double.NEGATIVE_INFINITY) {
+      return x;
     }
-    double negDiff = logY - logX;
+    double negDiff = y - x;
     if (negDiff < -20) {
-      return logX;
+      return x;
     }
-    return logX + java.lang.Math.log(1.0 + java.lang.Math.exp(negDiff));
+    return x + java.lang.Math.log(1.0 + java.lang.Math.exp(negDiff));
+  }
+  
+  /**
+   * Equivalent, but more numerically resilient to underflows and faster than:
+   * 
+   * Math.log(\sum_i Math.exp(v_i));
+   * 
+   * @param v an array of numbers (each in log scale)
+   * @return logAdded value
+   */
+  public static double logAdd(double[] v) {
+    double max = Double.NEGATIVE_INFINITY;
+    double maxIndex = 0;
+    for (int i = 0; i < v.length; i++) {
+      if (v[i] > max) { 
+        max = v[i];
+        maxIndex = i;
+      }
+    }
+    if (max == Double.NEGATIVE_INFINITY) return Double.NEGATIVE_INFINITY;
+    // compute the negative difference
+    double threshold = max - 20;
+    double sumNegativeDifferences = 0.0;
+    for (int i = 0; i < v.length; i++) {
+      if (i != maxIndex && v[i] > threshold) {
+        sumNegativeDifferences += Math.exp(v[i] - max);
+      }
+    }
+    if (sumNegativeDifferences > 0.0) {
+      return max + Math.log(1.0 + sumNegativeDifferences);
+    } else {
+      return max;
+    }
   }
   
   /**
@@ -100,6 +133,17 @@ public class NumericalUtils
     }
   }
 
-
+  /**
+   * Get the normalization of the array.
+   * @param data
+   * @return
+   */
+  public static double getNormalization(double[] data)
+  {
+    double sum = 0;
+    for(double x : data) 
+      sum += x;
+    return sum;
+  }
   
 }

@@ -1,4 +1,3 @@
-What we have:
 
 
 - Tiny example where close form is known (Exp -> Uni)
@@ -14,15 +13,30 @@ What we have:
   - GenerativeFactor
   - CheckStationarity
   - Unit testing
-- Building a new samplers for an existing datatype (positive length)
+- Building a new sampler for an existing datatype (walk through multiplicative)
   - @Samplers
   - Factor matching strategy
 - Supporting new types of variables
+  - Simplex example (real vector, Normal)
   - Walk through of the CRP
 - Processors
 
 ---
 
+Don't forget the bayonet stuff!!
+
+Outline of phylo sampler
+
+Variables:
+  - tree + branch lengths
+    - branch lengths sampler (given)
+    - tree rearrangement sampler
+  - rate matrix
+  - minor things:
+    - tree prior hyper param
+    
+  
+Parts:
 - Likelihood calculation
 - Tree move
 - Rate matrix

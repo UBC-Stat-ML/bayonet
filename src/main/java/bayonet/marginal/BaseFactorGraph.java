@@ -1,5 +1,6 @@
 package bayonet.marginal;
 
+import java.util.Arrays;
 import java.util.Map;
 
 import org.apache.commons.lang3.tuple.Pair;
@@ -74,6 +75,24 @@ public abstract class BaseFactorGraph<V> implements FactorGraph<V>
     if (unaries.containsKey(node))
       throw new RuntimeException("Overwriting factors is forbidden");
     unaries.put(node, unary);
+  }
+  
+  /**
+   * Modifies in place by a unary, pointwise multiplying each entry with the provided values.
+   * 
+   * If no unary are currently set, set the unary to be the provided one.
+   * 
+   * @param node The label of the variable for which the unary will be updated in place.
+   * @param newOne The unary to multiply/set.
+   */
+  @SuppressWarnings("unchecked")
+  public void unaryTimesEqual(V node, UnaryFactor<V> newOne)
+  {
+    UnaryFactor<V> oldOne = unaries.get(node);
+    if (oldOne == null)
+      unaries.put(node, newOne);
+    else
+      unaries.put(node, factorOperations().pointwiseProduct(Arrays.asList(newOne, oldOne)));
   }
   
   /**

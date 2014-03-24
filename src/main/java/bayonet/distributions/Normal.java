@@ -1,5 +1,7 @@
 package bayonet.distributions;
 
+import bayonet.math.SpecialFunctions;
+
 
 /**
  * Utilities for Normal distributions.
@@ -23,5 +25,17 @@ public class Normal
   public static double logProb(double mean, double var, double sum, double sumSq, double n) 
   {
     return -0.5*(sumSq - 2*mean*sum + mean*mean)/var + n*(LOG_INV_SQRT_2_PI - 0.5*Math.log(var));
+  }
+  
+  /**
+   * quantiles (=inverse cumulative density function)
+   *
+   * @param z  argument
+   * @param m  mean
+   * @param sd standard deviation
+   * @return icdf at z
+   */
+  public static double quantile(double z, double m, double sd) {
+      return m + Math.sqrt(2.0) * sd * SpecialFunctions.inverseErf(2.0 * z - 1.0);
   }
 }

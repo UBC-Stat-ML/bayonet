@@ -10,11 +10,7 @@ package bayonet.marginal;
  */
 public interface UnaryFactor<V>
 {
-  /**
-   * 
-   * @return
-   */
-  public V connectedVariable();
+
   
   /**
    * 

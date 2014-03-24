@@ -46,9 +46,9 @@ public class SumProductTests
     for (int i = 0; i < length; i++)
     {
       // create unary
-      double [] data = new double[nStates];
+      double [][] data = new double[1][nStates];
       for (int s = 0; s < nStates; s++)
-        data[s] = 1.0/nStates/2.0;
+        data[0][s] = 1.0/nStates/2.0;
       result.setUnary(i, data);
       
       if (i > 0) 

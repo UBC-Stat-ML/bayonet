@@ -12,7 +12,6 @@ import bayonet.graphs.GraphUtils;
 import bayonet.marginal.BinaryFactor;
 import bayonet.marginal.FactorGraph;
 import bayonet.marginal.FactorOperations;
-import bayonet.marginal.FactorUtils;
 import bayonet.marginal.UnaryFactor;
 import briefj.BriefCollections;
 
@@ -141,7 +140,6 @@ public class SumProduct<V>
     
     // marginalize one node
     BinaryFactor<V> binaryFactor = factorGraph.getBinary(source, destination);
-    FactorUtils.checkIntegrity(messageToCompute, binaryFactor, toMultiply);
     return factorOperations.marginalize(binaryFactor, toMultiply);
   }
 
