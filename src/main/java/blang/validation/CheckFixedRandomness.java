@@ -17,7 +17,7 @@ import blang.variables.RealValued;
  * for reproducibility and debugging.
  * 
  * Currently only check equality of the contents of real variables 
- * only to base this test on.
+ * this test on.
  * 
  * @author Alexandre Bouchard (alexandre.bouchard@gmail.com)
  *

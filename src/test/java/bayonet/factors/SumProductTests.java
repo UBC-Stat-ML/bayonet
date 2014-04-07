@@ -9,8 +9,8 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import bayonet.graphs.GraphUtils;
+import bayonet.marginal.DiscreteFactorGraph;
 import bayonet.marginal.algo.SumProduct;
-import bayonet.marginal.discrete.DiscreteFactorGraph;
 
 
 

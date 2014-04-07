@@ -13,6 +13,7 @@ import bayonet.marginal.BinaryFactor;
 import bayonet.marginal.FactorGraph;
 import bayonet.marginal.FactorOperations;
 import bayonet.marginal.UnaryFactor;
+import bayonet.math.NumericalUtils;
 import briefj.BriefCollections;
 
 import com.google.common.collect.Lists;
@@ -149,6 +150,25 @@ public class SumProduct<V>
     if (!allowNulls && result == null)
       throw new RuntimeException();
     return result;
+  }
+
+  /**
+   * If the normalization if zero (lognorm is negative infinity), return false.
+   * If the log normalization is NaN or infinite, throw an exception.
+   * Else, return true.
+   * 
+   * @return is the normalization of this factor graph a positive (>0) number?
+   */
+  public boolean isNormalizationPositive()
+  {
+    final double logNorm = logNormalization();
+    if (Double.isNaN(logNorm))
+      throw new RuntimeException("Normalization should not be NaN.");
+    if (logNorm == Double.POSITIVE_INFINITY)
+      throw new RuntimeException("Normalization should not be positive infinity.");
+    if (logNorm == Double.NEGATIVE_INFINITY)
+      return false;
+    return true;
   }
   
 }

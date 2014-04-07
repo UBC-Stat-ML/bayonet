@@ -29,34 +29,27 @@ public class SpecialFunctions
     }
   }
   
+  
+  
   /**
-   * log Gamma function: ln(gamma(alpha)) for alpha>0, accurate to 10 decimal places
+   * log Gamma function: ln(gamma(alpha))
    *
    * @author Korbinian Strimmer
    * @param alpha argument
    * @return the log of the gamma function of the given alpha
    */
   public static double lnGamma(double alpha) {
-      // Pike MC & Hill ID (1966) Algorithm 291: Logarithm of the gamma function.
-      // Communications of the Association for Computing Machinery, 9:684
-
-      double x = alpha, f = 0.0, z;
-
-      if (x < 7) {
-          f = 1;
-          z = x - 1;
-          while (++z < 7) {
-              f *= z;
-          }
-          x = z;
-          f = -Math.log(f);
-      }
-      z = 1 / (x * x);
-
-      return
-              f + (x - 0.5) * Math.log(x) - x + 0.918938533204673 +
-                      (((-0.000595238095238 * z + 0.000793650793651) *
-                              z - 0.002777777777778) * z + 0.083333333333333) / x;
+      return Gamma.logGamma(alpha);
+  }
+  
+  /**
+   * 
+   * @param input
+   * @return log(input!)
+   */
+  public static double logFactorial(int input) 
+  {
+    return Gamma.logGamma(input+1);
   }
 
   /**

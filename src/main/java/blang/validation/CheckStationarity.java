@@ -37,35 +37,6 @@ import com.google.common.primitives.Doubles;
 public class CheckStationarity
 {
   /**
-   * If set to true, print out summary statistics on each of the two
-   * set of samples being compared.
-   * 
-   * @param showSampleSummaryStats
-   */
-  public void setShowSampleSummaryStats(boolean showSampleSummaryStats)
-  {
-    this.showDetails = showSampleSummaryStats;
-  }
-  
-  /**
-   * 
-   * @return
-   */
-  public List<Test> getTests()
-  {
-    return tests;
-  }
-
-  /**
-   * 
-   * @param tests
-   */
-  public void setTests(List<Test> tests)
-  {
-    this.tests = tests;
-  }
-  
-  /**
    * Compares two sets of samples. 
    * 
    * A first set is obtained 
@@ -104,9 +75,9 @@ public class CheckStationarity
     if (nullRejected)
     {
       // check if the problem is not from the test itself
-      testResults = testResults(mcmc, nIndepSamples, tests, true);
+      Table<Object,Test,Double> testResultsForTwoIndepCopies = testResults(mcmc, nIndepSamples, tests, true);
       boolean testNullRejected = false;
-      for (double pValue : testResults.values())
+      for (double pValue : testResultsForTwoIndepCopies.values())
         if (pValue < bonferroniCorrected)
           testNullRejected = true;
       if (testNullRejected)
@@ -119,6 +90,35 @@ public class CheckStationarity
         Assert.fail("Stationary test suggests further investigations " +
           "(e.g. try one move at a time to narrow possibilities):\n" + toString(testResults));
     }
+  }
+  
+  /**
+   * If set to true, print out summary statistics on each of the two
+   * set of samples being compared.
+   * 
+   * @param showSampleSummaryStats
+   */
+  public void setShowSampleSummaryStats(boolean showSampleSummaryStats)
+  {
+    this.showDetails = showSampleSummaryStats;
+  }
+  
+  /**
+   * 
+   * @return
+   */
+  public List<Test> getTests()
+  {
+    return tests;
+  }
+
+  /**
+   * 
+   * @param tests
+   */
+  public void setTests(List<Test> tests)
+  {
+    this.tests = tests;
   }
   
   /**

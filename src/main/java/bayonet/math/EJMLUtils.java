@@ -6,7 +6,6 @@ import org.ejml.factory.DecompositionFactory;
 import org.ejml.factory.EigenDecomposition;
 import org.ejml.ops.EigenOps;
 import org.ejml.ops.EjmlUnitTests;
-import org.ejml.ops.MatrixVisualization;
 import org.ejml.simple.SimpleMatrix;
 
 import briefj.BriefIO;
@@ -24,8 +23,54 @@ import briefj.BriefStrings;
 public class EJMLUtils
 {
   /**
-   * A convenient access to EJML's eigen decomposition functionality.
-   * Note that using the matrix directly is more efficient if many eigendecompositions
+   * Is the max point-wise difference of the entries in the two matrices 
+   * below the provided threshold?
+   * 
+   * @param m1
+   * @param m2
+   * @param threshold
+   * @return false if one of the entry deviates by more than threshold, true otherwise
+   */
+  public static boolean isClose(SimpleMatrix m1, SimpleMatrix m2, double threshold)
+  {
+    int numCols = m1.numCols();
+    int numRows = m1.numRows();
+    if (m2.numCols() != numCols || m2.numRows() != numRows)
+      throw new RuntimeException();
+    for (int r = 0; r < numRows; r++)
+      for (int c = 0; c < numCols; c++)
+        if (!NumericalUtils.isClose(m1.get(r, c), m2.get(r, c), threshold))
+          return false;
+    return true;
+  }
+  
+  /**
+   * 
+   * @throws RuntimeException If the two matrices do not satisfy isClose()
+   * @param m1
+   * @param m2
+   * @param threshold
+   */
+  public static void checkIsClose(SimpleMatrix m1, SimpleMatrix m2, double threshold)
+  {
+    if (!isClose(m1, m2, threshold))
+      throw new RuntimeException("One of the entries of these two matrices differs by " +
+      		"more than " + threshold + "\nMatrix1:\n" + toString(m1) + "\nMatrix2:\n" + toString(m2));
+  }
+  
+  /**
+   * Uses the default threshold in NumericalUtils
+   * @param m1
+   * @param m2
+   */
+  public static void checkIsClose(SimpleMatrix m1, SimpleMatrix m2)
+  {
+    checkIsClose(m1, m2, NumericalUtils.THRESHOLD);
+  }
+  
+  /**
+   * A convenient access to EJML's eigen-decomposition functionality.
+   * Note that using the lower-level functions directly is more efficient if many eigen-decompositions
    * need to be performed.
    * 
    * Also checks that V D V^{-1} is indeed equal to the original matrix up
@@ -85,7 +130,7 @@ public class EJMLUtils
   }
   
   /**
-   * Holds the result of an eigendecomposition,
+   * Holds the result of an eigen-decomposition,
    * 
    * M = V * D * Vinverse
    * 

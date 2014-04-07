@@ -1,22 +1,20 @@
-package bayonet.marginal.discrete;
+package bayonet.marginal;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.ejml.simple.SimpleMatrix;
 import org.jgrapht.UndirectedGraph;
 
 import bayonet.distributions.Multinomial;
-import bayonet.marginal.BaseFactorGraph;
-import bayonet.marginal.BinaryFactor;
-import bayonet.marginal.FactorOperations;
-import bayonet.marginal.Sampler;
-import bayonet.marginal.UnaryFactor;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 
 
 /**
@@ -39,8 +37,12 @@ import com.google.common.collect.Lists;
  *
  * @param <V> A datatype used to label the variables.
  */
-public class DiscreteFactorGraph<V> extends BaseFactorGraph<V>
+public class DiscreteFactorGraph<V> implements FactorGraph<V>
 {
+  private final UndirectedGraph<V, ?> topology;
+  private final Map<V, DiscreteUnaryFactor<V>> unaries = Maps.newHashMap();
+  private final Map<Pair<V,V>, DiscreteBinaryFactor<V>> binaries = Maps.newHashMap();
+  
   /**
    * 
    * @param topology The undirected graphical model. Note that since
@@ -49,7 +51,18 @@ public class DiscreteFactorGraph<V> extends BaseFactorGraph<V>
    */
   public DiscreteFactorGraph(UndirectedGraph<V, ?> topology)
   {
-    super(topology);
+    this.topology = topology;
+  }
+  
+  /**
+   * @return The undirected graphical model. Note that since
+   *   factor are at most binary, we represent the factor graph
+   *   with just connection among the variables.
+   */
+  @Override
+  public UndirectedGraph<V, ?> getTopology()
+  {
+    return topology;
   }
   
   /**
@@ -72,6 +85,95 @@ public class DiscreteFactorGraph<V> extends BaseFactorGraph<V>
   }
   
   /**
+   * 
+   * @param node
+   * @param unary
+   */
+  public void setUnary(V node, UnaryFactor<V> unary)
+  {
+    setUnary(node, unary, false);
+  }
+  public void setUnary(V node, UnaryFactor<V> unary, boolean canOverwrite)
+  {
+    if (!canOverwrite && unaries.containsKey(node))
+      throw new RuntimeException("Overwriting factors is forbidden");
+    if (!(unary instanceof DiscreteUnaryFactor))
+      throw new RuntimeException("Only unaries of type DiscreteUnaryFactor " +
+      		"(created via DiscreteFactorGraph.createUnary()) are permitted.");
+    DiscreteUnaryFactor<V> cast = (DiscreteUnaryFactor<V>) unary;
+    checkNSites(cast.nSites);
+    unaries.put(node, cast);
+  }
+  
+  /**
+   * Get the unary attached to the given node label, or null if none
+   * have been defined.
+   * 
+   * @throws RuntimeException if the node is not defined in the graph.
+   * @param node
+   * @return The unary at that node
+   */
+  @Override
+  public UnaryFactor<V> getUnary(V node)
+  {
+    if (!topology.containsVertex(node))
+      throw new RuntimeException();
+    return unaries.get(node);
+  }
+  
+  /**
+   * Modifies in place by a unary, pointwise multiplying each entry with the provided values.
+   * 
+   * If no unary are currently set, set the unary to be the provided one.
+   * 
+   * @param node The label of the variable for which the unary will be updated in place.
+   * @param newOne The unary to multiply/set.
+   */
+  @SuppressWarnings("unchecked")
+  public void unaryTimesEqual(V node, UnaryFactor<V> newOne)
+  {
+    UnaryFactor<V> oldOne = unaries.get(node);
+    if (oldOne == null)
+      setUnary(node, newOne, false); 
+    else
+      setUnary(node, factorOperations().pointwiseProduct(Arrays.asList(newOne, oldOne)), true);
+  }
+  
+  /**
+   * Get the binary attached to the given pair of nodes.
+   * 
+   * Note: even though the graphical model is undirected, this views
+   * (marginaledNode, otherNode) as an ordered pair. This is because the
+   * interface BinaryFactor is used to perform marginalization in a 
+   * certain direction.
+   * 
+   * Methods in the descendants of this class are responsible for hiding this 
+   * complexity to the user.
+   */
+  @Override
+  public BinaryFactor<V> getBinary(V marginalizedNode, V otherNode)
+  {
+    if (!topology.containsEdge(marginalizedNode, otherNode))
+      throw new RuntimeException();
+    return binaries.get(Pair.of(marginalizedNode, otherNode));
+  }
+  
+  /**
+   * See comments in getBinary()
+   * 
+   * @param marginalizedNode
+   * @param otherNode
+   * @param factor
+   */
+  public void setBinary(V marginalizedNode, V otherNode, BinaryFactor<V> factor)
+  {
+    Pair<V,V> key = Pair.of(marginalizedNode, otherNode);
+    if (binaries.containsKey(key))
+      throw new RuntimeException("Overwriting factors is forbidden");
+    binaries.put(key, (DiscreteBinaryFactor<V>) factor);
+  }
+  
+  /**
    * Set a binary factor. 
    * 
    * @throws RuntimeException if the binary factor already exists 
@@ -85,15 +187,6 @@ public class DiscreteFactorGraph<V> extends BaseFactorGraph<V>
   { 
     setBinary(firstNode, secondNode, new SimpleMatrix(first2SecondPotentials));
   }
-  
-  
-//  public BinaryFactor<V> createBinary(V mNode, V oNode, SimpleMatrix m2oPotentials)
-//  {
-//    int nM = m2oPotentials.numRows();
-//    int nO = m2oPotentials.numCols();
-//    
-//    return new DiscreteBinaryFactor<V>(m2oPotentials.getMatrix().data, oNode, mNode, nO, nM);
-//  }
 
   /**
    * Set a unary factor.
@@ -105,9 +198,8 @@ public class DiscreteFactorGraph<V> extends BaseFactorGraph<V>
    */
   public void setUnary(V node, SimpleMatrix site2ValuePotentials)
   {
-    checkNSites(site2ValuePotentials.numRows());
     UnaryFactor<V> unary = createUnary(site2ValuePotentials);
-    setUnary(node, unary);
+    setUnary(node, unary, false);
   }
   
   /**
@@ -133,7 +225,6 @@ public class DiscreteFactorGraph<V> extends BaseFactorGraph<V>
    */
   public void unaryTimesEqual(V node, SimpleMatrix site2ValuePotentials)
   {
-    checkNSites(site2ValuePotentials.numRows());
     DiscreteUnaryFactor<V> newOne = new DiscreteUnaryFactor<V>(site2ValuePotentials.getMatrix().data, new int[site2ValuePotentials.numRows()], site2ValuePotentials.numCols());
     unaryTimesEqual(node, newOne);
   }
@@ -177,8 +268,10 @@ public class DiscreteFactorGraph<V> extends BaseFactorGraph<V>
     return createUnary(new SimpleMatrix(site2ValuePotentials));
   }
   
-  
   /**
+   * 
+   * For each site s, result[s] is a copy of the normalized values for that site, 
+   * or, if the normalization is zero for this size, an array of zeroes.
    * @param <V>
    * @param _factor
    * @return An array indexed by (sites, state) with normalized probabilities
@@ -389,8 +482,11 @@ public class DiscreteFactorGraph<V> extends BaseFactorGraph<V>
   }
   
   /**
+   * A sampling algorithm for discrete unary factors.
+   * Returns unary factors with a one at the index of the sampled value,
+   * or all zeros if the site has a normalization of zero.
    * 
-   * @return A sampling algorithm for discrete unary factors.
+   * @return 
    */
   public Sampler<V> getSampler()
   {
@@ -409,14 +505,17 @@ public class DiscreteFactorGraph<V> extends BaseFactorGraph<V>
       for (int site = 0; site < factor.nSites; site++)
       {
         final double [] currentPrs = normalized[site];
-        int sampledIndex = Multinomial.sampleMultinomial(rand, currentPrs);
-        for (int state = 0 ; state < factor.nVariableValues; state++)
-          currentPrs[state] = (state == sampledIndex ? 1.0 : 0.0);
+        double norm = Multinomial.getNormalization(currentPrs);
+        if (norm > 0.0)
+        {
+          int sampledIndex = Multinomial.sampleMultinomial(rand, currentPrs);
+          for (int state = 0 ; state < factor.nVariableValues; state++)
+            currentPrs[state] = (state == sampledIndex ? 1.0 : 0.0);
+        }
       }
       
       return createUnary(normalized);
     }
-
   };
 
   /**
@@ -562,8 +661,6 @@ public class DiscreteFactorGraph<V> extends BaseFactorGraph<V>
      */
     private final double logNormalization;
     
-
-    
     /**
      * The number of sites.
      */
@@ -669,15 +766,25 @@ public class DiscreteFactorGraph<V> extends BaseFactorGraph<V>
     }
     
     /**
+     * Copy the normalized values for the provided site into the array,
+     * or, if the normalization is zero for this size, set all entries
+     * of the destination array to zero.
      * 
      * @param destination
      * @param site
      */
     private void copyNormalizedValues(double [] destination, int site)
     {
+      boolean positive = false;
       for (int state = 0; state < nVariableValues(); state++)
-        destination[state] = getRawValue(site, state);
-      Multinomial.normalize(destination);
+      {
+        final double current = getRawValue(site, state);
+        destination[state] = current;
+        if (current > 0.0)
+          positive = true;
+      }
+      if (positive)
+        Multinomial.normalize(destination);
     }
 
     /**
@@ -733,88 +840,4 @@ public class DiscreteFactorGraph<V> extends BaseFactorGraph<V>
       return nSites;
     }
   }
-  
-//  public static void main(String [] args)
-//  {
-//    PhylogeneticHeldoutDatasetOptions phyloOptions = new PhylogeneticHeldoutDatasetOptions();
-//    phyloOptions.alignmentFile = "/Users/bouchard/Documents/data/utcs/23S.E/R0/cleaned.alignment.fasta";
-//    phyloOptions.treeFile = "/Users/bouchard/Documents/data/utcs/23S.E.raxml.nwk"; 
-//    phyloOptions.maxNSites = 1;
-//    phyloOptions.minFractionObserved = 0.9;
-//    PhylogeneticHeldoutDataset phyloData = PhylogeneticHeldoutDataset.loadData(phyloOptions);
-//    SimpleCTMC ctmc = new SimpleCTMC(RateMatrixLoader.k2p(), 1);
-//    GMFct<Taxon> pots = DiscreteBP.toGraphicalModel(phyloData.rootedTree, ctmc, phyloData.obs, 0);
-//    
-//    DiscreteFactorGraph<Taxon> converted = fromGM(pots, 10000);
-//    
-//    for (int i = 0; i < 100; i++)
-//    {
-//      long start = System.currentTimeMillis();
-//      TreeSumProd<Taxon> tsp = new TreeSumProd<Taxon>(
-//          pots);
-////      
-////      
-//      System.out.println("method1 = " + tsp.logZ());
-//      System.out.println("time = " + (System.currentTimeMillis()-start));
-//      System.out.println();
-////      
-//      
-//      
-//      start = System.currentTimeMillis();
-//      SumProduct<Taxon> sp = new SumProduct<Taxon>(converted);
-//      System.out.println("method2 = " + sp.computeMarginal(new Taxon("internal66")).logNormalization());
-//      System.out.println("time = " + (System.currentTimeMillis()-start));
-//      System.out.println();
-//    }
-//  }
-  
-//  public static <V> DiscreteFactorGraph<V> fromGM(GMFct<V> model, int nSites)
-//  {
-//    // create graph
-//    UndirectedGraph<V, DefaultEdge> ug = new SimpleGraph<V, DefaultEdge>(DefaultEdge.class);
-//    DiscreteFactorGraph<V> newFG = new DiscreteFactorGraph<V>(ug);
-//    
-//    // add vertex
-//    for (V vertex : model.graph().vertexSet())
-//    {
-//      ug.addVertex(vertex);
-//     
-//      int nValues = model.nStates(vertex);
-//      SimpleMatrix newMatrix = new SimpleMatrix(nSites, nValues);
-//      
-//      boolean shouldAdd = false;
-//      for (int s = 0; s < nSites; s++)
-//        for (int valueIndex = 0; valueIndex < nValues; valueIndex++)
-//        {
-//          double value = model.get(vertex, valueIndex);
-//          newMatrix.set(s, valueIndex, value);
-//          if (value != 1.0)
-//            shouldAdd = true;
-//        }
-//      if (shouldAdd)
-//        newFG.setUnaries(vertex, newMatrix);
-//    }
-//    
-//    // add edges
-//    for (UnorderedPair<V, V> e : Graphs.edgeSet(model.graph()))
-//    {
-//      V n0 = e.getFirst(), 
-//        n1 = e.getSecond();
-//      ug.addEdge(n0, n1);
-//      
-//      int nValues0 = model.nStates(n0),
-//          nValues1 = model.nStates(n1);
-//      
-//      SimpleMatrix trans = new SimpleMatrix(nValues0, nValues1);
-//      
-//      for (int s0 = 0; s0 < nValues0; s0++)
-//        for (int s1 = 0; s1 < nValues1; s1++)
-//          trans.set(s0, s1, model.get(n0, n1, s0, s1));
-//      
-//      newFG.setBinary(n0, n1, trans);
-//    }
-//    
-//    return newFG;
-//  }
-  
 }

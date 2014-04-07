@@ -21,3 +21,4 @@ public interface GenerativeFactor extends Factor
    */
   public void generate(Random random);
 }
+

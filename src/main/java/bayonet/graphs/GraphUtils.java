@@ -202,4 +202,27 @@ public class GraphUtils
       result.add(iter.next());
     return result;
   }
+  
+  /**
+   * http://en.wikipedia.org/wiki/Complete_graph
+   * 
+   * @param <S>
+   * @param states
+   * @return A complete graph on the provided set of states.
+   */
+  public static <S> UndirectedGraph<S,?> completeGraph(final Set<S> states)
+  {
+    UndirectedGraph<S,?> result = GraphUtils.newUndirectedGraph();
+    
+    for (S state : states)
+      result.addVertex(state);
+    
+    for (S state : states)
+    {
+      for (S state2 : states)
+        if (state != state2)
+          result.addEdge(state, state2);
+    }
+    return result;
+  }
 }

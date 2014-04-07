@@ -57,7 +57,7 @@ public class Exponential<P extends Exponential.Parameters> implements Generative
 
   /**
    * @return The log of the density for the current
-   *  assignment of parameters and realization.
+   *         assignment of parameters and realization.
    */
   @Override
   public double logDensity()
@@ -185,7 +185,7 @@ public class Exponential<P extends Exponential.Parameters> implements Generative
    */
   public static Exponential<RateParameterization> newExponential()
   {
-    return new Exponential<RateParameterization>(new RealVariable(1.0), new RateParameterization(real(1.0)));
+    return Exponential.on(new RealVariable(1.0));
   }
   
   /**

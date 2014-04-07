@@ -131,6 +131,14 @@ public class ProbabilityModel
       		"defining a random variable, or at least one FactorComponent recursively satisfying that property. " +
       		"See FactorArgument.makeStochastic()");
   }
+  
+  public double logDensity()
+  {
+    double sum = 0.0;
+    for (Factor f : allFactors())
+      sum += f.logDensity();
+    return sum;
+  }
 
   public String getName(Object variable)
   {
@@ -345,8 +353,8 @@ public class ProbabilityModel
     for (Field comp : ReflexionUtils.getAnnotatedDeclaredFields(f.getClass(), FactorComponent.class, true))
     {
       Object componentInstance = ReflexionUtils.getFieldValue(comp, f);
-      result.add(comp.getName() + " = " + componentInstance.getClass().getSimpleName() + "(\n" +
-          BriefStrings.indent(argumentsAndComponentsToString(componentInstance)) + "\n)");
+      result.add(comp.getName() + " = " + (componentInstance == null ? "null" : componentInstance.getClass().getSimpleName() + "(\n" +
+          BriefStrings.indent(argumentsAndComponentsToString(componentInstance)) + "\n)"));
     }
     return Joiner.on("\n").join(result);
   }
@@ -576,6 +584,8 @@ public class ProbabilityModel
       return Joiner.on(".").join(result);
     }
   }
+
+
 
 
 }
