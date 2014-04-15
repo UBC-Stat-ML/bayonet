@@ -1,5 +1,6 @@
 package blang.variables;
 
+import blang.annotations.Processors;
 import blang.annotations.Samplers;
 import blang.mcmc.RealVariablePeskunTypeMove;
 
@@ -11,6 +12,7 @@ import blang.mcmc.RealVariablePeskunTypeMove;
  * @author Alexandre Bouchard (alexandre.bouchard@gmail.com)
  */
 @Samplers({RealVariablePeskunTypeMove.class})
+@Processors({RealVariableProcessor.class})
 public class RealVariable implements RealValued
 {
   /**

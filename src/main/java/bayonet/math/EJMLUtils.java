@@ -130,7 +130,7 @@ public class EJMLUtils
   }
   
   /**
-   * Holds the result of an eigen-decomposition,
+   * Holds the result of a real valued eigen-decomposition,
    * 
    * M = V * D * Vinverse
    * 

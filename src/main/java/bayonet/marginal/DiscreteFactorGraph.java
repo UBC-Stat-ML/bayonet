@@ -512,6 +512,7 @@ public class DiscreteFactorGraph<V> implements FactorGraph<V>
           for (int state = 0 ; state < factor.nVariableValues; state++)
             currentPrs[state] = (state == sampledIndex ? 1.0 : 0.0);
         }
+        
       }
       
       return createUnary(normalized);

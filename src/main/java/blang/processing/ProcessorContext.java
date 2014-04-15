@@ -13,6 +13,14 @@ public class ProcessorContext
     this.mcmcIteration = mcmcIteration;
     this.model = model;
   }
+  public int getMcmcIteration()
+  {
+    return mcmcIteration;
+  }
+  public ProbabilityModel getModel()
+  {
+    return model;
+  }
   
   
   

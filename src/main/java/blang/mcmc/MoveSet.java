@@ -42,7 +42,7 @@ public class MoveSet
     if (check)
       if (!coveredNode.containsAll(model.getLatentVariables()))
       {
-        Set<String> missingNodeNames = Sets.newHashSet();
+        Set<String> missingNodeNames = Sets.newLinkedHashSet();
         for (Object variable : model.getLatentVariables())
           if (!coveredNode.contains(variable))
             missingNodeNames.add(model.getName(variable));

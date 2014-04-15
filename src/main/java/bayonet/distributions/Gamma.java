@@ -1,12 +1,163 @@
 package bayonet.distributions;
 
+import java.util.Random;
+
+import org.apache.commons.math3.distribution.GammaDistribution;
+
 import bayonet.math.SpecialFunctions;
+import blang.annotations.FactorArgument;
+import blang.annotations.FactorComponent;
+import blang.factors.GenerativeFactor;
+import blang.variables.RealVariable;
 
 
 
 
-public class Gamma
+public class Gamma<P extends Gamma.Parameters> implements GenerativeFactor, UnivariateRealDistribution
 {
+  /**
+   * The variable on which this density is defined on.
+   */
+  @FactorArgument(makeStochastic=true)
+  public final RealVariable realization;
+  
+  /**
+   * The parameter of this exponential density.
+   */
+  @FactorComponent 
+  public final P parameters;
+  
+  public static interface Parameters
+  {
+    public double getRate();
+    
+    public double getShape();
+  }
+  
+  public Gamma(RealVariable realization, P parameters)
+  {
+    if (true)
+      throw new RuntimeException("This class needs to be tested.");
+    
+    this.realization = realization;
+    this.parameters = parameters;
+  }
+  
+  /**
+   * @return The log of the density for the current
+   *         assignment of parameters and realization.
+   */
+  @Override
+  public double logDensity()
+  {
+    return logDensity(realization.getValue(), parameters.getRate(), parameters.getShape());
+  }
+  
+  @Override
+  public void generate(Random random)
+  {
+    realization.setValue(generate(random, parameters.getRate(), parameters.getShape()));
+  }
+  
+  public static class RateShapeParameterization implements Parameters
+  {
+    /**
+     * 
+     */
+    @FactorArgument 
+    public final RealVariable rate;
+    
+    /**
+     * 
+     */
+    @FactorArgument 
+    public final RealVariable shape;
+    
+    public RateShapeParameterization(RealVariable rate, RealVariable shape)
+    {
+      this.rate = rate;
+      this.shape = shape;
+    }
+
+    @Override
+    public double getRate()
+    {
+      return rate.getValue();
+    }
+
+    @Override
+    public double getShape()
+    {
+      return shape.getValue();
+    }
+  }
+  
+  /**
+   * 
+   * @param random The source of pseudo-randomness
+   * @param rate 
+   * @return The sample.
+   */
+  public static double generate(Random random, double rate, double shape)
+  {
+    final GammaDistribution gd = new GammaDistribution(new Random2RandomGenerator(random), shape, 1.0/rate, GammaDistribution.DEFAULT_INVERSE_ABSOLUTE_ACCURACY);
+    return gd.sample();
+  }
+  
+  public static Gamma<RateShapeParameterization> on(RealVariable realization)
+  {
+    return new Gamma<RateShapeParameterization>(realization, new RateShapeParameterization(RealVariable.real(1.0), RealVariable.real(1.0)));
+  }
+
+  public static Gamma<RateShapeParameterization> newGamma()
+  {
+    return Gamma.on(new RealVariable(1.0));
+  }
+  
+  /**
+   * the natural log of the probability density function of the distribution
+   *
+   * @author Korbinian Strimmer
+   * @author Gerton Lunter
+   *
+   * @param x     argument
+   * @param shape shape parameter
+   * @param scale scale parameter
+   * @return log pdf value
+   */
+  public static double logDensity(double x, double rate, double shape) {
+    
+    if (x < 0.0 || rate < 0.0 || shape < 0.0)
+      return Double.NEGATIVE_INFINITY;
+    
+    final double scale = 1.0/rate;
+    // double a = Math.pow(scale,-shape) * Math.pow(x, shape-1.0);
+    // double b = x/scale + GammaFunction.lnGamma(shape);
+    // return Math.log(a) - b;
+
+    // AR - changed this to return -ve inf instead of throwing an
+    // exception... This makes things
+    // much easier when using this to calculate log likelihoods.
+    // if (x < 0) throw new IllegalArgumentException();
+    if (x < 0)
+        return Double.NEGATIVE_INFINITY;
+
+    if (x == 0) {
+        if (shape == 1.0)
+            return Math.log(1.0 / scale);
+        else
+            return Double.NEGATIVE_INFINITY;
+    }
+    if (shape == 1.0) {
+        return (-x / scale) - Math.log(scale);
+    }
+    if (shape == 0.0)  // uninformative
+        return -Math.log(x);
+
+    return ((shape - 1.0) * Math.log(x / scale) - x / scale - SpecialFunctions
+            .lnGamma(shape))
+            - Math.log(scale);
+  }
 
   /**
    * quantile (inverse cumulative density function) of the Gamma distribution
@@ -98,4 +249,10 @@ public class Gamma
 
     return (ch);
 }
+
+  @Override
+  public RealVariable getRealization()
+  {
+    return realization;
+  }
 }

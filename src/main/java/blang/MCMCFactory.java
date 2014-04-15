@@ -27,7 +27,7 @@ public class MCMCFactory
   public static class MCMCOptions
   {
     @Option public int nMCMCSweeps = 10000;
-    @Option public int thinningPeriod = 100;
+    @Option public int thinningPeriod = 10;
     @Option public Random random = new Random(1);
   }
 

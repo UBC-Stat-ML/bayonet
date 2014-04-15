@@ -18,7 +18,6 @@ public abstract class RJavaBridge
     for (double number : numbers)
       out.println(number);
     out.close();
-//    return "read.table('" + RUtils.escapeQuote(tempFile.getAbsolutePath()) + "',sep=',')$V1";
     return "scan('" + RUtils.escapeQuote(tempFile.getAbsolutePath()) + "')";
   }
   

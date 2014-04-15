@@ -49,10 +49,10 @@ public class AnnotationBasedFactory<I,A extends Annotation,P>
   }
 
   private final Set<Class<? extends P>> 
-    exclusions = Sets.newHashSet();
+    exclusions = Sets.newLinkedHashSet();
   
   private final Map<Class<? extends I>, Set<Class<? extends P>>>
-    inclusions = Maps.newHashMap();
+    inclusions = Maps.newLinkedHashMap();
   
   public void exclude(Class<? extends P> product)
   {
@@ -94,7 +94,7 @@ public class AnnotationBasedFactory<I,A extends Annotation,P>
       
       Set<Class<? extends P>> productTypes = inclusions.get(initiator.getClass());
       if (productTypes == null)
-        productTypes = Sets.newHashSet();
+        productTypes = Sets.newLinkedHashSet();
       
       if (annotation == null && productTypes.isEmpty())
         continue loop;

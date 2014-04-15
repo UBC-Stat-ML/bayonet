@@ -485,6 +485,8 @@ public class ProbabilityModel
     {
       return payload;
     }
+    
+
 
 //    @Override
 //    public Object getRealization()
@@ -523,8 +525,8 @@ public class ProbabilityModel
     private final Map<Node,FieldPath> longNames = Maps.newHashMap();
 
     private final Set<String> 
-      allShortNames = Sets.newHashSet(),
-      collisions = Sets.newHashSet();   
+      allShortNames = Sets.newLinkedHashSet(),
+      collisions = Sets.newLinkedHashSet();   
     
     public void add(Node variable, FieldPath fieldsPath)
     {

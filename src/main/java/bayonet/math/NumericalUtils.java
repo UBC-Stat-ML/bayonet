@@ -109,6 +109,7 @@ public class NumericalUtils
   
   /**
    * Call checkIsTransitionMatrix(matrix,threshold) with the default threshold
+   * Also checks non-negativity.
    * @param matrix
    */
   public static void checkIsTransitionMatrix(double[][] matrix)
@@ -118,6 +119,7 @@ public class NumericalUtils
 
   /**
    * Check that the sum of the entries in each row is numerically close to 1.0.
+   * Also checks non-negativity.
    * @param matrix
    * @param threshold
    */
@@ -131,6 +133,27 @@ public class NumericalUtils
       double norm = Multinomial.getNormalization(matrix[row]);
       checkIsClose(norm, 1.0, threshold);
     }
+  }
+  
+  /**
+   * Check that the sum of the entries is numerically close to 1.0.
+   * Also checks non-negativity.
+   * @param numbers
+   * @param threshold
+   */
+  public static void checkIsProb(final double [] numbers, double threshold)
+  {
+    checkIsClose(1.0, Multinomial.getNormalization(numbers), threshold);
+  }
+  
+  /**
+   * Call checkIsProb() with the default threshold
+   * Also checks non-negativity.
+   * @param matrix
+   */
+  public static void checkIsProb(final double [] numbers)
+  {
+    checkIsClose(1.0, Multinomial.getNormalization(numbers), THRESHOLD);
   }
 
   /**
