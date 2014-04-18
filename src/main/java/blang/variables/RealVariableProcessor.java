@@ -10,7 +10,21 @@ import briefj.OutputManager;
 import briefj.tomove.Results;
 
 
-
+/**
+ * 
+ * Collects samples of a real variables into a csv file under a directory named 
+ * upon the name given to the variable by the ProbabilityModel's getName().
+ * 
+ * After 2 iterations, create a plot via coda, then after 4, 8, 16, etc. The plot
+ * is in the same directory, called codaPlot.pdf.
+ * This requires R.
+ * 
+ * TODO: avoid going through coda
+ * TODO: produce richer and nicer plots
+ * 
+ * @author Alexandre Bouchard (alexandre.bouchard@gmail.com)
+ *
+ */
 public class RealVariableProcessor implements NodeProcessor<RealVariable> 
 {
   private  RealVariable variable;

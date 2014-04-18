@@ -6,6 +6,18 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 
+/**
+ * An annotation used to specify where and how MCMC samplers 
+ * can be applied in a probability models.
+ * 
+ * When writing a class implementing an MCMC move, two main 
+ * annotations should be used. First, use SampledVariable to
+ * specify the field that will hold a reference to the variable
+ * to be resampled. Second, use ConnectedFactor to specify which
+ * factors are expected to be connected to the variable.
+ * 
+ * @author Alexandre Bouchard (alexandre.bouchard@gmail.com)
+ */
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.FIELD})
 public @interface ConnectedFactor

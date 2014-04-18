@@ -9,7 +9,18 @@ import blang.annotations.util.AnnotationBasedFactory.Producer;
 import briefj.ReflexionUtils;
 
 
-
+/**
+ * For each variable in a probability model, Processor annotations in the class of this 
+ * variable will be used to instantiate NodeProcessors. This class
+ * contains the internal mechanisms responsible for implementing this mapping.
+ * 
+ * Much of the work is done in the AnnotationBasedFactory, which generalizes both
+ * this process and the related process in which samplers are created from 
+ * Samplers annotations.
+ * 
+ * @author Alexandre Bouchard (alexandre.bouchard@gmail.com)
+ *
+ */
 public class NodeProcessorFactory implements ProcessorFactory
 {
   @SuppressWarnings("rawtypes")
@@ -51,59 +62,4 @@ public class NodeProcessorFactory implements ProcessorFactory
     }
     
   }
-  
-//  private final boolean useAnnotations;
-//  
-//  /**
-//   * 
-//   * @param useAnnotations Whether to use @Samplers annotations in addition to the one
-//   *  included manually via include()
-//   */
-//  public ProcessorBuilder(boolean useAnnotations) 
-//  {
-//    this.useAnnotations = useAnnotations;
-//  }
-//  
-//  private final Set<Class<? extends Processor>> 
-//    exclusions = Sets.newHashSet();
-//  
-//  private final Map<Class<?>, Set<Class<? extends Processor>>>
-//    inclusions = Maps.newHashMap();
-//  
-//  public void addProcessor(Class<?> variableType, Class<? extends Processor> opType)
-//  {
-//    BriefMaps.getOrPutSet(inclusions, variableType).add(opType);
-//  }
-//  
-//  public void exclude(Class<? extends Processor> opType)
-//  {
-//    exclusions.add(opType);
-//  }
-//  
-//  
-//  public List<SingleNodeProcessor<?>> buildProcessors(ProbabilityModel model)
-//  {
-//    List<SingleNodeProcessor<?>> result = Lists.newArrayList();
-//    
-//    loop:for (Object variable : model.getLatentVariables())
-//    {
-//      Processors annotation = variable.getClass().getAnnotation(Processors.class);
-//      
-//      Set<Class<? extends Processor>> processorTypes = inclusions.get(variable.getClass());
-//      
-//      if (annotation == null && processorTypes == null)
-//        continue loop;
-//      
-//      if (useAnnotations)
-//        processorTypes.addAll(Arrays.asList(annotation.value()));
-//      
-//      for (Class<? extends Processor> processorType : processorTypes)
-//        if (!exclusions.contains(processorType))
-//        {
-//          SingleNode instantiated 
-//        }
-//    }
-//    
-//    return result;
-//  }
 }

@@ -2,18 +2,16 @@ package blang.mcmc;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.ParameterizedType;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
 
-import com.google.common.collect.Lists;
-
-import bayonet.distributions.Exponential;
 import blang.factors.Factor;
 import briefj.BriefCollections;
 import briefj.BriefLists;
 import briefj.ReflexionUtils;
+
+import com.google.common.collect.Lists;
 
 
 
