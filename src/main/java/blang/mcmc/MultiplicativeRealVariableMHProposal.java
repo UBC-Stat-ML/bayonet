@@ -3,23 +3,28 @@ package blang.mcmc;
 import java.util.List;
 import java.util.Random;
 
-import bayonet.distributions.Uniform;
 import blang.factors.Factor;
 import blang.variables.RealVariable;
-import briefj.BriefIO;
-import briefj.BriefLog;
-import briefj.BriefStrings;
 
 
-
+/**
+ * A move for real variables constrained to be positive.
+ * See appendix of Lakner et al., Efﬁciency of Markov Chain Monte 
+ * Carlo Tree Proposals in Bayesian Phylogenetics.
+ * 
+ * TODO: implement some adaptation/optimization
+ * TODO: not currently used, need to finalize a mechanisms to choose
+ * moves depending on the support of the random variables.
+ * 
+ * @author Alexandre Bouchard (alexandre.bouchard@gmail.com)
+ *
+ */
 public class MultiplicativeRealVariableMHProposal implements MHProposalDistribution
 {
   @SampledVariable RealVariable variable;
   
   @ConnectedFactor List<Factor> connectedFactors;
 
-  // TODO: implement some adaptation/optimization
-  
   private double savedValue = Double.NaN;
   
   private static final double lambda = 2.0 * Math.log(2.0);
@@ -45,7 +50,7 @@ public class MultiplicativeRealVariableMHProposal implements MHProposalDistribut
     private ProposalRealization(double d) { logm = d; }
 
     @Override
-    public double logProposalRatio() { return logm; } // proposal log ratio is zero since Gaussian is symmetric
+    public double logProposalRatio() { return logm; } 
 
     @Override
     public void acceptReject(boolean accept)

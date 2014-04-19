@@ -4,7 +4,12 @@ import java.util.Collections;
 import java.util.List;
 
 
-
+/**
+ * A move that affects a single variable in the model.
+ * 
+ * @author Alexandre Bouchard (alexandre.bouchard@gmail.com)
+ *
+ */
 public abstract class NodeMove implements Move
 {
 

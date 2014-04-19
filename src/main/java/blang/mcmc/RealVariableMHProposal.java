@@ -5,9 +5,6 @@ import java.util.Random;
 
 import blang.factors.Factor;
 import blang.variables.RealVariable;
-import briefj.BriefIO;
-import briefj.BriefLog;
-import briefj.BriefStrings;
 
 
 

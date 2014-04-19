@@ -13,7 +13,14 @@ import com.google.common.collect.Sets;
 
 
 
-
+/**
+ * A collection of several Moves. There should be enough
+ * to have an irreducible samplers in most cases of interest
+ * (except some specialized testing scenarios).
+ * 
+ * @author Alexandre Bouchard (alexandre.bouchard@gmail.com)
+ *
+ */
 public class MoveSet
 {
   private final List<Move> moves;
@@ -25,6 +32,14 @@ public class MoveSet
     this.moves = init(factories, check);
   }
 
+  /**
+   * Use all the factories to instantiate samplers. If requested, then
+   * check all nodes are covered, and throw a RuntimeException if not.
+   * 
+   * @param factories
+   * @param check Whether to check that all nodes are covered by at least one move.
+   * @return
+   */
   @SuppressWarnings({ "rawtypes", "unchecked" })
   private List<Move> init(List<MoveFactory> factories, boolean check)
   {
@@ -52,6 +67,10 @@ public class MoveSet
     return result;
   }
   
+  /**
+   * Shuffle the Move objects and call them each of them once.
+   * @param rand
+   */
   public void sweep(Random rand)
   {
     Collections.shuffle(moves, rand);

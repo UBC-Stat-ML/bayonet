@@ -10,7 +10,6 @@ import java.util.Set;
 import blang.annotations.Processors;
 import blang.annotations.Samplers;
 import briefj.BriefMaps;
-import briefj.ReflexionUtils;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -34,6 +33,15 @@ public class AnnotationBasedFactory<I,A extends Annotation,P>
   
   public static interface Producer<I,P>
   {
+    /**
+     * 
+     * @param initiator The variable driving the instantiation, i.e. variable in 
+     *                  a ProbabilityModel in the blang context.
+     * @param productType The type to instantiate, obtained via the argument
+     *                    values of the annotation.
+     * @return A new instance of productType
+     */
+    @SuppressWarnings("rawtypes")
     public P produce(I initiator, Class productType);
   }
   
@@ -59,6 +67,7 @@ public class AnnotationBasedFactory<I,A extends Annotation,P>
     exclusions.add(product);
   }
   
+  @SuppressWarnings({ "rawtypes", "unchecked" })
   public void add(Class<? extends I> initiator, Class product)
   {
     BriefMaps.getOrPutSet(inclusions, initiator).add(product);

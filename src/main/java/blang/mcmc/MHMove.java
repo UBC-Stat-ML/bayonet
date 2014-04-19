@@ -10,16 +10,18 @@ import blang.mcmc.MHProposalDistribution.Proposal;
 
 
 /**
- * A simple MH move for real random variables, using a standard 
- * normal to propose.
+ * A simple MH move. The user implements a MHPropoalDistribution, which 
+ * are matched and instantiated to variables in a model via the Samplers
+ * annotation.
+ * 
+ * TODO: record and report acceptance rates.
+ * TODO: some adaptation.
  * 
  * @author Alexandre Bouchard (alexandre.bouchard@gmail.com)
  *
  */
 public class MHMove implements Move
 {
-
-
   //  final SummaryStatistics acceptanceProbabilities = new SummaryStatistics();
   private final MHProposalDistribution proposal;
   private final Collection<Factor> connectedFactors;

@@ -12,7 +12,19 @@ import blang.factors.Factor;
 import briefj.ReflexionUtils;
 
 
-
+/**
+ * Use the annotation Samplers to instantiate and match moves to variables
+ * in a ProbabilityModel.
+ * 
+ * In summary, for each variable in a ProbabilityModel, NodeMoveFactory will look 
+ * for the arguments specified in the Samplers annotation. Those can be either
+ * Moves, or MHProposals (which are turned into Moves via MHMoves).
+ * 
+ * See Move for details on this matching and instatiation process.
+ * 
+ * @author Alexandre Bouchard (alexandre.bouchard@gmail.com)
+ *
+ */
 public class NodeMoveFactory implements MoveFactory
 {
   public final AnnotationBasedFactory<Object, Samplers, Move> annotationBasedFactory;
@@ -43,6 +55,9 @@ public class NodeMoveFactory implements MoveFactory
       this.model = model;
     }
 
+    /**
+     * 
+     */
     @SuppressWarnings("rawtypes")
     @Override
     public Move produce(
@@ -52,7 +67,7 @@ public class NodeMoveFactory implements MoveFactory
       List<Factor> factors = model.neighborFactors(variable);
       
       List<Field> fieldsToPopulate = ReflexionUtils.getAnnotatedDeclaredFields(moveType, ConnectedFactor.class, true);
-      if (!Utils.isFactorAssignmentCompatible(factors, fieldsToPopulate))
+      if (!NodeMoveUtils.isFactorAssignmentCompatible(factors, fieldsToPopulate))
         return null;
       
       // instantiate via empty constructor
@@ -60,10 +75,10 @@ public class NodeMoveFactory implements MoveFactory
       Operator instantiated = (Operator) ReflexionUtils.instantiate(moveType);
       
       // fill the fields via annotations
-      Utils.assignFactorConnections(instantiated, factors, fieldsToPopulate);
+      NodeMoveUtils.assignFactorConnections(instantiated, factors, fieldsToPopulate);
       
       // fill the variable node too; make sure there is only one such field
-      Utils.assignVariable(instantiated, variable);
+      NodeMoveUtils.assignVariable(instantiated, variable);
       
       // check if MHProposal or Move, act accordingly; make sure it is not both
       boolean isMHProposal = instantiated instanceof MHProposalDistribution;

@@ -16,6 +16,10 @@ import java.lang.annotation.Target;
  * to be resampled. Second, use ConnectedFactor to specify which
  * factors are expected to be connected to the variable.
  * 
+ * The rules used to match up the fields of a sampler to the 
+ * factors in a ProbabilityModel are implemented in 
+ * blang.mcmc.Utils.
+ * 
  * @author Alexandre Bouchard (alexandre.bouchard@gmail.com)
  */
 @Retention(RetentionPolicy.RUNTIME)

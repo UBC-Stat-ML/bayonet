@@ -14,13 +14,29 @@ import briefj.ReflexionUtils;
 import com.google.common.collect.Lists;
 
 
-
-public class Utils
+/**
+ * Utilities for annotation-based instantiation of Samplers.
+ * 
+ * @author Alexandre Bouchard (alexandre.bouchard@gmail.com)
+ *
+ */
+public class NodeMoveUtils
 {
-  // TODO: this stuff needs to be tested more extensively
-  
-  
-  
+  /**
+   * An operator (move or proposal) specifies a list of factors that are 
+   * expected to be connected to the variable that
+   * this sampler is able to resample.
+   * 
+   * This checks if the list of factor found in 
+   * a ProbabilityModel's variable's neighborhood 
+   * match the operator's required fields, passed in fieldsToPopulate.
+   * 
+   * See assignFactorConnections() for the details of this matching process.
+   * 
+   * @param factors
+   * @param fieldsToPopulate
+   * @return
+   */
   public static boolean isFactorAssignmentCompatible(
       List<? extends Factor> factors, 
       List<Field> fieldsToPopulate)
@@ -28,6 +44,17 @@ public class Utils
     return assignFactorConnections(null, factors, fieldsToPopulate, true);
   }
   
+  /**
+   * Once the Operator is deemed to mach, it is instantiated, and 
+   * a copy is passed in this method to fill (match) its fields with 
+   * the factors in the ProbabilityModel, passed in fieldsToPopulate.
+   * 
+   * See assignFactorConnections() for the details of this matching process.
+   * 
+   * @param mcmcMoveInstance
+   * @param factors
+   * @param fieldsToPopulate
+   */
   public static void assignFactorConnections(Operator mcmcMoveInstance, 
       List<? extends Factor> factors, 
       List<Field> fieldsToPopulate)
@@ -37,6 +64,25 @@ public class Utils
       throw new RuntimeException();
   }
   
+  /**
+   * 
+   * Check or assign field matchings.
+   * 
+   * List the Operator's fields in the order specified by the comparator
+   * fieldsComparator. For each one, iterator over the items in 
+   * fieldsToPopulate (in the provided order) until the first factor
+   * that match the field's type is found, or in case of a list, do this for
+   * each factor matching the generic type bounds. 
+   * 
+   * Factors are actually copied into a fresh linked list, so that they can be
+   * deleted as they are matched, to ensure the 1-1 property.
+   * 
+   * @param mcmcMoveInstance
+   * @param factors
+   * @param fieldsToPopulate
+   * @param onlyPeek
+   * @return true if all factors were successfully matched.
+   */
   private static boolean assignFactorConnections(
       Operator mcmcMoveInstance, 
       List<? extends Factor> factors, 
@@ -104,7 +150,12 @@ public class Utils
     }
   }
 
-
+  /**
+   * Order fields listing more specific types first (in terms of the 
+   * type hierarchy), then lists of types (and ordering list by the more
+   * specific type parameters first). Finally, break ties using the alphabetic
+   * order of the names of the fields.
+   */
   public static Comparator<Field> fieldsComparator = new Comparator<Field>() {
 
     @Override
@@ -153,26 +204,5 @@ public class Utils
   {
     ParameterizedType genericType = (ParameterizedType) field.getGenericType();
     return (Class<?>) genericType.getActualTypeArguments()[0];
-  }
-
-
-  
-//  public static class TestClass 
-//  {
-//    Factor aFactor;
-//    Factor bFactor;
-//    List<Factor> aaaa;
-//    Exponential aexp;
-//    List<Exponential> bexp;
-//  }
-//  
-  public static void main(String [] args)
-  {
-    System.out.println("@" + SampledVariable.class.getSimpleName());
-//    
-//    List<Field> fields = ReflexionUtils.getDeclaredFields(TestClass.class, true);
-//    Collections.sort(fields, fieldsComparator);
-//    for (Field f : fields)
-//      System.out.println(f.getName());
   }
 }
