@@ -4,14 +4,15 @@ if(length(new.packages)) install.packages(new.packages, repos="http://cran.us.r-
 library(RColorBrewer)
 c <- rev(colorRampPalette(brewer.pal(9, "RdYlBu"))(32))
 
-
-pdf('@{getOutput()}')
-    
 x  <- @{javaDoublesToRVector(x)}
 y  <- @{javaDoublesToRVector(y)}
 z  <- @{javaDoublesToRMatrix(z)}
 
+df <- cbind(x, y, z)
+write.csv(df, '@{getCsvOutput()}', row.names = F)
+
+
+pdf('@{getOutput()}')
 contour(x, y, z)
 filled.contour(x, y, z, col = c)
-
 dev.off()
