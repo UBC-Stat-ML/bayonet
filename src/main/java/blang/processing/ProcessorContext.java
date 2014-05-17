@@ -1,5 +1,6 @@
 package blang.processing;
 
+import blang.MCMCFactory.MCMCOptions;
 import blang.ProbabilityModel;
 
 
@@ -13,17 +14,19 @@ import blang.ProbabilityModel;
  * 
  * etc.
  * 
- * @author Alexandre Bouchard (alexandre.bouchard@gmail.com)
- *
+ * @author Alexandre Bouchard (alexandre.bouchard@gmail.com) and slightly modified by
+ * @author Sean Jewell (jewellsean@gmail.com) 
  */
 public class ProcessorContext
 {
   private final int mcmcIteration;
   private final ProbabilityModel model;
-  public ProcessorContext(int mcmcIteration, ProbabilityModel model)
+  private final MCMCOptions options;
+  public ProcessorContext(int mcmcIteration, ProbabilityModel model, MCMCOptions options)
   {
     this.mcmcIteration = mcmcIteration;
     this.model = model;
+    this.options = options; 
   }
   
   /**
@@ -40,6 +43,12 @@ public class ProcessorContext
   public ProbabilityModel getModel()
   {
     return model;
+  }
+  
+  
+  public MCMCOptions getOptions()
+  {
+    return options;
   }
   
 }

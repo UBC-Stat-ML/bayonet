@@ -23,6 +23,7 @@ import briefj.tomove.Results;
  * TODO: produce richer and nicer plots
  * 
  * @author Alexandre Bouchard (alexandre.bouchard@gmail.com)
+ * @author Sean Jewell (jewellsean@gmail.com)
  *
  */
 public class RealVariableProcessor implements NodeProcessor<RealVariable> 
@@ -40,7 +41,7 @@ public class RealVariableProcessor implements NodeProcessor<RealVariable>
     output.write(key, "mcmcIter", context.getMcmcIteration(), key, variable.getValue());
     output.flush();
     current++;
-    if (current == interval)
+    if (current == interval && context.getOptions().progressCODA == true)
     {
       interval = interval * 2;
       current = 0;
@@ -51,8 +52,19 @@ public class RealVariableProcessor implements NodeProcessor<RealVariable>
       SimpleCodaPlots codaPlots = new SimpleCodaPlots(chainFile, indexFile);
       codaPlots.toPDF(new File(output.getOutputFolder(), "codaPlots.pdf"));
     }
+
+    if (context.getMcmcIteration() == (context.getOptions().nMCMCSweeps - 1))
+    {
+      File 
+        indexFile = new File(output.getOutputFolder(), "CODAindex.txt"),
+        chainFile = new File(output.getOutputFolder(), "CODAchain1.txt");
+      CodaParser.CSVToCoda(indexFile, chainFile, output.getOutputFolder());
+      SimpleCodaPlots codaPlots = new SimpleCodaPlots(chainFile, indexFile);
+      codaPlots.toPDF(new File(output.getOutputFolder(), "codaPlots.pdf"));
+    }
+
   }
-  
+
   private void ensureInitialized(ProcessorContext context)
   {
     if (output != null)
