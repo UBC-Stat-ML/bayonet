@@ -8,11 +8,9 @@ import java.util.Random;
 
 import org.junit.Test;
 
-import com.sun.tools.javac.util.List;
 
 import bayonet.distributions.Beta.AlphaBetaParameterization;
 import bayonet.distributions.Exponential.MeanParameterization;
-import bayonet.distributions.Exponential.RateParameterization;
 import blang.MCMCAlgorithm;
 import blang.MCMCFactory;
 import blang.MCMCRunner;
