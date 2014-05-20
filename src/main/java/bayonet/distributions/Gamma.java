@@ -1,7 +1,7 @@
 package bayonet.distributions;
 
-import java.util.Random;
 
+import java.util.Random;
 import org.apache.commons.math3.distribution.GammaDistribution;
 
 import bayonet.math.SpecialFunctions;
@@ -9,7 +9,7 @@ import blang.annotations.FactorArgument;
 import blang.annotations.FactorComponent;
 import blang.factors.GenerativeFactor;
 import blang.variables.RealVariable;
-
+import static blang.variables.RealVariable.real;
 
 
 
@@ -36,9 +36,6 @@ public class Gamma<P extends Gamma.Parameters> implements GenerativeFactor, Univ
   
   public Gamma(RealVariable realization, P parameters)
   {
-    if (true)
-      throw new RuntimeException("This class needs to be tested.");
-    
     this.realization = realization;
     this.parameters = parameters;
   }
@@ -92,6 +89,40 @@ public class Gamma<P extends Gamma.Parameters> implements GenerativeFactor, Univ
     }
   }
   
+  
+  public static class ScaleShapeParameterization implements Parameters
+  {
+    /**
+     * 
+     */
+    @FactorArgument 
+    public final RealVariable scale;
+
+    /**
+     * 
+     */
+    @FactorArgument 
+    public final RealVariable shape;
+
+    public ScaleShapeParameterization(RealVariable scale, RealVariable shape)
+    {
+      this.scale = scale;
+      this.shape = shape;
+    }
+
+    @Override
+    public double getRate()
+    {
+      return 1.0 / scale.getValue();
+    }
+
+    @Override
+    public double getShape()
+    {
+      return shape.getValue();
+    }
+  }
+
   /**
    * 
    * @param random The source of pseudo-randomness
@@ -102,16 +133,6 @@ public class Gamma<P extends Gamma.Parameters> implements GenerativeFactor, Univ
   {
     final GammaDistribution gd = new GammaDistribution(new Random2RandomGenerator(random), shape, 1.0/rate, GammaDistribution.DEFAULT_INVERSE_ABSOLUTE_ACCURACY);
     return gd.sample();
-  }
-  
-  public static Gamma<RateShapeParameterization> on(RealVariable realization)
-  {
-    return new Gamma<RateShapeParameterization>(realization, new RateShapeParameterization(RealVariable.real(1.0), RealVariable.real(1.0)));
-  }
-
-  public static Gamma<RateShapeParameterization> newGamma()
-  {
-    return Gamma.on(new RealVariable(1.0));
   }
   
   /**
@@ -250,6 +271,38 @@ public class Gamma<P extends Gamma.Parameters> implements GenerativeFactor, Univ
     return (ch);
 }
 
+  /* Syntactic sugar/method chaining */
+  public static Gamma<RateShapeParameterization> on(RealVariable realization)
+  {
+    return new Gamma<RateShapeParameterization>(realization, new RateShapeParameterization(RealVariable.real(1.0), RealVariable.real(1.0)));
+  }
+  
+  public static Gamma<RateShapeParameterization> newGamma()
+  {
+    return Gamma.on(new RealVariable(1.0));
+  }  
+  
+  public Gamma<RateShapeParameterization> withRateShape(double rate, double shape)
+  {
+    return new Gamma<RateShapeParameterization>(realization, new RateShapeParameterization(real(rate), real(shape)));
+  }
+  
+  public Gamma<RateShapeParameterization> withRateShape(RealVariable rate, RealVariable shape)
+  {
+    return new Gamma<RateShapeParameterization>(realization, new RateShapeParameterization(rate, shape));
+  }
+  
+  public Gamma<ScaleShapeParameterization> withScaleShape(double scale, double shape)
+  {
+    return new Gamma<ScaleShapeParameterization>(realization, new ScaleShapeParameterization(real(scale), real(shape)));
+  }
+  
+  public Gamma<ScaleShapeParameterization> withScaleShape(RealVariable scale, RealVariable shape)
+  {
+    return new Gamma<ScaleShapeParameterization>(realization, new ScaleShapeParameterization(scale, shape));
+  }
+  
+  
   @Override
   public RealVariable getRealization()
   {
