@@ -27,4 +27,10 @@ public interface RealVectorInterface
    * @param values
    */
   public void setVector(double [] values);
+  
+  /**
+   * Get the dimension (length) of the vector
+   * @return the length of the vector 
+   */
+  public int getDim();
 }

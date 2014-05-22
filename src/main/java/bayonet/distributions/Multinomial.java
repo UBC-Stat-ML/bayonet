@@ -2,7 +2,13 @@ package bayonet.distributions;
 
 import java.util.Random;
 
+import org.apache.commons.math3.util.ArithmeticUtils;
+
 import bayonet.math.NumericalUtils;
+import blang.annotations.FactorArgument;
+import blang.factors.GenerativeFactor;
+import blang.variables.IntegerValuedVector;
+import blang.variables.ProbabilitySimplex;
 
 
 /**
@@ -11,8 +17,118 @@ import bayonet.math.NumericalUtils;
  * @author Alexandre Bouchard (alexandre.bouchard@gmail.com)
  *
  */
-public class Multinomial
+public class Multinomial implements GenerativeFactor
 {
+	private int N;
+	
+	@FactorArgument(makeStochastic=true) public final IntegerValuedVector realization;
+	@FactorArgument public final ProbabilitySimplex parameters;
+
+	public Multinomial(int N, IntegerValuedVector realization, ProbabilitySimplex parameters)
+	{
+		this.N = N;
+		this.realization = realization;
+		this.parameters = parameters;
+	}
+	
+	/**
+	 * Set the parameters
+	 * @param probs
+	 */
+	public void setProbs(double [] probs)
+	{
+		this.parameters.setVector(probs);
+	}
+	
+	public double [] getProbs()
+	{
+		return this.parameters.getVector();
+	}
+	
+
+	@Override
+	public double logDensity() 
+	{
+	  return logDensity(realization, parameters.getVector());
+	}
+
+	@Override
+	public void generate(Random random) 
+	{
+		// set the value for the realization -- repeatedly draw from sampleMultinomial()
+		// TODO: improve on this -- may be there is a faster way to do this
+		int d = this.realization.getDim();
+		int [] sample = new int[d];
+		for (int i = 0; i < N; i++)
+		{
+			int index = sampleMultinomial(random, this.getProbs());
+			sample[index] += 1;
+		}
+		realization.setVector(sample);
+	}
+	
+	public static int [] generate(Random random, int N, double [] probs)
+	{
+		int [] values = new int[probs.length];
+		for (int i = 0; i < N; i++)
+		{
+			int index = sampleMultinomial(random, probs);
+			values[index] += 1;
+		}
+		return values;
+	}
+
+	public static double [] mle(IntegerValuedVector vector)
+	{
+		final int dim = vector.getDim(); 
+		int N = vector.getSum();
+		double [] probs = new double[dim];
+		int [] vec = vector.getVector();
+		for (int i = 0; i < dim; i++)
+		{
+			probs[i] = (double)vec[i]/N;
+		}
+		
+		return probs;
+	}
+	
+	public static double logDensity(IntegerValuedVector realization, double [] probs)
+	{
+		int N = realization.getSum();
+		double logDensity = Math.log(ArithmeticUtils.factorialDouble(N));
+		int [] counts = realization.getVector();
+		for (int d = 0; d < realization.getDim(); d++)
+		{
+			logDensity -= (Math.log(ArithmeticUtils.factorialDouble(counts[d])));
+			logDensity += (counts[d] * Math.log(probs[d]));
+		}		
+
+		return logDensity;
+	}
+
+	/**
+	 * Create a new Multinomial object with default parameter (1/K, ..., 1/K)
+	 * @param realization
+	 * @return
+	 */
+	public static Multinomial on(IntegerValuedVector realization)
+	{
+		int dim = realization.getDim();
+		double val = 1.0/dim;
+		double [] parameters = new double[dim];
+		for (int d = 0; d < dim; d++)
+		{
+			parameters[d] = val;
+		}
+		
+		return new Multinomial(realization.getSum(), realization, new ProbabilitySimplex(parameters));
+	}
+	
+	public Multinomial with(ProbabilitySimplex parameters)
+	{
+		return new Multinomial(realization.getSum(), realization, parameters);
+	}
+	
   /**
    * Sample a single sample from a multinomial and the provided probabilities.
    * 
