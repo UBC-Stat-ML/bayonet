@@ -14,7 +14,7 @@ import blang.MCMCRunner;
 import blang.annotations.DefineFactor;
 import blang.processing.ProcessorContext;
 import blang.variables.RealVariable;
-import briefj.tomove.Results;
+import briefj.run.Results;
 
 import static  blang.variables.RealVariable.*;
 

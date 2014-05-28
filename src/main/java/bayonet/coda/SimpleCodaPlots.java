@@ -36,7 +36,7 @@ public class SimpleCodaPlots extends RJavaBridge
     return inputChain;
   }
 
-  public File getInputIndex()
+  public File getInputIndex() 
   {
     return inputIndex;
   }

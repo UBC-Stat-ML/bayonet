@@ -29,7 +29,27 @@ public class SpecialFunctions
     }
   }
   
+  public static double logit(double x)
+  {
+    return Math.log(x) - Math.log(1-x);
+  }
   
+  public static double logistic(double x)
+  {
+    return 1.0 / (1 + Math.exp(-x));
+  }
+  
+  /**
+   * The log of n choose k
+   * 
+   * @param n
+   * @param k
+   * @return
+   */
+  public static double logBinomial(int n, int k)
+  {
+    return logFactorial(n) - logFactorial(k) - logFactorial(n-k);
+  }
   
   /**
    * log Gamma function: ln(gamma(alpha))
