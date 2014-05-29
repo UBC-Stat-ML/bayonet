@@ -9,3 +9,6 @@ res = read.coda('@{getInputChain()}', '@{getInputIndex()}')
 plot(res)
 
 dev.off()
+
+df <- effectiveSize(res)
+write.csv(df, '@{getOutputESS()}', row.names = T)

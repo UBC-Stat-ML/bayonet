@@ -4,6 +4,7 @@ import java.io.File;
 
 import bayonet.rplot.RJavaBridge;
 import bayonet.rplot.RUtils;
+import blang.MCMCAlgorithm;
 
 
 
@@ -29,6 +30,11 @@ public class SimpleCodaPlots extends RJavaBridge
     return output.getAbsolutePath();
   }
 
+  public String getOutputESS()
+  {
+    return output.getParent() + "/ess-" + (System.currentTimeMillis() - MCMCAlgorithm.startTime) + ".csv";
+  }
+  
   @Override public String rTemplateResourceURL() { return "/bayonet/coda/SimpleCodaPlots.txt"; }
 
   public File getInputChain()
@@ -36,6 +42,8 @@ public class SimpleCodaPlots extends RJavaBridge
     return inputChain;
   }
 
+  
+  
   public File getInputIndex()
   {
     return inputIndex;

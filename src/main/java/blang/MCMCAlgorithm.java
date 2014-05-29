@@ -11,6 +11,9 @@ import blang.processing.ProcessorContext;
 
 public class MCMCAlgorithm
 {
+  
+  public final static long startTime = System.currentTimeMillis();
+  
   public final ProbabilityModel model;
   public final MoveSet sampler;
   public final List<Processor> processors;
