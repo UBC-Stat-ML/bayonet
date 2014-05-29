@@ -2,14 +2,11 @@ package blang.factors;
 
 import java.util.Random;
 
-
 import bayonet.distributions.Normal;
-import bayonet.distributions.UnivariateRealDistribution;
 import bayonet.distributions.Normal.MeanVarianceParameterization;
-import bayonet.opt.DoubleArrays;
+import bayonet.distributions.UnivariateRealDistribution;
 import blang.annotations.FactorArgument;
 import blang.annotations.FactorComponent;
-import blang.annotations.Processors;
 import blang.processing.NodeProcessor;
 import blang.processing.ProcessorContext;
 import blang.variables.RealValued;

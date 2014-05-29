@@ -11,7 +11,6 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.jgrapht.DirectedGraph;
 import org.jgrapht.Graphs;
 import org.jgrapht.UndirectedGraph;
-import org.jgrapht.graph.SimpleGraph;
 
 import bayonet.graphs.GraphUtils;
 import blang.MCMCFactory.Factories;

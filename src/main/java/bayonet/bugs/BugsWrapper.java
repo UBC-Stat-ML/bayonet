@@ -2,31 +2,26 @@ package bayonet.bugs;
 
 import static binc.Command.call;
 import static binc.Command.cmd;
+import static briefj.BriefMaps.getOrPut;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.io.Writer;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
-import org.junit.Test;
 
 import bayonet.coda.CodaParser;
 import binc.Command;
-import static briefj.BriefMaps.*;
 import briefj.BriefIO;
 
 import com.beust.jcommander.DynamicParameter;
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.internal.Maps;
 import com.beust.jcommander.internal.Sets;
-import com.google.common.base.Charsets;
-import com.google.common.base.Joiner;
-import com.google.common.io.Files;
 
 
 

@@ -13,7 +13,6 @@ import bayonet.marginal.BinaryFactor;
 import bayonet.marginal.FactorGraph;
 import bayonet.marginal.FactorOperations;
 import bayonet.marginal.UnaryFactor;
-import bayonet.math.NumericalUtils;
 import briefj.BriefCollections;
 
 import com.google.common.collect.Lists;

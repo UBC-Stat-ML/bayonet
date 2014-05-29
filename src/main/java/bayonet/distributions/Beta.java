@@ -3,16 +3,11 @@ package bayonet.distributions;
 
 import static blang.variables.RealVariable.real;
 
+import java.util.Random;
+
 import org.apache.commons.math3.distribution.BetaDistribution;
 import org.apache.commons.math3.util.FastMath;
 
-import java.util.Random;
-
-import com.beust.jcommander.Parameter;
-
-import bayonet.distributions.Beta.AlphaBetaParameterization;
-import bayonet.distributions.Uniform.MinMaxParameterization;
-import bayonet.distributions.Uniform.Parameters;
 import blang.annotations.FactorArgument;
 import blang.annotations.FactorComponent;
 import blang.factors.GenerativeFactor;

@@ -1,12 +1,9 @@
 package bayonet.bugs;
 
-import static binc.Command.call;
-
 import java.io.File;
 
 import org.apache.commons.io.FilenameUtils;
 
-import bayonet.coda.CodaParser;
 import bayonet.rplot.RJavaBridge;
 import bayonet.rplot.RUtils;
 import briefj.BriefIO;
