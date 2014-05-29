@@ -35,7 +35,8 @@ public class MCMCAlgorithm
     for (int i = 0; i < options.nMCMCSweeps; i++)
     {
       sampler.sweep(options.random);
-      if (i % options.thinningPeriod == 0 || i == (options.nMCMCSweeps - 1))
+      if ((i % options.thinningPeriod == 0 || i == (options.nMCMCSweeps - 1)) &&
+          i > options.burnIn)
         MCMCFactory.callProcessors(processors, new ProcessorContext(i, model, options));
     }
   }
