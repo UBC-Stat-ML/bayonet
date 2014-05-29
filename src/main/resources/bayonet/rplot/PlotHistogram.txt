@@ -2,7 +2,16 @@ pdf('@{getOutput()}')
 par(ps=30)
     
 data  <- @{javaDoublesToRVector(getData())}
-hist(data, breaks="FD",ann=FALSE,probability=TRUE, col="gray", border="white")
+hist(
+	data, 
+	breaks="FD", 
+	ann=FALSE, 
+	probability=TRUE, 
+	col="gray", 
+	border="white" 
+	@if{xLimits != null}, xlim = c(@{xLimits.getLeft()}, @{xLimits.getRight()}) @end{}
+	@if{yLimits != null}, ylim = c(@{yLimits.getLeft()}, @{yLimits.getRight()}) @end{}
+	 )
 
 d <- density(data)
 lines(d, col="red", lwd=@{lineWidth})
