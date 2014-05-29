@@ -53,6 +53,7 @@ public class TestExponential extends MCMCRunner
     TestExponential runner = new TestExponential();
     MCMCAlgorithm algo = runner.buildMCMCAlgorithm();
     algo.options.random = new Random(200001);
+    algo.options.CODA = false; // do not produce CODA plots from processor
     System.out.println(algo.model);
     System.out.println();
     algo.options.nMCMCSweeps = 10;

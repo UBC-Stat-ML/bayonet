@@ -28,6 +28,9 @@ public class MCMCFactory
   {
     @Option public int nMCMCSweeps = 10000;
     @Option public int thinningPeriod = 10;
+    @Option public int burnIn = 0;
+    @Option public boolean progressCODA = false;
+    @Option public boolean CODA = true;
     @Option public Random random = new Random(1);
   }
 

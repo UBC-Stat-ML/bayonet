@@ -54,6 +54,7 @@ public class TestNormalExponential extends MCMCRunner
     System.out.println(algo.model);
     System.out.println();
     algo.options.nMCMCSweeps = 10;
+    algo.options.CODA = false;
     CheckStationarity check = new CheckStationarity();
     check.setShowSampleSummaryStats(true);
     check.check(algo, 10000, 0.05);

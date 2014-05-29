@@ -350,7 +350,7 @@ public class CheckStationarity
       BriefMaps.getOrPutList(values, mcmc.model.getName(realValuedVariable)).add(realValuedVariable.getValue());
     
     for (Processor processor : mcmc.processors)
-      processor.process(new ProcessorContext(mcmc.options.nMCMCSweeps - 1, mcmc.model));
+      processor.process(new ProcessorContext(mcmc.options.nMCMCSweeps - 1, mcmc.model, mcmc.options));
     
     for (RealValued realValuedProcessor : ReflexionUtils.sublistOfGivenType(mcmc.processors, RealValued.class))
       BriefMaps.getOrPutList(values, realValuedProcessor).add(realValuedProcessor.getValue());

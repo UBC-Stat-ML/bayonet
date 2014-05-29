@@ -11,6 +11,9 @@ import blang.processing.ProcessorContext;
 
 public class MCMCAlgorithm
 {
+  
+  public final static long startTime = System.currentTimeMillis();
+  
   public final ProbabilityModel model;
   public final MoveSet sampler;
   public final List<Processor> processors;
@@ -32,8 +35,9 @@ public class MCMCAlgorithm
     for (int i = 0; i < options.nMCMCSweeps; i++)
     {
       sampler.sweep(options.random);
-      if (i % options.thinningPeriod == 0)
-        MCMCFactory.callProcessors(processors, new ProcessorContext(i, model));
+      if ((i % options.thinningPeriod == 0 || i == (options.nMCMCSweeps - 1)) &&
+          i > options.burnIn)
+        MCMCFactory.callProcessors(processors, new ProcessorContext(i, model, options));
     }
   }
   @Override

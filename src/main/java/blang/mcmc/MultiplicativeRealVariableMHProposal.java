@@ -9,7 +9,7 @@ import blang.variables.RealVariable;
 
 /**
  * A move for real variables constrained to be positive.
- * See appendix of Lakner et al., Efﬁciency of Markov Chain Monte 
+ * See appendix of Lakner et al., Efficiency of Markov Chain Monte 
  * Carlo Tree Proposals in Bayesian Phylogenetics.
  * 
  * TODO: implement some adaptation/optimization
