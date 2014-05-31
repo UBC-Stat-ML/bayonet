@@ -9,19 +9,22 @@ import blang.MCMCRunner;
 import blang.annotations.DefineFactor;
 import blang.validation.CheckStationarity;
 import blang.variables.IntegerValuedVector;
+import blang.variables.IntegerValuedVectorProcessor.MaxComponent;
+import blang.variables.IntegerValuedVectorProcessor.TestFunction;
 
 public class TestDirichletMultinomial extends MCMCRunner
 {
-	public static final IntegerValuedVector observation = new IntegerValuedVector(new int[]{8, 1, 1});
-	
+	public static final TestFunction g = new MaxComponent();;
+	public static final IntegerValuedVector observation = new IntegerValuedVector(new int[]{8, 1, 1}, g);
+
 	@DefineFactor public final Multinomial likelihood = Multinomial.on(observation);
 	@DefineFactor public final Dirichlet prior = Dirichlet.on(likelihood.parameters);
 
 	public TestDirichletMultinomial()
 	{
+		
 	}
 
-	@Test
 	public void test()
 	{
 		TestDirichletMultinomial runner = new TestDirichletMultinomial();
@@ -34,7 +37,7 @@ public class TestDirichletMultinomial extends MCMCRunner
 	    check.setShowSampleSummaryStats(true);
 	    check.check(algo, 10000, 0.05);
 	}
-	
+
 	public static void main(String [] args)
 	{
 		new TestDirichletMultinomial().run();
