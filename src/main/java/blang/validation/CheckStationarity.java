@@ -354,6 +354,7 @@ public class CheckStationarity
     
     for (RealValued realValuedProcessor : ReflexionUtils.sublistOfGivenType(mcmc.processors, RealValued.class))
       BriefMaps.getOrPutList(values, realValuedProcessor).add(realValuedProcessor.getValue());
+    
   }
 
 }

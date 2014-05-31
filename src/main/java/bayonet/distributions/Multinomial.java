@@ -2,14 +2,13 @@ package bayonet.distributions;
 
 import java.util.Random;
 
-import org.apache.commons.math3.util.ArithmeticUtils;
+import org.apache.commons.math3.util.CombinatoricsUtils;
 
 import bayonet.math.NumericalUtils;
 import blang.annotations.FactorArgument;
 import blang.factors.GenerativeFactor;
 import blang.variables.IntegerValuedVector;
 import blang.variables.ProbabilitySimplex;
-
 
 /**
  * Utilities for Multinomial distributions.
@@ -39,7 +38,7 @@ public class Multinomial implements GenerativeFactor
 	{
 		this.parameters.setVector(probs);
 	}
-	
+
 	public double [] getProbs()
 	{
 		return this.parameters.getVector();
@@ -58,7 +57,7 @@ public class Multinomial implements GenerativeFactor
 		// set the value for the realization -- repeatedly draw from sampleMultinomial()
 		// TODO: improve on this -- may be there is a faster way to do this
 		int d = this.realization.getDim();
-		int [] sample = new int[d];
+		double [] sample = new double[d];
 		for (int i = 0; i < N; i++)
 		{
 			int index = sampleMultinomial(random, this.getProbs());
@@ -66,10 +65,11 @@ public class Multinomial implements GenerativeFactor
 		}
 		realization.setVector(sample);
 	}
-	
-	public static int [] generate(Random random, int N, double [] probs)
+
+	// should return integer vector instead of double
+	public static double [] generate(Random random, int N, double [] probs)
 	{
-		int [] values = new int[probs.length];
+		double [] values = new double[probs.length];
 		for (int i = 0; i < N; i++)
 		{
 			int index = sampleMultinomial(random, probs);
@@ -81,12 +81,12 @@ public class Multinomial implements GenerativeFactor
 	public static double [] mle(IntegerValuedVector vector)
 	{
 		final int dim = vector.getDim(); 
-		int N = vector.getSum();
+		int N = vector.componentSum();
 		double [] probs = new double[dim];
-		int [] vec = vector.getVector();
+		double [] vec = vector.getVector();
 		for (int i = 0; i < dim; i++)
 		{
-			probs[i] = (double)vec[i]/N;
+			probs[i] = vec[i]/N;
 		}
 		
 		return probs;
@@ -94,12 +94,12 @@ public class Multinomial implements GenerativeFactor
 	
 	public static double logDensity(IntegerValuedVector realization, double [] probs)
 	{
-		int N = realization.getSum();
-		double logDensity = Math.log(ArithmeticUtils.factorialDouble(N));
-		int [] counts = realization.getVector();
+		int N = realization.componentSum(); 
+		double logDensity = Math.log(CombinatoricsUtils.factorialDouble(N));
+		double [] counts = realization.getVector();
 		for (int d = 0; d < realization.getDim(); d++)
 		{
-			logDensity -= (Math.log(ArithmeticUtils.factorialDouble(counts[d])));
+			logDensity -= (Math.log(CombinatoricsUtils.factorialDouble((int)counts[d])));
 			logDensity += (counts[d] * Math.log(probs[d]));
 		}		
 
@@ -121,12 +121,12 @@ public class Multinomial implements GenerativeFactor
 			parameters[d] = val;
 		}
 		
-		return new Multinomial(realization.getSum(), realization, new ProbabilitySimplex(parameters));
+		return new Multinomial(realization.componentSum(), realization, new ProbabilitySimplex(parameters));
 	}
 	
 	public Multinomial with(ProbabilitySimplex parameters)
 	{
-		return new Multinomial(realization.getSum(), realization, parameters);
+		return new Multinomial(realization.componentSum(), realization, parameters);
 	}
 	
   /**

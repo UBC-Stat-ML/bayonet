@@ -13,9 +13,10 @@ import blang.mcmc.RealVectorMHProposal;
 public class RealVector implements RealVectorInterface
 {
 	private int dim;
-	private RealVariable [] vector;  
+	private RealVariable [] vector;
+	private TestFunction g;
 	
-	public RealVector(double [] vector)
+	public RealVector(double [] vector, TestFunction g)
 	{
 		this.dim = vector.length;
 		this.vector = new RealVariable[this.dim];
@@ -23,6 +24,13 @@ public class RealVector implements RealVectorInterface
 		{
 			this.vector[d] = new RealVariable(vector[d]);
 		}
+		
+		this.g = g;
+	}
+	
+	public RealVector(double [] vector)
+	{
+		this(vector, new DefaultTestFunction());
 	}
 	
 	public static RealVector ones(int dim)
@@ -97,6 +105,30 @@ public class RealVector implements RealVectorInterface
 	public int getDim()
 	{
 		return dim;
+	}
+
+	@Override
+	public double evaluateTestFunction() 
+	{
+		return g.eval(this);
+	}
+	
+	public static class DefaultTestFunction implements TestFunction
+	{
+
+		@Override
+		public double eval(RealVectorInterface vector) 
+		{
+			// return the sum?
+			double sum = 0.0;
+			double [] vec = vector.getVector();
+			for (int i = 0; i < vector.getDim(); i++)
+			{
+				sum += vec[i];
+			}
+			return sum;
+		}
+		
 	}
 
 }

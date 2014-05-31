@@ -33,7 +33,7 @@ public class IntegerValuedVectorMHProposal implements MHProposalDistribution
 		// 1. generate a new vector from the Multinomial with MLE obtained from the current value of the vector
 		// 2. compute the log density of the newly generated vector(this is the denominator)
 		// 3. compute the log density of the old value using the MLE obtained from the new realization in step 2 (this is the numerator)
-		int N = vector.getSum();
+		int N = vector.componentSum();
 		double [] probs = Multinomial.mle(vector);
 		vector.setVector(Multinomial.generate(rand, N, probs));
 		double logD = Multinomial.logDensity(vector, probs); // denominator
