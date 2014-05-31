@@ -138,13 +138,7 @@ public class GraphUtils
     });
     while (iterator.hasNext())
       iterator.next();
-    
-    if (result.size() != graph.vertexSet().size())
-      throw new RuntimeException("" + result.size() + "!=" + graph.vertexSet().size());
-    
-    if (!result.get(result.size() -1).equals(root))
-      throw new RuntimeException("bad index: " + result.indexOf(root) + " out of " + result.size() + ", isConn=" + new ConnectivityInspector<V, E>(graph).connectedSets().size());
-    
+   
     return result;
   }
   
@@ -224,5 +218,20 @@ public class GraphUtils
           result.addEdge(state, state2);
     }
     return result;
+  }
+  
+  /**
+   * Pick the end of an edge other than the one in variable node
+   * 
+   * @param <T>
+   * @param pair
+   * @param node
+   * @return
+   */
+  public static <T> T pickOther(UnorderedPair<T,T> pair, T node)
+  {
+    if (node.equals(pair.getFirst() )) return pair.getSecond();
+    if (node.equals(pair.getSecond())) return pair.getFirst();
+    throw new RuntimeException();
   }
 }
