@@ -22,7 +22,6 @@ public class TestDirichletMultinomial extends MCMCRunner
 		
 	}
 
-	@Test
 	public void test()
 	{
 		TestDirichletMultinomial runner = new TestDirichletMultinomial();
