@@ -18,32 +18,17 @@ import blang.variables.ProbabilitySimplex;
  */
 public class Multinomial implements GenerativeFactor
 {
-	private int N;
-	
+	private int numSamples;
+
 	@FactorArgument(makeStochastic=true) public final IntegerValuedVector realization;
 	@FactorArgument public final ProbabilitySimplex parameters;
 
-	public Multinomial(int N, IntegerValuedVector realization, ProbabilitySimplex parameters)
+	public Multinomial(int numSamples, IntegerValuedVector realization, ProbabilitySimplex parameters)
 	{
-		this.N = N;
+		this.numSamples = numSamples;
 		this.realization = realization;
 		this.parameters = parameters;
 	}
-	
-	/**
-	 * Set the parameters
-	 * @param probs
-	 */
-	public void setProbs(double [] probs)
-	{
-		this.parameters.setVector(probs);
-	}
-
-	public double [] getProbs()
-	{
-		return this.parameters.getVector();
-	}
-	
 
 	@Override
 	public double logDensity() 
@@ -55,18 +40,24 @@ public class Multinomial implements GenerativeFactor
 	public void generate(Random random) 
 	{
 		// set the value for the realization -- repeatedly draw from sampleMultinomial()
-		// TODO: improve on this -- may be there is a faster way to do this
+		// TODO: improve on this -- there is a faster way to do this
 		int d = this.realization.getDim();
 		double [] sample = new double[d];
-		for (int i = 0; i < N; i++)
+		for (int i = 0; i < numSamples; i++)
 		{
-			int index = sampleMultinomial(random, this.getProbs());
+			int index = sampleMultinomial(random, this.parameters.getVector());
 			sample[index] += 1;
 		}
 		realization.setVector(sample);
 	}
 
-	// should return integer vector instead of double
+	/**
+	 * Returns double array but really contains only the integers
+	 * @param random
+	 * @param N
+	 * @param probs
+	 * @return
+	 */
 	public static double [] generate(Random random, int N, double [] probs)
 	{
 		double [] values = new double[probs.length];
@@ -78,6 +69,11 @@ public class Multinomial implements GenerativeFactor
 		return values;
 	}
 
+	/**
+	 * Compute the MLE estimate of the parameters for the realization vector
+	 * @param vector
+	 * @return
+	 */
 	public static double [] mle(IntegerValuedVector vector)
 	{
 		final int dim = vector.getDim(); 
@@ -86,13 +82,33 @@ public class Multinomial implements GenerativeFactor
 		double [] vec = vector.getVector();
 		for (int i = 0; i < dim; i++)
 		{
-			probs[i] = vec[i]/N;
+			probs[i] = (double)vec[i]/N;
 		}
 		
 		return probs;
 	}
 	
 	public static double logDensity(IntegerValuedVector realization, double [] probs)
+	{
+		int N = realization.componentSum(); 
+		double logDensity = Math.log(CombinatoricsUtils.factorialDouble(N));
+		double [] counts = realization.getVector();
+		for (int d = 0; d < realization.getDim(); d++)
+		{
+			logDensity -= (Math.log(CombinatoricsUtils.factorialDouble((int)counts[d])));
+			logDensity += (counts[d] * Math.log(probs[d]));
+		}		
+
+		return logDensity;
+	}
+
+	/**
+	 * Make another version for the object version (Double []) see above for the primitive version (double [])
+	 * @param realization
+	 * @param probs
+	 * @return
+	 */
+	public static double logDensity(IntegerValuedVector realization, Double [] probs)
 	{
 		int N = realization.componentSum(); 
 		double logDensity = Math.log(CombinatoricsUtils.factorialDouble(N));
@@ -120,13 +136,23 @@ public class Multinomial implements GenerativeFactor
 		{
 			parameters[d] = val;
 		}
-		
+
 		return new Multinomial(realization.componentSum(), realization, new ProbabilitySimplex(parameters));
 	}
-	
+
 	public Multinomial with(ProbabilitySimplex parameters)
 	{
 		return new Multinomial(realization.componentSum(), realization, parameters);
+	}
+	
+	/**
+	 * Convenience method that returns a new Multinomial object
+	 */
+	public static Multinomial newMultinomial(int dim)
+	{
+		IntegerValuedVector realization = IntegerValuedVector.ones(dim);
+		ProbabilitySimplex parameters = ProbabilitySimplex.rep(dim, 1.0/dim);
+		return new Multinomial(dim, realization, parameters);
 	}
 	
   /**
@@ -209,5 +235,23 @@ public class Multinomial implements GenerativeFactor
       sum += x;
     }
     return sum;
+  }
+  
+  public static void main(String [] args)
+  {
+  	// do simple sanity checks
+  	IntegerValuedVector realization = new IntegerValuedVector(new double[]{30, 20, 50});
+  	double [] mleParams = Multinomial.mle(realization);
+  	StringBuilder sb = new StringBuilder();
+  	sb.append("( ");
+  	for (double param : mleParams)
+  	{
+  		sb.append(param + " ");
+  	}
+  	sb.append(")");
+  	System.out.println(sb.toString());
+  	
+  	Multinomial mult = Multinomial.on(realization).with(new ProbabilitySimplex(mleParams)); // 0.3, 0.2, 0.5
+  	System.out.println(mult.logDensity()); // should be -4.697546
   }
 }

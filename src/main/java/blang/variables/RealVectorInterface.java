@@ -34,9 +34,4 @@ public interface RealVectorInterface
    */
   public int getDim();
   
-  /**
-   * Evaluate the vector using a test function, g of type TestFunction
-   * @return g.eval(this)
-   */
-  public double evaluateTestFunction();
 }

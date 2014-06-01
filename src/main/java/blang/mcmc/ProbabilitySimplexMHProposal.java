@@ -9,7 +9,7 @@ import blang.variables.ProbabilitySimplex;
 import blang.variables.RealVector;
 
 /**
- * For testing ProbabilitySimplex when the number of dimensions is small
+ * For testing ProbabilitySimplex data type when the number of dimensions is small
  * @author Seong-Hwan Jun (s2jun.uw@gmail.com)
  *
  */
@@ -28,21 +28,14 @@ public class ProbabilitySimplexMHProposal implements MHProposalDistribution
 
 		probSaved = probSimplex.deepCopy();
 
-		// Propose a new probability simplex from a symmetric Dirichlet, this will lead to log ratio of 0
+		// Propose a new probability simplex from a symmetric Dirichlet, this will lead to log proposal ratio of 0
 		int dim = probSimplex.getDim();
-		double [] vector = new double[dim];
-		double val = 1.0;
-		for (int d = 0; d < dim; d++)
-		{
-			vector[d] = val;
-		}
-		
-		double [] piNew = Dirichlet.generate(rand, new RealVector(vector));
+		double [] piNew = Dirichlet.generate(rand, RealVector.ones(dim).getVector());
 		probSimplex.setVector(piNew);
-		
+
 		return new ProposalRealization();
   }
-	
+
 	private class ProposalRealization implements Proposal
 	{
 

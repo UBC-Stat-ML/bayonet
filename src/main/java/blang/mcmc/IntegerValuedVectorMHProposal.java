@@ -6,6 +6,7 @@ import java.util.Random;
 import bayonet.distributions.Multinomial;
 import blang.factors.Factor;
 import blang.variables.IntegerValuedVector;
+import blang.variables.RealVector;
 
 /**
  * To be used for testing when the number of dimensions is small
@@ -18,8 +19,10 @@ public class IntegerValuedVectorMHProposal implements MHProposalDistribution
 
 	@SampledVariable IntegerValuedVector vector;
 	@ConnectedFactor List<Factor> connectedFactors;
-	
+
 	private IntegerValuedVector savedVector;
+	
+	private static double [] probs = null;
 
 	@Override
 	public Proposal propose(Random rand) 
@@ -29,20 +32,25 @@ public class IntegerValuedVectorMHProposal implements MHProposalDistribution
 		
 		savedVector = vector.deepCopy(); // make a deep copy
 
-		// Idea: propose a new value from Multinomial with the parameters obtained via MLE of the current vector
-		// 1. generate a new vector from the Multinomial with MLE obtained from the current value of the vector
+		// Idea: propose a new value from Multinomial with fixed parameters (pi_1 = pi_2 = ... = pi_K)
+		// 1. generate a new vector from the Multinomial
 		// 2. compute the log density of the newly generated vector(this is the denominator)
 		// 3. compute the log density of the old value using the MLE obtained from the new realization in step 2 (this is the numerator)
-		int N = vector.componentSum();
-		double [] probs = Multinomial.mle(vector);
-		vector.setVector(Multinomial.generate(rand, N, probs));
-		double logD = Multinomial.logDensity(vector, probs); // denominator
-		probs = Multinomial.mle(vector);
-		double logN = Multinomial.logDensity(savedVector, probs); // numerator
 		
+		if (probs == null)
+		{
+			double pi = 1.0/vector.getDim();
+			probs = RealVector.rep(vector.getDim(), pi).getVector();
+		}
+
+		int N = vector.componentSum(); // number of draws
+		vector.setVector(Multinomial.generate(rand, N, probs));
+
+		double logD = Multinomial.logDensity(vector, probs); // denominator
+		double logN = Multinomial.logDensity(savedVector, probs); // numerator
+
 		return new ProposalRealization(logN - logD);
 	}
-	
 
 	private class ProposalRealization implements Proposal
 	{

@@ -2,87 +2,61 @@ package blang.variables;
 
 import blang.annotations.Processors;
 import blang.annotations.Samplers;
+import blang.factors.IIDRealVectorGenerativeFactor.VectorNormProcessor;
 import blang.mcmc.RealVectorMHProposal;
 
+/**
+ * Simplest implementation of RealVectorInterface
+ * @author Seong-Hwan Jun (s2jun.uw@gmail.com)
+ *
+ */
 @Samplers({
 	RealVectorMHProposal.class
 })
 @Processors({
-	RealVectorProcessor.class
+	VectorNormProcessor.class
 })
 public class RealVector implements RealVectorInterface
 {
-	private int dim;
-	private RealVariable [] vector;
-	private TestFunction g;
-	
-	public RealVector(double [] vector, TestFunction g)
-	{
-		this.dim = vector.length;
-		this.vector = new RealVariable[this.dim];
-		for (int d = 0; d < dim; d++)
-		{
-			this.vector[d] = new RealVariable(vector[d]);
-		}
-		
-		this.g = g;
-	}
-	
+	protected int dim;
+	protected double [] vector;
+
 	public RealVector(double [] vector)
 	{
-		this(vector, new DefaultTestFunction());
+		this.dim = vector.length;
+		this.vector = vector;
+	}
+		
+	public static RealVector ones(int dim)
+	{
+		return rep(dim, 1.0);
 	}
 	
-	public static RealVector ones(int dim)
+	public static RealVector rep(int dim, double val)
 	{
 		double [] vector = new double[dim];
 		for (int d = 0; d < dim; d++)
 		{
-			vector[d] = 1.0;
+			vector[d] = val;
 		}
 		return new RealVector(vector);
 	}
 	
-	public RealVariable getComponent(int d)
+	@Override
+	public double [] getVector() 
 	{
-		return vector[d];
-	}
-	
-	public void setComponent(int d, double val)
-	{
-		if (vector[d] == null)
-		{
-			vector[d] = new RealVariable(val);
-		}
-		else
-			vector[d].setValue(val);
+		return vector;
 	}
 
 	@Override
-	public double[] getVector() 
+	public void setVector(double [] values) 
 	{
-		double [] vec = new double[dim];
-		for (int d = 0; d < dim; d++)
-		{
-			vec[d] = vector[d].getValue();
-		}
+		if (this.vector == null)
+			this.vector = new double[values.length];
 		
-		return vec;
-	}
-
-	@Override
-	public void setVector(double[] values) 
-	{
 		for (int d = 0; d < dim; d++)
 		{
-			if (vector[d] == null)
-			{
-				vector[d] = new RealVariable(values[d]);
-			}
-			else
-			{
-				vector[d].setValue(values[d]);
-			}
+				vector[d] = values[d];
 		}
 	}
 	
@@ -92,7 +66,7 @@ public class RealVector implements RealVectorInterface
 		StringBuilder sb = new StringBuilder();
 		for (int d = 0; d < dim; d++)
 		{
-			sb.append(this.vector[d].getValue());
+			sb.append(this.vector[d]);
 			if (d < (dim - 1))
 			{
 				sb.append(", ");
@@ -106,29 +80,4 @@ public class RealVector implements RealVectorInterface
 	{
 		return dim;
 	}
-
-	@Override
-	public double evaluateTestFunction() 
-	{
-		return g.eval(this);
-	}
-	
-	public static class DefaultTestFunction implements TestFunction
-	{
-
-		@Override
-		public double eval(RealVectorInterface vector) 
-		{
-			// return the sum?
-			double sum = 0.0;
-			double [] vec = vector.getVector();
-			for (int i = 0; i < vector.getDim(); i++)
-			{
-				sum += vec[i];
-			}
-			return sum;
-		}
-		
-	}
-
 }

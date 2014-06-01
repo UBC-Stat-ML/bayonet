@@ -1,34 +1,45 @@
 package blang.variables;
 
-import org.apache.commons.math3.util.CombinatoricsUtils;
-
 import blang.annotations.Processors;
 import blang.annotations.Samplers;
+import blang.factors.IIDRealVectorGenerativeFactor.RandomNormProcessor;
 import blang.mcmc.IntegerValuedVectorMHProposal;
 
+/**
+ * Implements RealVectorInterface and behaves exactly as RealVector except that it has a sampler specific to IntegerValuedVector
+ * TODO: code refactoring
+ * 
+ * @author Seong-Hwan Jun (s2jun.uw@gmail.com)
+ *
+ */
 @Samplers({IntegerValuedVectorMHProposal.class})
-@Processors({IntegerValuedVectorProcessor.class})
+@Processors({RandomNormProcessor.class})
 public class IntegerValuedVector implements RealVectorInterface
 {
-	private double [] vector; // hack, should be an integer array -- need to ensure that only the integers are tracked
-	private TestFunction g;
+	private double [] vector;
 
-	public IntegerValuedVector(int [] values, TestFunction g)
+	public IntegerValuedVector(double [] values)
 	{
-		vector = new double[values.length];
-		for (int i = 0; i < values.length; i++)
-		{
-			vector[i] = values[i];
-		}
-		
-		this.g = g;
+		vector = values;
+				
 	}
 	
-	public IntegerValuedVector(int [] values)
+	public static IntegerValuedVector ones(int dim)
 	{
-		this(values, new DefaultTestFunction());
+		return rep(dim, 1);
 	}
+	
+	public static IntegerValuedVector rep(int dim, int val)
+	{
+		double [] values = new double[dim];
+		for (int i = 0; i < dim; i++)
+		{
+			values[i] = val;
+		}
 
+		return new IntegerValuedVector(values);
+	}
+	
 	@Override
 	public void setVector(double [] vector)
 	{
@@ -65,41 +76,9 @@ public class IntegerValuedVector implements RealVectorInterface
 	
 	public IntegerValuedVector deepCopy()
 	{
-		int [] copy = new int[this.getDim()];
+		double [] copy = new double[this.getDim()];
 		System.arraycopy(this.vector, 0, copy, 0, getDim());
-		return new IntegerValuedVector(copy, this.g);
+		return new IntegerValuedVector(copy);
 	}
 		
-	@Override
-	public double evaluateTestFunction()
-	{
-		if (g == null)
-			throw new RuntimeException();
-		
-		return g.eval(this);
-	}
-
-
-	public static class DefaultTestFunction implements TestFunction
-	{
-
-		@Override
-		public double eval(RealVectorInterface vector) 
-		{
-			// TODO: until you find a better default test function... average of the pairwise differences?
-			int D = vector.getDim();
-			double [] vec = vector.getVector();
-			double diffSum = 0.0;
-			for (int i = 0; i < D; i++)
-			{
-				for (int j = (i+1); j < D; j++)
-				{
-					diffSum += Math.abs(vec[i] - vec[j]);
-				}
-			}
-			diffSum /= CombinatoricsUtils.binomialCoefficientDouble(D, 2);
-			return diffSum;
-		}
-		
-	}
 }

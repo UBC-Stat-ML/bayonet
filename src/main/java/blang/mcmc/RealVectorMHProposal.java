@@ -3,14 +3,14 @@ package blang.mcmc;
 import java.util.List;
 import java.util.Random;
 
+import bayonet.distributions.Exponential;
 import blang.factors.Factor;
 import blang.variables.RealVectorInterface;
 
 public class RealVectorMHProposal implements MHProposalDistribution
 {
 
-	  @SampledVariable RealVectorInterface variable;
-	  
+	  @SampledVariable RealVectorInterface variable;	  
 	  @ConnectedFactor List<Factor> connectedFactors;
 	  
 	  private double [] savedValue = null;
@@ -25,7 +25,10 @@ public class RealVectorMHProposal implements MHProposalDistribution
 	    savedValue = variableArray.clone();
 	    
 	    for (int i = 0; i < variableArray.length; i++)
-	      variableArray[i] += 0.01 * rand.nextGaussian();
+	    {
+	    	double x = Exponential.generate(rand, 1.0);
+	      variableArray[i] += 0.01 * x;
+	    }
 	    variable.setVector(variableArray);
 	    
 	    return new ProposalRealization();
