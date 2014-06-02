@@ -20,7 +20,8 @@ public class ProbabilitySimplex implements RealVectorInterface
 	
 	public ProbabilitySimplex(double [] probs)
 	{
-		this.probs = probs;
+		this.probs = new double[probs.length];
+		setAndCheck(probs, this.probs);
 	}
 	
 	public static ProbabilitySimplex rep(int dim, double val)
@@ -40,19 +41,25 @@ public class ProbabilitySimplex implements RealVectorInterface
 		if (probs.length != this.probs.length)
 			throw new RuntimeException();
 		
-		// check that this is a probability distribution
+		setAndCheck(probs, this.probs);
+
+	}
+	
+	public static void setAndCheck(double [] src, double [] dest)
+	{
 		double sum = 0.0;
-		for (int i = 0; i < probs.length; i++)
+		for (int i = 0; i < src.length; i++)
 		{
-			double x = probs[i];
+			double x = src[i];
 			if (x > 1.0 || x < 0.0)
 				throw new RuntimeException("Not a probability.");
 			sum += x;
-			this.probs[i] = x;
+			dest[i] = x;
 		}
-
+		
 		if (Math.abs(sum - 1.0) > THRESHOLD)
 			throw new RuntimeException("Not a probability simplex.");
+
 	}
 	
 	public ProbabilitySimplex deepCopy()
