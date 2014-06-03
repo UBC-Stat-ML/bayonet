@@ -197,6 +197,20 @@ public class EJMLUtils
   }
   
   /**
+   * Unpack the provided matrix in an array based on row number
+   * 
+   */
+  public static double[] copyMatrixRowToArray(SimpleMatrix matrix, int row)
+  {
+    double[] result = new double[matrix.numCols()];
+    for (int col = 0; col < matrix.numCols(); col++)
+      result[col] = matrix.get(row, col);
+    return result;
+  }
+  
+  
+  
+  /**
    * @param vector
    * @return
    */
