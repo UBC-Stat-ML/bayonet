@@ -13,7 +13,8 @@ import blang.variables.RealVariable;
 
 
 /**
- * Exponential densities.
+ * Exponential densities that allows for translation of variables
+ * ie. store a min value so that X - min is exponential
  * 
  * P is the type of parameterization.
  * 
@@ -33,6 +34,8 @@ public class Exponential<P extends Exponential.Parameters> implements Generative
   @FactorComponent 
   public final P parameters;
   
+  public final double minValue; 
+  
   /**
    * 
    */
@@ -49,10 +52,11 @@ public class Exponential<P extends Exponential.Parameters> implements Generative
    * @param realization The variable on which the density is defined on
    * @param parameters
    */
-  public Exponential(RealVariable realization, P parameters)
+  public Exponential(RealVariable realization, P parameters, double minValue)
   {
     this.realization = realization;
     this.parameters = parameters;
+    this.minValue = minValue;
   }
 
   /**
@@ -62,7 +66,7 @@ public class Exponential<P extends Exponential.Parameters> implements Generative
   @Override
   public double logDensity()
   {
-    return logDensity(realization.getValue(), parameters.getRate());
+    return logDensity((realization.getValue() - minValue), parameters.getRate());
   }
 
   /**
@@ -175,7 +179,7 @@ public class Exponential<P extends Exponential.Parameters> implements Generative
    */
   public static Exponential<RateParameterization> on(RealVariable realization)
   {
-    return new Exponential<RateParameterization>(realization, new RateParameterization(real(1.0)));
+    return new Exponential<RateParameterization>(realization, new RateParameterization(real(1.0)), 0.0);
   }
   
   /**
@@ -195,22 +199,28 @@ public class Exponential<P extends Exponential.Parameters> implements Generative
    */
   public Exponential<RateParameterization> withRate(double rate)
   {
-    return new Exponential<RateParameterization>(realization, new RateParameterization(real(rate)));
+    return new Exponential<RateParameterization>(realization, new RateParameterization(real(rate)), 0.0);
   }
   
   public Exponential<MeanParameterization> withMean(double mean)
   {
-    return new Exponential<MeanParameterization>(realization, new MeanParameterization(real(mean)));
+    return new Exponential<MeanParameterization>(realization, new MeanParameterization(real(mean)), 0.0);
   }
   
+  
+  public Exponential<MeanParameterization> truncateAt(double minValue)
+  {
+    return new Exponential<MeanParameterization>(realization, (MeanParameterization) parameters, minValue);
+  }
+ 
   public Exponential<RateParameterization> withRate(RealVariable rate)
   {
-    return new Exponential<RateParameterization>(realization, new RateParameterization(rate));
+    return new Exponential<RateParameterization>(realization, new RateParameterization(rate), 0.0);
   }
   
   public Exponential<MeanParameterization> withMean(RealVariable mean)
   {
-    return new Exponential<MeanParameterization>(realization, new MeanParameterization(mean));
+    return new Exponential<MeanParameterization>(realization, new MeanParameterization(mean), 0.0);
   }
 
   @Override
