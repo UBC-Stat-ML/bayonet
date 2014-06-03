@@ -2,9 +2,8 @@ package bayonet.distributions;
 
 import java.util.Random;
 
-import org.apache.commons.math3.util.CombinatoricsUtils;
-
 import bayonet.math.NumericalUtils;
+import bayonet.math.SpecialFunctions;
 import blang.annotations.FactorArgument;
 import blang.factors.GenerativeFactor;
 import blang.variables.IntegerValuedVector;
@@ -91,11 +90,13 @@ public class Multinomial implements GenerativeFactor
 	public static double logDensity(IntegerValuedVector realization, double [] probs)
 	{
 		int N = realization.componentSum(); 
-		double logDensity = Math.log(CombinatoricsUtils.factorialDouble(N));
+		//double logDensity = Math.log(CombinatoricsUtils.factorialDouble(N));
+		double logDensity = SpecialFunctions.logFactorial(N);
 		double [] counts = realization.getVector();
 		for (int d = 0; d < realization.getDim(); d++)
 		{
-			logDensity -= (Math.log(CombinatoricsUtils.factorialDouble((int)counts[d])));
+			//logDensity -= (Math.log(CombinatoricsUtils.factorialDouble((int)counts[d])));
+			logDensity -= SpecialFunctions.logFactorial((int)counts[d]);
 			logDensity += (counts[d] * Math.log(probs[d]));
 		}		
 
@@ -108,6 +109,7 @@ public class Multinomial implements GenerativeFactor
 	 * @param probs
 	 * @return
 	 */
+	/* not necessary
 	public static double logDensity(IntegerValuedVector realization, Double [] probs)
 	{
 		int N = realization.componentSum(); 
@@ -121,6 +123,7 @@ public class Multinomial implements GenerativeFactor
 
 		return logDensity;
 	}
+	*/
 
 	/**
 	 * Create a new Multinomial object with default parameter (1/K, ..., 1/K)
