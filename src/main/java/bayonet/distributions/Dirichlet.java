@@ -2,6 +2,7 @@ package bayonet.distributions;
 
 import java.util.Random;
 
+import bayonet.math.SpecialFunctions;
 import blang.annotations.FactorArgument;
 import blang.annotations.FactorComponent;
 import blang.factors.GenerativeFactor;
@@ -86,13 +87,13 @@ public class Dirichlet<P extends Dirichlet.Parameters> implements GenerativeFact
 		for (int d = 0; d < dim; d++)
 		{
 			sumOfAlpha += alphas[d];
-			logNorm += org.apache.commons.math3.special.Gamma.logGamma(alphas[d]);
+			logNorm += SpecialFunctions.lnGamma(alphas[d]);
 			
 			logDensity += (alphas[d] - 1) * Math.log(probs[d]);
 		}
 		
 		// compute log(B(alpha))
-		logNorm = logNorm - Math.log(org.apache.commons.math3.special.Gamma.gamma(sumOfAlpha));
+		logNorm = logNorm - SpecialFunctions.lnGamma(sumOfAlpha);
 		logDensity = logDensity - logNorm;
 		return logDensity;
 	}
