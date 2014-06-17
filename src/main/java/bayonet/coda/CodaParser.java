@@ -1,6 +1,5 @@
 package bayonet.coda;
 
-import static briefj.BriefIO.ls;
 import static briefj.BriefIO.output;
 import static briefj.BriefIO.readLines;
 
@@ -10,7 +9,7 @@ import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 
-import briefj.BriefIO;
+import briefj.BriefFiles;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
@@ -27,7 +26,7 @@ public class CodaParser
    */
   public static void codaToCSV(File codaIndex, File codaContents, File destinationDirectory)
   {
-    BriefIO.createParentDirs(destinationDirectory);
+    BriefFiles.createParentDirs(destinationDirectory);
     LinkedList<Block> blocks = readCodaIndex(codaIndex);
     
     // state of the writing process:
@@ -79,7 +78,7 @@ public class CodaParser
     
     int currentLine = 0;
     int startOfBlockLine = 0;
-    for (File variableFile : ls(variableFilesDirectory, "csv"))
+    for (File variableFile : BriefFiles.ls(variableFilesDirectory, "csv"))
     {
       // TODO: variableName should be the name of the field instead
       String variableName = variableFile.getName().replace(".csv", "");

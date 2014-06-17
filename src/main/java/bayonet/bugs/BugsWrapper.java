@@ -16,6 +16,7 @@ import org.apache.commons.io.FilenameUtils;
 
 import bayonet.coda.CodaParser;
 import binc.Command;
+import briefj.BriefFiles;
 import briefj.BriefIO;
 
 import com.beust.jcommander.DynamicParameter;
@@ -152,7 +153,7 @@ public class BugsWrapper implements Runnable
         currentStr.append((currentStr.length() > 0 ? ",\n" : "") + fields.get(key));
       }
     
-    File dataFile = BriefIO.createTempFile(); //new File("data.txt");
+    File dataFile = BriefFiles.createTempFile(); //new File("data.txt");
     PrintWriter out = BriefIO.output(dataFile);
     
     for (String key : outputMap.keySet())

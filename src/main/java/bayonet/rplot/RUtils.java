@@ -6,6 +6,7 @@ import org.mvel2.templates.TemplateRuntime;
 
 
 import binc.Command;
+import briefj.BriefFiles;
 import briefj.BriefIO;
 
 
@@ -19,7 +20,7 @@ public class RUtils
   
   public static String callR(String commands)
   {
-    File tempFile = BriefIO.createTempFile();
+    File tempFile = BriefFiles.createTempFile();
     BriefIO.write(tempFile, commands);
     return Command.call(Rscript.withArgs(tempFile.getAbsolutePath()));
   }

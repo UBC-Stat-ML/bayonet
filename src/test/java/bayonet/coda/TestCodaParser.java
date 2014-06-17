@@ -1,6 +1,5 @@
 package bayonet.coda;
 
-import static briefj.BriefIO.createTempFile;
 
 import java.io.File;
 import java.io.IOException;
@@ -10,9 +9,9 @@ import org.junit.Test;
 
 import tutorialj.Tutorial;
 
-import static briefj.BriefIO.*;
 
 import bayonet.bugs.TestWrapper;
+import briefj.BriefFiles;
 
 import com.google.common.io.Files;
 
@@ -42,20 +41,20 @@ public class TestCodaParser
     codaToCSV(originalCodaIndex, originalCoda, dest);
     
     File newCodaIndex = 
-      createTempFile(); 
+      BriefFiles.createTempFile(); 
       //new File("/Users/bouchard/temp/created2/CODAindex.txt");
-    File newCoda = createTempFile(); //new File("/Users/bouchard/temp/created2/CODAchain1.txt");
+    File newCoda = BriefFiles.createTempFile(); //new File("/Users/bouchard/temp/created2/CODAchain1.txt");
     CSVToCoda(newCodaIndex, newCoda, dest);
     
     File finalDest = Files.createTempDir();
     
     codaToCSV(newCodaIndex, newCoda, finalDest);
     
-    Assert.assertTrue(ls(finalDest, "csv").size() == (ls(dest, "csv").size()));
+    Assert.assertTrue(BriefFiles.ls(finalDest, "csv").size() == (BriefFiles.ls(dest, "csv").size()));
     
-    Assert.assertTrue(!ls(finalDest, "csv").isEmpty());
+    Assert.assertTrue(!BriefFiles.ls(finalDest, "csv").isEmpty());
     
-    for (File f : ls(finalDest, "csv"))
+    for (File f : BriefFiles.ls(finalDest, "csv"))
     {
       File f2 = new File(dest, f.getName());
       Assert.assertTrue("Files do not match: " + f + " vs " + f2, Files.equal(f, f2));

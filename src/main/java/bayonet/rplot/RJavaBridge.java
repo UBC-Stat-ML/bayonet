@@ -3,6 +3,7 @@ package bayonet.rplot;
 import java.io.File;
 import java.io.PrintWriter;
 
+import briefj.BriefFiles;
 import briefj.BriefIO;
 
 
@@ -13,7 +14,7 @@ public abstract class RJavaBridge
   
   public String javaDoublesToRVector(double [] numbers)
   {
-    File tempFile = BriefIO.createTempFile();
+    File tempFile = BriefFiles.createTempFile();
     PrintWriter out = BriefIO.output(tempFile);
     for (double number : numbers)
       out.println(number);
@@ -23,7 +24,7 @@ public abstract class RJavaBridge
   
   public String javaDoublesToRMatrix(double [][] numbers)
   {
-    File tempFile = BriefIO.createTempFile();
+    File tempFile = BriefFiles.createTempFile();
     PrintWriter out = BriefIO.output(tempFile);
     for (int r = 0; r < numbers.length; r++)
       for (int c = 0; c < numbers[0].length; c++)
