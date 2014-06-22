@@ -1,0 +1,15 @@
+library(ggplot2)
+
+
+dat = read.csv('@{getParticleCSV()}', colClasses = "numeric")
+h  = @{javaDoubleToR(getTrueHeight())}
+p = ggplot(dat, aes(y = log(weights), x = heights, color = heights)) + geom_point() + geom_vline(aes(xintercept = h)) 
+ggsave('@{getPlotOut()}', p)
+
+binWidth <- 2 * IQR(dat$heights) / (length(dat$heights)^(1/3))
+q = ggplot(dat, aes(x = heights)) + geom_histogram(binwidth = binWidth, colour="black", fill="white",aes(weight = weights)) +
+  geom_vline(aes(xintercept=sum(heights * weights)),   # Ignore NA values for mean
+             color="red", linetype="dashed", size = 0.75) +  
+  geom_vline(aes(xintercept = h), color = "blue", size = 0.75, linetype = "dashed") 
+ggsave('@{getHistOut()}', q)
+  
