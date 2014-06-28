@@ -200,7 +200,7 @@ public class Multinomial implements GenerativeFactor
   }
   
   /**
-   * Destructively normalize and returns the normalization
+   * Destructively normalize and returns the normalization.
    * 
    * WARNING: modifies the provided logProbs in place
    * 
@@ -233,7 +233,7 @@ public class Multinomial implements GenerativeFactor
     double sum = 0;
     for(double x : data) 
     {
-      if (x + NumericalUtils.THRESHOLD < 0.0)
+      if (x < 0.0)
         throw new RuntimeException("Negative values not allowed in multinomial parameters.");
       sum += x;
     }
