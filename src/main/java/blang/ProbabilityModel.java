@@ -520,32 +520,19 @@ public class ProbabilityModel
    */
   private static class VariableNames
   {
-    private final Map<Node,String> shortNames = Maps.newHashMap();
     private final Map<Node,FieldPath> longNames = Maps.newHashMap();
 
-    private final Set<String> 
-      allShortNames = Sets.newLinkedHashSet(),
-      collisions = Sets.newLinkedHashSet();   
     
     public void add(Node variable, FieldPath fieldsPath)
     {
       if (variable.isFactor())
         throw new RuntimeException();
-      String shortName = fieldsPath.getLastField().getName();
-      if (allShortNames.contains(shortName))
-        collisions.add(shortName);
-      allShortNames.add(shortName);
-      shortNames.put(variable, shortName);
       longNames.put(variable, fieldsPath);
     }
     
     public String get(Node variable)
     {
-      String shortName = shortNames.get(variable);
-      if (collisions.contains(shortName))
-        return longNames.get(variable).toString();
-      else
-        return shortName;
+      return longNames.get(variable).toString();
     }
   }
   
