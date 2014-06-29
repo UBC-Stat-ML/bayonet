@@ -10,7 +10,12 @@ import blang.processing.ProcessorFactory;
 import briefj.opt.OptionSet;
 
 
-
+/**
+ * 
+ * @author Alexandre Bouchard (alexandre.bouchard@gmail.com)
+ * @deprecated See BlangSmallExample for a better way of instrumenting
+ *   blang-based runs.
+ */
 public class MCMCRunner implements Runnable
 {
   @OptionSet(name = "factory")
