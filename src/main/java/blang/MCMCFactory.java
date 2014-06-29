@@ -1,6 +1,7 @@
 package blang;
 
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 
@@ -47,6 +48,17 @@ public class MCMCFactory
   public void addProcessorFactory(ProcessorFactory factory)
   {
     processorFactories.factories.add(factory);
+  }
+  
+  public void addProcessor(final Processor processor)
+  {
+    processorFactories.factories.add(new ProcessorFactory() {
+      @Override
+      public List<? extends Processor> build(ProbabilityModel model)
+      {
+        return Collections.singletonList(processor);
+      }
+    });
   }
 
   public void addNodeMove(Class<? extends Object> variableType, Class<? extends Operator> moveType)

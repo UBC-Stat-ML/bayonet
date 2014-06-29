@@ -26,10 +26,8 @@ import static  blang.variables.RealVariable.*;
  */
 public class BlangSmallExample extends MCMCRunner
 {
-  /* ******************************************************************* *
-     Specification of the probability model used for this small example: 
-   * ******************************************************************* */
-  
+
+
   RealVariable observation = real(0.06);
     
   @DefineFactor(onObservations = true) 
@@ -37,9 +35,6 @@ public class BlangSmallExample extends MCMCRunner
          
   @DefineFactor 
   Exponential<MeanParameterization> prior = Exponential.on(likelihood.parameters.max).withMean(10.0);
-
-  
-  /* ******************************************************************* */ 
 
   public static void main(String [] args)
   {
