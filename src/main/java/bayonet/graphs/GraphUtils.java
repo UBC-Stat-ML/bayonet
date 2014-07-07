@@ -2,6 +2,7 @@ package bayonet.graphs;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.apache.commons.lang3.tuple.Pair;
@@ -20,9 +21,11 @@ import org.jgrapht.traverse.DepthFirstIterator;
 import org.jgrapht.traverse.GraphIterator;
 import org.jgrapht.traverse.TopologicalOrderIterator;
 
+import bayonet.marginal.algo.EdgeSorter;
 import briefj.collections.UnorderedPair;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 
 
 
@@ -49,6 +52,7 @@ public class GraphUtils
     EdgeFactory<V, UnorderedPair<V, V>> factory = undirectedEdgeFactory();
     return new SimpleGraph<V, UnorderedPair<V, V>>(factory);
   }
+  
   
   /**
    * A reasonable default implementation for directed graphs..
@@ -143,6 +147,25 @@ public class GraphUtils
   }
   
   /**
+   * 
+   * @param <V>
+   * @param graph
+   * @param root
+   * @return A map where each non-root key is given as a value its parent relative to root
+   */
+  public static <V> Map<V,V> parentPointers(UndirectedGraph<V, ?> graph, final V root)
+  {
+    Map<V,V> result = Maps.newHashMap();
+    
+    EdgeSorter<V> sorter = EdgeSorter.newEdgeSorter(graph, root);
+    
+    for (Pair<V,V> edge : sorter.forwardMessages())
+      result.put(edge.getLeft(), edge.getRight());
+    
+    return result;
+  }
+  
+  /**
    * List the connected components. 
    * @param <V>
    * @param <E>
@@ -233,5 +256,49 @@ public class GraphUtils
     if (node.equals(pair.getFirst() )) return pair.getSecond();
     if (node.equals(pair.getSecond())) return pair.getFirst();
     throw new RuntimeException();
+  }
+
+
+  /**
+   * 
+   * @param <N>
+   * @param topology
+   * @return The nodes that have strictly more than one neighbors.
+   */
+  public static <N> List<N> internalNodes(UndirectedGraph<N,UnorderedPair<N, N>> topology)
+  {
+    List<N> result = Lists.newArrayList();
+    for (N vertex : topology.vertexSet())
+      if (topology.degreeOf(vertex) > 1)
+        result.add(vertex);
+    return result;
+  }
+
+
+  /**
+   * 
+   * @param <N>
+   * @param topology
+   * @return The nodes that have one or zero neighbors.
+   */
+  public static <N> List<N> leaves(UndirectedGraph<N,UnorderedPair<N, N>> topology)
+  {
+    List<N> result = Lists.newArrayList();
+    for (N vertex : topology.vertexSet())
+      if (topology.degreeOf(vertex) <= 1)
+        result.add(vertex);
+    return result;
+  }
+
+
+  /**
+   * @param <N>
+   * @param edge
+   * @param topology
+   * @return The edges connected to leaves.
+   */
+  public static <N> boolean isTip(UnorderedPair<N, N> edge, UndirectedGraph<N,UnorderedPair<N, N>> topology)
+  {
+    return topology.degreeOf(edge.getFirst()) == 1 || topology.degreeOf(edge.getSecond()) == 1;
   }
 }
