@@ -15,8 +15,6 @@ public class ForwardSampler
   
   public ForwardSampler(ProbabilityModel model)
   {
-    if (model.nObservedNodes() > 0)
-      throw new RuntimeException("Forward samplers are only available for models with no observation.");
     this.model = model;
   }
   
