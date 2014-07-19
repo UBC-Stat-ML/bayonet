@@ -63,6 +63,12 @@ public class SumProduct<V>
     return sum;
   }
   
+  public UnaryFactor<V> getMessage(V source, V dest) 
+  {
+    computeMessages(dest, true);
+    return cachedMessages.get(Pair.of(source, dest)); 
+  }
+  
   /**
    * The node marginal at the queryNode variable.
    * 
