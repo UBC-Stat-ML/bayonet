@@ -52,7 +52,20 @@ public class GraphUtils
     EdgeFactory<V, UnorderedPair<V, V>> factory = undirectedEdgeFactory();
     return new SimpleGraph<V, UnorderedPair<V, V>>(factory);
   }
-  
+
+  /**
+   * Return a new instance that is a deep copy of the provided model.
+   */
+  public static <V> UndirectedGraph<V, UnorderedPair<V, V>> newUndirectedGraph(
+      UndirectedGraph<V, UnorderedPair<V, V>> model)
+  {
+    UndirectedGraph<V, UnorderedPair<V, V>> result = newUndirectedGraph();
+    for (V vertex : model.vertexSet())
+      result.addVertex(vertex);
+    for (UnorderedPair<V, V> edge : model.edgeSet())
+      result.addEdge(edge.getFirst(), edge.getSecond());
+    return result;
+  }
   
   /**
    * A reasonable default implementation for directed graphs..
@@ -301,4 +314,6 @@ public class GraphUtils
   {
     return topology.degreeOf(edge.getFirst()) == 1 || topology.degreeOf(edge.getSecond()) == 1;
   }
+
+
 }
