@@ -13,7 +13,7 @@ public class Doc
 {
   /**
    * 
-   * Summary
+   * Summary [![Build Status](https://travis-ci.org/alexandrebouchard/bayonet.png?branch=master)](https://travis-ci.org/alexandrebouchard/bayonet)
    * -------
    * 
    * Bayonet contains utilities for doing probability inference.
