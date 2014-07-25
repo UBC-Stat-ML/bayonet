@@ -43,7 +43,7 @@ public class BlangInstrumentedExample implements Runnable, Processor
     public Uniform<MinMaxParameterization> prior = Uniform.on(likelihood.parameters.mean);
   }
   
-  // Note: only instantiate this in run to avoid problems with command line argument parsing
+  // Note: only instantiate this in run() to avoid problems with command line argument parsing
   public Model model;
 
   @Override

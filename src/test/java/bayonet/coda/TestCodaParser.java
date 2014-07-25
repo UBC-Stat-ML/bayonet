@@ -28,7 +28,6 @@ public class TestCodaParser
    * separate, self-explanatory csv file.
    */
   @Test
-  @Tutorial(showSource = true, nextStep = TestWrapper.class)
   public void testParseWrite() throws IOException
   {
     File originalCodaIndex = new File("src/test/resources/CODAindex.txt");

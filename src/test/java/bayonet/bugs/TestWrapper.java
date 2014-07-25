@@ -15,7 +15,6 @@ public class TestWrapper
    * This module makes it easier to call JAGS.
    */
   @Test
-  @Tutorial
   public void test()
   {
     

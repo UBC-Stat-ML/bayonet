@@ -72,4 +72,15 @@ public class RealVariable implements RealValued
     return "real(" + value + ")";
   }
   
+  /**
+   * Used for parsing
+   * @param str
+   */
+  public RealVariable(String str)
+  {
+    if (str.matches("real[(].*[)]"))
+      str = str.replaceFirst("real[(]", "").replaceFirst("[)]", "");
+    this.value = (Double.parseDouble(str));
+  }
+  
 }
