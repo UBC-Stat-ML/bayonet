@@ -38,7 +38,7 @@ dependencies {
 
 - Check out the source ``git clone git@github.com:alexandrebouchard/bayonet.git``
 - Compile using ``gradle installApp``
-- Add the jars in ``build/install/tips/lib/`` into your classpath
+- Add the jars in ``build/install/bayonet/lib/`` into your classpath
 
 ### Use in eclipse
 
