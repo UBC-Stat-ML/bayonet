@@ -234,7 +234,7 @@ public class Multinomial implements GenerativeFactor
     for(double x : data) 
     {
       if (x < 0.0)
-        throw new RuntimeException("Negative values not allowed in multinomial parameters.");
+        throw new RuntimeException("Negative values not allowed in multinomial parameters: " + x);
       sum += x;
     }
     return sum;

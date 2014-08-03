@@ -31,7 +31,8 @@ public class MCMCAlgorithm
   }
   public void run()
   {
-
+    if (options.thinningPeriod < 1)
+      throw new RuntimeException("The thinning period should be greater or equal to 1: "+options.thinningPeriod);
     for (int i = 0; i < options.nMCMCSweeps; i++)
     {
       sampler.sweep(options.random);

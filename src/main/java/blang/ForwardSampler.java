@@ -13,6 +13,11 @@ public class ForwardSampler
 {
   private final ProbabilityModel model;
   
+  public ForwardSampler(Object modelSpecification)
+  {
+    this.model = new ProbabilityModel(modelSpecification);
+  }
+  
   public ForwardSampler(ProbabilityModel model)
   {
     this.model = model;

@@ -50,5 +50,10 @@ public class ProcessorContext
   {
     return options;
   }
+
+  public boolean isLastProcessCall()
+  {
+    return mcmcIteration == (options.nMCMCSweeps - 1);
+  }
   
 }

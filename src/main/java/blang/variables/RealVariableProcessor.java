@@ -2,6 +2,8 @@ package blang.variables;
 
 import java.io.File;
 
+import org.apache.commons.math3.stat.descriptive.SummaryStatistics;
+
 import bayonet.coda.CodaParser;
 import bayonet.coda.SimpleCodaPlots;
 import blang.processing.NodeProcessor;
@@ -28,29 +30,40 @@ import briefj.run.Results;
  */
 public class RealVariableProcessor implements NodeProcessor<RealVariable> 
 {
-  private  RealVariable variable;
+  private RealValued variable;
   private OutputManager output = null;
   private int interval = 2;
   private int current = 0;
+  private String variableName = null;
   private boolean progress;
   private boolean CODA;
-  private int nMCMCSweeps;
-
+  private SummaryStatistics statistics = new SummaryStatistics();
+  
+  public RealVariableProcessor()
+  {
+  }
+  
+  public RealVariableProcessor(String variableName, RealValued variable)
+  {
+    this.variableName = variableName;
+    this.variable = variable;
+  }
+  
   /**
    * This processor allows for a variety of different customizations
    * In the most basic setup, the processor will always write the thinned samples to the output file
    * Optionally, the processor can generate CODA plots either: 
-   * 1) Throughout the sampling for debugging purposes, at exponential times and for the last sample; or
-   * 2) At the end of sampling. That is, it will wait to generate the CODA plot until the last iterate. 
+   * 1) Throughout the sampling for debugging purposes, at exponential times and for the last sample (progress = true); or
+   * 2) Only at the end of sampling (progress = false). That is, it will wait to generate the CODA plot until the last iterate. 
    * 
    */
   @Override
   public void process(ProcessorContext context)
   {
     ensureInitialized(context);
-    String key = context.getModel().getName(variable);
     int iteration = context.getMcmcIteration();
-    output.write(key, "mcmcIter", iteration, key, variable.getValue());
+    output.write(variableName, "mcmcIter", iteration, variableName, variable.getValue());
+    statistics.addValue(variable.getValue());
     output.flush();
 
     if (CODA)
@@ -63,12 +76,15 @@ public class RealVariableProcessor implements NodeProcessor<RealVariable>
         generateCODA();       
       }
 
-      if (iteration == (nMCMCSweeps - 1))
-      {
+      if (context.isLastProcessCall())
         generateCODA();
-      }
     }
-
+    
+    if (context.isLastProcessCall())
+    {
+      output.printWrite(variableName + "-summary", statistics);
+      output.flush();
+    }
   }
 
   private void generateCODA()
@@ -86,11 +102,11 @@ public class RealVariableProcessor implements NodeProcessor<RealVariable>
     if (output != null)
       return;
     output = new OutputManager();
-    String varName = context.getModel().getName(variable);
-    File csvSamples = new File(Results.getResultFolder(), varName + "-csv");
+    if (variableName == null)
+      variableName = context.getModel().getName(variable);
+    File csvSamples = new File(Results.getResultFolder(), variableName + "-csv");
     output.setOutputFolder(csvSamples);
     progress = context.getOptions().progressCODA;
-    nMCMCSweeps = context.getOptions().nMCMCSweeps;
     CODA = context.getOptions().CODA;
   }
 

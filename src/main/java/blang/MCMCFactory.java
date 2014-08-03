@@ -28,7 +28,8 @@ public class MCMCFactory
   public static class MCMCOptions
   {
     @Option public int nMCMCSweeps = 10000;
-    @Option public int thinningPeriod = 10;
+    @Option(gloss = "Thinning period. Should be greater or equal to 1.") 
+    public int thinningPeriod = 10;
     @Option public int burnIn = 0;
     @Option public boolean progressCODA = false;
     @Option public boolean CODA = true;
@@ -107,10 +108,19 @@ public class MCMCFactory
   {
     return processorFactories.standardFactory;
   }
-
+  
+  public MCMCAlgorithm build(Object modelSpecification)
+  {
+    return build(ProbabilityModel.parse(modelSpecification, false));
+  }
+  
   public MCMCAlgorithm build(Object modelSpecification, boolean clone)
   {
-    ProbabilityModel model = ProbabilityModel.parse(modelSpecification, clone);
+    return build(ProbabilityModel.parse(modelSpecification, clone));
+  }
+
+  public MCMCAlgorithm build(ProbabilityModel model)
+  {
     MoveSet sampler = new MoveSet(model, moveFactories.factories, checkAllNodesCoveredByMCMCMoves);
     
     List<Processor> processors = buildProcessors(model);
