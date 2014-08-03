@@ -1,14 +1,19 @@
-list.of.packages <- c("coda")
+list.of.packages <- c("coda", "ggmcmc", "gridExtra")
 new.packages <- list.of.packages[!(list.of.packages %in% installed.packages()[,"Package"])]
 if(length(new.packages)) install.packages(new.packages, repos="http://cran.us.r-project.org")
 library(coda)
+library(ggmcmc)
+require(gridExtra)
 
-pdf('@{getOutput()}')
-    
-res = read.coda('@{getInputChain()}', '@{getInputIndex()}')
-plot(res)
 
+coda <- read.coda('@{getInputChain()}', '@{getInputIndex()}')
+codaMCMC <- mcmc(coda)
+
+ch <- ggs(codaMCMC)
+
+trace <- ggs_traceplot(ch) + theme_minimal() + theme(text=element_text(color="black",size=20,family='Times'))
+density <- ggs_density(ch, rug = T) + theme_minimal() + theme(text=element_text(color="black",size=20,family='Times'))
+
+pdf('@{getOutput()}', width = 15, height = 8)
+codaPlot <- grid.arrange(trace, density,  ncol = 2)
 dev.off()
-
-#df <- effectiveSize(res)
-#write.csv(df, '@{getOutputESS()}', row.names = T)
