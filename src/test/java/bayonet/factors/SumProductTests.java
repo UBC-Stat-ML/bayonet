@@ -2,7 +2,6 @@ package bayonet.factors;
 
 import java.util.Random;
 
-import org.ejml.ops.RandomMatrices;
 import org.ejml.simple.SimpleMatrix;
 import org.jgrapht.UndirectedGraph;
 import org.junit.Assert;
@@ -122,8 +121,6 @@ public class SumProductTests
   
   public static void main(String [] args)
   {
-    Random rand = new Random(1);
-    
     int len = 8000;
     DiscreteFactorGraph<Integer> markov = buildRegularMarkov(2, len);
     long start = System.currentTimeMillis();

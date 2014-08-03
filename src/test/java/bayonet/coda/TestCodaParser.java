@@ -1,21 +1,18 @@
 package bayonet.coda;
 
 
+import static bayonet.coda.CodaParser.CSVToCoda;
+import static bayonet.coda.CodaParser.codaToCSV;
+
 import java.io.File;
 import java.io.IOException;
 
 import org.junit.Assert;
 import org.junit.Test;
 
-import tutorialj.Tutorial;
-
-
-import bayonet.bugs.TestWrapper;
 import briefj.BriefFiles;
 
 import com.google.common.io.Files;
-
-import static bayonet.coda.CodaParser.*;
 
 public class TestCodaParser
 {

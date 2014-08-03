@@ -7,12 +7,10 @@ import org.junit.Test;
 
 import bayonet.distributions.Exponential.MeanParameterization;
 import bayonet.distributions.Exponential.RateParameterization;
-import bayonet.distributions.Uniform.MinMaxParameterization;
 import blang.MCMCAlgorithm;
 import blang.MCMCFactory;
 import blang.MCMCRunner;
 import blang.annotations.DefineFactor;
-import blang.mcmc.MultiplicativeRealVariableMHProposal;
 import blang.mcmc.RealVariableMHProposal;
 import blang.mcmc.RealVariablePeskunTypeMove;
 import blang.validation.CheckStationarity;
