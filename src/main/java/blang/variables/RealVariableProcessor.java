@@ -2,6 +2,7 @@ package blang.variables;
 
 import java.io.File;
 
+import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.math3.stat.descriptive.SummaryStatistics;
 
 import bayonet.coda.CodaParser;
@@ -82,7 +83,16 @@ public class RealVariableProcessor implements NodeProcessor<RealVariable>
     
     if (context.isLastProcessCall())
     {
-      output.printWrite(variableName + "-summary", statistics);
+      String statString = statistics.toString();
+      String[] sepStats = statString.split("\n");
+      String[] toWrite = null; 
+      for (int i = 1; i < sepStats.length; i++) // avoid the first element; serves as an unneeded header
+      {
+        String statSplit = sepStats[i];
+        String[] stat = statSplit.split(":");
+        toWrite = ArrayUtils.addAll(toWrite, stat);
+      }
+      output.printWrite(variableName + "-summary", (Object []) toWrite);
       output.flush();
     }
   }
