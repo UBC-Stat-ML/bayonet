@@ -34,7 +34,7 @@ public class NegativeBinomial<P extends NegativeBinomial.Parameters> implements 
   public final IntegerVariable realization;
 
   /**
-   * The parameter of this exponential density.
+   * The parameter of this NB density.
    */
   @FactorComponent 
   public final P parameters;
