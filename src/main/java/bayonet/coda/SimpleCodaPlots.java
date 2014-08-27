@@ -29,11 +29,6 @@ public class SimpleCodaPlots extends RJavaBridge
   {
     return output.getAbsolutePath();
   }
-
-  public String getOutputESS()
-  {
-    return output.getParent() + "/ess-" + (System.currentTimeMillis() - MCMCAlgorithm.startTime) + ".csv";
-  }
   
   @Override public String rTemplateResourceURL() { return "/bayonet/coda/SimpleCodaPlots.txt"; }
 
@@ -41,12 +36,9 @@ public class SimpleCodaPlots extends RJavaBridge
   {
     return inputChain;
   }
-
-  
   
   public File getInputIndex()
   {
     return inputIndex;
   }
-
 }

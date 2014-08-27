@@ -6,10 +6,12 @@ import static briefj.BriefIO.readLines;
 import java.io.File;
 import java.io.PrintWriter;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
 import briefj.BriefFiles;
+import briefj.BriefIO;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
@@ -71,14 +73,44 @@ public class CodaParser
     if (out != null) out.close();
   }
   
+  public static void listToCoda(File codaIndex, File codaContents, List<Double> data, String varName)
+  {
+    File tempCSVFile = BriefFiles.createTempFile();
+    PrintWriter out = BriefIO.output(tempCSVFile);
+    out.println("mcmcIter," + varName);
+    int i = 0;
+    for (double datum : data)
+      out.println("" + (i++) + "," + datum);
+    out.close();
+    CSVToCodaFromSingleVariable(codaIndex, codaContents, tempCSVFile);
+  }
+  
+  public static void CSVToCodaFromSingleVariable(File codaIndex, File codaContents, File singleCSV)
+  {
+    CSVToCoda(codaIndex, codaContents, null, singleCSV);
+  }
+  
   public static void CSVToCoda(File codaIndex, File codaContents, File variableFilesDirectory)
+  {
+    CSVToCoda(codaIndex, codaContents, variableFilesDirectory, null);
+  }
+  
+  private static void CSVToCoda(File codaIndex, File codaContents, File variableFilesDirectory, File singleCSV)
   {
     PrintWriter codaIndexOut =  output(codaIndex);
     PrintWriter codaContentsOut=output(codaContents);
     
     int currentLine = 0;
     int startOfBlockLine = 0;
-    for (File variableFile : BriefFiles.ls(variableFilesDirectory, "csv"))
+    
+    if (singleCSV != null && variableFilesDirectory != null)
+      throw new RuntimeException();
+    
+    List<File> filesToIterate = variableFilesDirectory == null ?
+        Collections.singletonList(singleCSV) :
+        BriefFiles.ls(variableFilesDirectory, "csv");
+    
+    for (File variableFile : filesToIterate)
     {
       // TODO: variableName should be the name of the field instead
       String variableName = variableFile.getName().replace(".csv", "");

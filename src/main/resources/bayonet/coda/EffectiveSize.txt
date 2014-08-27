@@ -1,0 +1,8 @@
+list.of.packages <- c("coda")
+new.packages <- list.of.packages[!(list.of.packages %in% installed.packages()[,"Package"])]
+if(length(new.packages)) install.packages(new.packages, repos="http://cran.us.r-project.org")
+library(coda)
+
+coda <- read.coda('@{getInputChain()}', '@{getInputIndex()}')
+
+cat("EffectiveSize=", effectiveSize(coda), sep='')

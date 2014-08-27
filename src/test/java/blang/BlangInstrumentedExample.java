@@ -50,6 +50,7 @@ public class BlangInstrumentedExample implements Runnable, Processor
     factory.addProcessor(this);
     model = new Model();
     MCMCAlgorithm mcmc = factory.build(model, false);
+    mcmc.options.CODA = true;
     System.out.println(mcmc.model);
     mcmc.run();
   }
