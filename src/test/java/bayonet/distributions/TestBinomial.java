@@ -4,8 +4,6 @@ import java.util.Random;
 
 import org.junit.Test;
 
-import bayonet.distributions.Gamma.RateShapeParameterization;
-import bayonet.distributions.NegativeBinomial.ProbSuccessParameterization;
 import bayonet.distributions.Uniform.MinMaxParameterization;
 import blang.MCMCAlgorithm;
 import blang.MCMCFactory;
@@ -17,14 +15,14 @@ import blang.validation.CheckStationarity;
 import blang.variables.IntegerVariable;
 import blang.variables.RealVariable;
 
-public class TestNegativeBinomial extends MCMCRunner
+public class TestBinomial extends MCMCRunner
 {
 
-  public final IntegerVariable observation = IntegerVariable.intVar(1);
+  public final IntegerVariable observation = IntegerVariable.intVar(50);
 
-  @DefineFactor public final NegativeBinomial<ProbSuccessParameterization> likelihood = NegativeBinomial.on(observation).withProbN(0.5, 10);
-  @DefineFactor public final Uniform<MinMaxParameterization> priorProb = Uniform.on(likelihood.parameters.prob).withBounds(0.5, 0.6);
-  @DefineFactor public final Gamma<RateShapeParameterization> priorN = Gamma.on(likelihood.parameters.n).withRateShape(20, 200);
+  @DefineFactor public final Binomial<bayonet.distributions.Binomial.ProbSuccessParameterization> likelihood = Binomial.on(observation).withProbN(0.5, 100);
+  @DefineFactor public final Uniform<MinMaxParameterization> priorProb = Uniform.on(likelihood.parameters.prob).withBounds(0.4, 0.6);
+  
   
   @Override
   protected void setupMCMC(MCMCFactory factory)
@@ -36,10 +34,10 @@ public class TestNegativeBinomial extends MCMCRunner
   @Test
   public void test()
   {
-    TestNegativeBinomial runner = new TestNegativeBinomial();
+    TestBinomial runner = new TestBinomial();
     MCMCAlgorithm algo = runner.buildMCMCAlgorithm();
     algo.options.random = new Random(200001);
-    algo.options.CODA = false; // do not produce CODA plots from processor
+    algo.options.CODA = false; 
     System.out.println(algo.model);
     System.out.println();
     algo.options.nMCMCSweeps = 10;
@@ -50,8 +48,7 @@ public class TestNegativeBinomial extends MCMCRunner
   
   public static void main(String [] args)
   {
-    new TestNegativeBinomial().test();
+    new TestBinomial().test();
   }
   
-
 }
