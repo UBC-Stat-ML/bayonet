@@ -118,7 +118,7 @@ import blang.variables.RealVariable;
      */
     public static Binomial<ProbSuccessParameterization> on(IntegerVariable realization)
     {
-      return new Binomial<ProbSuccessParameterization>(realization, new ProbSuccessParameterization(real(1), intVar(1)));
+      return new Binomial<ProbSuccessParameterization>(realization, new ProbSuccessParameterization(real(0.5), intVar(1)));
     }
     
     public Binomial<ProbSuccessParameterization> withProbN(RealVariable prob, IntegerVariable trials)
