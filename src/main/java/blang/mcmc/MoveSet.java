@@ -23,7 +23,7 @@ import com.google.common.collect.Sets;
  */
 public class MoveSet
 {
-  private final List<Move> moves;
+  public final List<Move> moves;
   private final ProbabilityModel model;
   
   public MoveSet(ProbabilityModel model, List<MoveFactory> factories, boolean check)

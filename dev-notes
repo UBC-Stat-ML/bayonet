@@ -1,3 +1,12 @@
+Samplers: 
+
+- give a way for samplers to say if accept reject? or just use the likelihood?
+- caches?
+- 
+
+
+===
+
 Development notes
 -----------------
 
