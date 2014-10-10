@@ -180,10 +180,6 @@ public class GraphUtils
   
   /**
    * List the connected components. 
-   * @param <V>
-   * @param <E>
-   * @param graph
-   * @return
    */
   public static <V,E> List<Set<V>> connectedComponents(UndirectedGraph<V, E> graph)
   {
@@ -192,11 +188,7 @@ public class GraphUtils
   }
   
   /**
-   * Return all (np -> n1) st. np not equal to n2
-   * @param <N>
-   * @param f
-   * @param e = (n1 -> n2)
-   * @return
+   * Return all (np to n1) st. np not equal to n2
    */
   public static <V,E> List<Pair<V,V>> distinctIncoming(UndirectedGraph<V,E> f, Pair<V,V> e)
   {
@@ -218,10 +210,6 @@ public class GraphUtils
   /**
    * Return the linearization or topological order of a given directed graph.
    * 
-   * @param <V>
-   * @param <E>
-   * @param graph
-   * @return
    */
   public static <V,E> List<V> linearization(
       DirectedGraph<V, E> graph)
@@ -236,8 +224,6 @@ public class GraphUtils
   /**
    * http://en.wikipedia.org/wiki/Complete_graph
    * 
-   * @param <S>
-   * @param states
    * @return A complete graph on the provided set of states.
    */
   public static <S> UndirectedGraph<S,?> completeGraph(final Set<S> states)

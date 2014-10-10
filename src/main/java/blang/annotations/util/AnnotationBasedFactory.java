@@ -22,9 +22,6 @@ import com.google.common.collect.Sets;
  * 
  * @author Alexandre Bouchard (alexandre.bouchard@gmail.com)
  *
- * @param <V>
- * @param <A>
- * @param <P>
  */
 public class AnnotationBasedFactory<I,A extends Annotation,P>
 {
@@ -80,7 +77,7 @@ public class AnnotationBasedFactory<I,A extends Annotation,P>
    * declaration of i.
    * 
    * A is assumed to contained a function with signature
-   * public Class<? extends P>[] value();
+   * public Class ? extends P [] value();
    * 
    * For each i and type t returned by value(), the Producer is 
    * used to instantiate a product p of type t, or null.

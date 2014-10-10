@@ -10,7 +10,6 @@ import java.util.List;
  * 
  * @author Alexandre Bouchard (alexandre.bouchard@gmail.com)
  *
- * @param <V>
  */
 public interface FactorOperations<V>
 {
@@ -23,7 +22,6 @@ public interface FactorOperations<V>
   
   /**
    * 
-   * @param <V>
    * @param binary
    * @param unariesOnMarginalized Unary factors on the variable to marginalize
    * @return a unary on the other variable

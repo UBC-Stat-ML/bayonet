@@ -169,7 +169,7 @@ public class Exponential<P extends Exponential.Parameters> implements Generative
   /* Syntactic sugar/method chaining */
   
   /**
-   * Allows writing Exponential.on(x) instead of new Exponential<..>(x, ...)
+   * Allows writing Exponential.on(x) instead of new Exponential(x, ...)
    * Default rate/mean is set to 1.0.
    * @param realization 
    */

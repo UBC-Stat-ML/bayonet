@@ -82,7 +82,7 @@ public class SparseVector
   /**
    * Mutates argument vector
    * performs (in vector):
-   * vector <- vector + coef * this
+   * vector gets vector + coef * this
    * @param coef
    * @param vector
    */

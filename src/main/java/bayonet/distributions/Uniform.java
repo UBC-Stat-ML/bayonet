@@ -146,7 +146,7 @@ public class Uniform<P extends Uniform.Parameters> implements GenerativeFactor, 
   /**
    * Simulate uniformly on the interval [min, max).
    * 
-   * @param random The source of pseudo-randomness 
+   * @param rand The source of pseudo-randomness 
    * @param min The left boundary of the inteval.
    * @param max The right boundary of the inteval.
    */
@@ -160,7 +160,7 @@ public class Uniform<P extends Uniform.Parameters> implements GenerativeFactor, 
   /* Syntactic sugar/method chaining */
   
   /**
-   * Allows writing Uniform.on(x) instead of new Uniform<..>(x, ...)
+   * Allows writing Uniform.on(x) instead of new Uniform(x, ...)
    * Default interval is set to [0, 1).
    * @param variable
    * @return

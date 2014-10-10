@@ -142,8 +142,8 @@ public class Gamma<P extends Gamma.Parameters> implements GenerativeFactor, Univ
    * @author Gerton Lunter
    *
    * @param x     argument
+   * @param rate rate parameter
    * @param shape shape parameter
-   * @param scale scale parameter
    * @return log pdf value
    */
   public static double logDensity(double x, double rate, double shape) {

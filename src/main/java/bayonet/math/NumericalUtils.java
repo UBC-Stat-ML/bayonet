@@ -149,7 +149,6 @@ public class NumericalUtils
   /**
    * Call checkIsProb() with the default threshold
    * Also checks non-negativity.
-   * @param matrix
    */
   public static void checkIsProb(final double [] numbers)
   {

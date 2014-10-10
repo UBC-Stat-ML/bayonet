@@ -162,7 +162,7 @@ public class SumProduct<V>
    * If the log normalization is NaN or infinite, throw an exception.
    * Else, return true.
    * 
-   * @return is the normalization of this factor graph a positive (>0) number?
+   * @return is the normalization of this factor graph a positive number?
    */
   public boolean isNormalizationPositive()
   {

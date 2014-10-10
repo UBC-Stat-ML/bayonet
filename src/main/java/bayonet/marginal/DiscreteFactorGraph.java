@@ -246,7 +246,6 @@ public class DiscreteFactorGraph<V> implements FactorGraph<V>
    * Create a UnaryFactor.
    * 
    * @param <V> The type indexing variables.
-   * @param node The label of the variable to which this unary is planned to belong to.
    * @param site2ValuePotentials A matrix where the row index sites, and the columns index node's state.
    * @return
    */
@@ -259,7 +258,6 @@ public class DiscreteFactorGraph<V> implements FactorGraph<V>
    * Create a UnaryFactor.
    * 
    * @param <V> The type indexing variables.
-   * @param node The label of the variable to which this unary is planned to belong to.
    * @param site2ValuePotentials A 2d array where the row index sites, and the columns index node's state.
    * @return
    */
