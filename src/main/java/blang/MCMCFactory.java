@@ -5,7 +5,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 
-import blang.mcmc.Move;
 import blang.mcmc.MoveFactory;
 import blang.mcmc.MoveSet;
 import blang.mcmc.NodeMoveFactory;
@@ -67,9 +66,13 @@ public class MCMCFactory
     getNodeMoveFactory().annotationBasedFactory.add(variableType, moveType);
   }
   
-  public void excludeNodeMove(Class<? extends Move> moveType)
+  @SuppressWarnings({ "unchecked"})
+  public void excludeNodeMove(Class<? extends Operator> moveType)
   {
-    getNodeMoveFactory().annotationBasedFactory.exclude(moveType);
+    // TODO: more permanent solution needed
+    @SuppressWarnings("rawtypes")
+    Class _cast = moveType;
+    getNodeMoveFactory().annotationBasedFactory.exclude(_cast);
   }
   
   @SuppressWarnings("rawtypes")
