@@ -5,4 +5,4 @@ library(coda)
 
 coda <- read.coda('@{getInputChain()}', '@{getInputIndex()}')
 
-cat("EffectiveSize=", effectiveSize(coda), sep='')
+cat("EffectiveSize =", effectiveSize(coda), sep=' ')
