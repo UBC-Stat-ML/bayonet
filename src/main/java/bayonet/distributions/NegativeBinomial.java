@@ -1,6 +1,6 @@
 package bayonet.distributions;
 
-import static org.apache.commons.math3.util.ArithmeticUtils.factorialLog;
+import static org.apache.commons.math3.util.CombinatoricsUtils.factorialLog;
 import static org.apache.commons.math3.special.Gamma.logGamma;
 
 import java.util.Random;
