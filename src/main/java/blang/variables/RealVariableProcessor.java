@@ -97,7 +97,7 @@ public class RealVariableProcessor implements NodeProcessor<RealVariable>
         String[] stat = statSplit.split(":");
         toWrite = ArrayUtils.addAll(toWrite, stat);
       }
-      output.printWrite(variableName + "-summary", (Object []) toWrite);
+      output.write(variableName + "-summary", (Object []) toWrite);
       output.flush();
     }
   }
