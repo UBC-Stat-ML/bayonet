@@ -17,9 +17,9 @@ import blang.variables.RealVariable;
 
 
 /**
- * Continius Beta priors with mean Alpha and Beta parameter Beta.
+ * Continuous Beta priors with mean Alpha and Beta parameter Beta.
  * 
- *  P is the type of parametrization.
+ *  P is the type of parameterization.
  *  
  * @author Sohrab Salehi (sohrab.salehi@gmail.com)
  *
