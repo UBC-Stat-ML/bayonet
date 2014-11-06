@@ -75,6 +75,54 @@ public class BetaBinomial <P extends BetaBinomial.Parameters> implements Generat
         
     }
     
+    /**
+     * Bit of a misnomer since the mean and precision are not exactly given
+     * as the input parameters. Follows the notation of: 
+     * 
+     * A. Roth, J. Khattra, D. Yap, A. Wan, E. Laks, J. Biele, G. Ha, S. Aparicio, A. Bouchard-Côté, S. Shah. (2014)
+     * PyClone: Statistical inference of clonal population structure in cancer. Nature Methods. 10.1038/nmeth.2883
+     * http://www.nature.com/nmeth/journal/v11/n4/full/nmeth.2883.html
+     * (see supplement pdf p 26)
+     * 
+     * @author jewellsean
+     *
+     */
+    public static class MeanPrecisionParameterization implements Parameters
+    {
+        @FactorArgument
+        public final RealVariable m; 
+        @FactorArgument
+        public final RealVariable s; 
+        @FactorArgument
+        public final IntegerVariable trials;
+        
+        public MeanPrecisionParameterization(RealVariable m, RealVariable s, IntegerVariable trials)
+        {
+            this.trials = trials;
+            this.m = m;
+            this.s = s; 
+        }
+        
+        @Override
+        public int getTrials()
+        {
+            return trials.getIntegerValue();
+        }
+
+        @Override
+        public double getAlpha()
+        {
+            return (s.getValue() * m.getValue());
+        }
+
+        @Override
+        public double getBeta()
+        {
+            return (s.getValue() * (1 - m.getValue()));
+        }
+        
+    }
+    
     public BetaBinomial(IntegerVariable realization, P parameters)
     {
         this.realization = realization; 
@@ -134,5 +182,16 @@ public class BetaBinomial <P extends BetaBinomial.Parameters> implements Generat
     {
         return new BetaBinomial<AlphaBetaParameterization>(realization, new AlphaBetaParameterization(real(alpha), real(beta), intVar(trials)));
     }
+    
+    public BetaBinomial<MeanPrecisionParameterization> withMeanPrecision(RealVariable mean, RealVariable s, IntegerVariable trials)
+    {
+        return new BetaBinomial<MeanPrecisionParameterization>(realization, new MeanPrecisionParameterization(mean, s, trials));
+    }
+    
+    public BetaBinomial<MeanPrecisionParameterization> withMeanPrecision(double mean, double s, int trials)
+    {
+        return new BetaBinomial<MeanPrecisionParameterization>(realization, new MeanPrecisionParameterization(real(mean), real(s), intVar(trials)));
+    }
+    
     
 }
