@@ -1,0 +1,38 @@
+## Alex's code to create discrete valued cdf, and pmf
+## https://github.com/alexandrebouchard/coda-discrete-utils
+require(descr)
+my.matrix <- as.matrix(@{javaDoublesToRVector(getData())})
+
+variable.data <- my.matrix[, 1]
+my.freq <- freq(variable.data, plot = FALSE)
+number.rows <- dim(my.freq)[1]
+my.freq <- my.freq[-number.rows, ]
+pdf(paste('@{getOutput()}/', '@{getVarName()}', '-pmf.pdf', sep = ''))
+x.values <- as.numeric(row.names(my.freq))
+y.values <- my.freq[, 2]/100
+max.y <- max(y.values)
+y.label <- paste('Approximation of P(', '@{getVarName()}',' = k)', sep = '')
+plot(x.values, y.values, type = 'h', xlab = 'k', ylab = y.label, main = NULL, ylim = c(0, max.y))
+title('Probability Mass Function (PMF)')
+garbage <- dev.off()
+   
+m <- data.frame(k = x.values, mass = y.values)
+colnames(m) <- c('k', y.label)
+write.table(m, file = paste('@{getOutput()}/', '@{getVarName()}', '-pmf.csv', sep = ''), row.names = F, sep = ',')
+   
+mycdf <- ecdf(variable.data)
+pdf(paste('@{getOutput()}/', '@{getVarName()}', '-cdf.pdf', sep = ''))
+colnames(mycdf) <- NULL
+rownames(mycdf) <- NULL
+y.label <- paste('Approximation of P(', '@{getVarName()}', ' <= k)', sep = '')
+plot(mycdf, xlab = 'k', ylab = y.label, main = NULL)
+title('Cumulative Distribution Function (CDF)')
+garbage <- dev.off()
+            
+my.freq <- freq(variable.data, plot = FALSE)
+number.rows <- dim(my.freq)[1]
+my.freq <- my.freq[-number.rows, ]
+x.values <- as.numeric(row.names(my.freq))
+m <- data.frame(k = x.values, mass = mycdf(x.values))
+colnames(m) <- c('k', y.label)
+write.table(m, file = paste('@{getOutput()}/', '@{getVarName()}', '-cdf.csv', sep = ''), row.names = F, sep = ',')
