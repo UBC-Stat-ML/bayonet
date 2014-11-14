@@ -59,6 +59,7 @@ public class BlangSmallExample implements Runnable, Processor
     model = new Model();
     MCMCAlgorithm mcmc = factory.build(model, false);
     System.out.println(mcmc.model);
+    mcmc.model.printGraph(Results.getFileInResultFolder("pgm.dot"));
     mcmc.run();
     File histogramFile = Results.getFileInResultFolder("posteriorOnNumberOfFutureHumans.pdf");
     PlotHistogram.from(samples).toPDF(histogramFile);

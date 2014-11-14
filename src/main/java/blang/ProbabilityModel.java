@@ -1,5 +1,8 @@
 package blang;
 
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.util.Collections;
@@ -11,6 +14,8 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.jgrapht.DirectedGraph;
 import org.jgrapht.Graphs;
 import org.jgrapht.UndirectedGraph;
+import org.jgrapht.ext.DOTExporter;
+import org.jgrapht.ext.StringNameProvider;
 
 import bayonet.graphs.GraphUtils;
 import blang.MCMCFactory.Factories;
@@ -241,6 +246,36 @@ public class ProbabilityModel
       if (node.isFactor())
         result.add(node.getAsFactor());
     return result;
+  }
+  
+  public class BlangStringProvider extends StringNameProvider<Node>
+  {
+    
+    @Override
+    public String getVertexName(Node vertex)
+    {
+        String name = variableNames.get(vertex);
+        if (name == "")
+            name = vertex.toString();
+        return "<" + name + ">"; 
+        
+    }
+      
+  }
+    
+  @SuppressWarnings({ "unchecked", "rawtypes" })
+  /**
+   * Generates a .dot file for the composite factor graph
+   * saves to the provided file 
+   * @param file
+   */
+  public void printGraph(File file)
+  {
+      BlangStringProvider p = new BlangStringProvider();
+      DOTExporter export = new DOTExporter(p, p,null, null, null);
+      try {
+          export.export(new FileWriter(file), graph);
+      }catch (IOException e){}
   }
   
   public List<Factor> neighborFactors(Object variable)
@@ -532,7 +567,9 @@ public class ProbabilityModel
     
     public String get(Node variable)
     {
-      return longNames.get(variable).toString();
+        if(longNames.containsKey(variable))
+                return longNames.get(variable).toString();
+        return ""; 
     }
   }
   
