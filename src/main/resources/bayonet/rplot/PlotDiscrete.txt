@@ -2,7 +2,7 @@
 ## https://github.com/alexandrebouchard/coda-discrete-utils
 require(descr)
 my.matrix <- as.matrix(@{javaDoublesToRVector(getData())})
-
+numLabels <- 10
 variable.data <- my.matrix[, 1]
 my.freq <- freq(variable.data, plot = FALSE)
 number.rows <- dim(my.freq)[1]
@@ -12,7 +12,12 @@ x.values <- as.numeric(row.names(my.freq))
 y.values <- my.freq[, 2]/100
 max.y <- max(y.values)
 y.label <- paste('Approximation of P(', '@{getVarName()}',' = k)', sep = '')
-plot(x.values, y.values, type = 'h', xlab = 'k', ylab = y.label, main = NULL, ylim = c(0, max.y))
+if(length(x.values) <= numLabels){
+    plot(x.values, y.values, type = 'h', ylab = y.label, main = NULL, ylim = c(0, max.y), xaxt='n', xlab = 'k')
+    axis(side=1, at=x.values, label=x.values)
+} else { 
+    plot(x.values, y.values, type = 'h', ylab = y.label, main = NULL, ylim = c(0, max.y), xlab = 'k')
+}
 title('Probability Mass Function (PMF)')
 garbage <- dev.off()
    
@@ -25,8 +30,16 @@ pdf(paste('@{getOutput()}/', '@{getVarName()}', '-cdf.pdf', sep = ''))
 colnames(mycdf) <- NULL
 rownames(mycdf) <- NULL
 y.label <- paste('Approximation of P(', '@{getVarName()}', ' <= k)', sep = '')
-plot(mycdf, xlab = 'k', ylab = y.label, main = NULL)
+min.x = min(x.values)
+max.x = max(x.values)
+if(length(x.values) <= numLabels){
+	plot(mycdf, ylab = y.label, main = NULL, xlim = c(min.x, max.x), xaxt='n', xlab = 'k')
+	axis(side=1, at=x.values, label=x.values)
+	} else {
+	plot(mycdf, ylab = y.label, main = NULL, xlim = c(min.x, max.x), xlab = 'k')
+	}
 title('Cumulative Distribution Function (CDF)')
+
 garbage <- dev.off()
             
 my.freq <- freq(variable.data, plot = FALSE)
