@@ -12,7 +12,7 @@ import blang.variables.RealVector;
 public class Dirichlet<P extends Dirichlet.Parameters> implements GenerativeFactor 
 {
 	@FactorArgument(makeStochastic=true)
-	public final ProbabilitySimplex realization; // NOTE: the realization of a Dirichlet distribution is a Multinomial distribution
+	public final ProbabilitySimplex realization; 
 	@FactorComponent
 	public final P parameters; 
 

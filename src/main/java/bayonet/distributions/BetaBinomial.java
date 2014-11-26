@@ -159,7 +159,7 @@ public class BetaBinomial <P extends BetaBinomial.Parameters> implements Generat
 
     public static double logDensity(int point, double alpha, double beta, int trials)
     {
-        if (alpha < 0 || beta < 0 || trials < 1 || point < 0 || point > trials)
+        if (alpha < 0 || beta < 0 || (trials < 1 && point > 0) || point < 0 || point > trials)
             return Double.NEGATIVE_INFINITY;
         double logDensity = binomialCoefficientLog(trials, point);
         logDensity += logBeta(point + alpha, trials - point + beta);
