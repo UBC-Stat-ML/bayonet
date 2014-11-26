@@ -15,7 +15,7 @@ public class NumericalUtils
    * A default threshold when checking if quantities match up to 
    * numerical error.
    */
-  public static double THRESHOLD = 1e-8;
+  public static double THRESHOLD = 1e-6;
 
   /**
    * 
@@ -168,4 +168,18 @@ public class NumericalUtils
     return sum;
   }
   
+  public static double[][] smallNeg2Zero(double[][] mtx, double threshold)
+  {
+      for (int row = 0; row < mtx[0].length; row++)
+      {
+          int col = 0;
+          for (double val : mtx[row])
+          {
+              if(isClose(val, 0, threshold))
+                  mtx[row][col] = 0;
+              col++;
+          }
+      }
+      return mtx; 
+  }
 }

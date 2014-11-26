@@ -142,5 +142,14 @@ public class DoubleArrays {
         initialize((Object[]) o, d);
     }
   }
+  
+  public static double[] pointwiseExp(double[] x) {
+      double[] y = new double[x.length];
+      for (int i = 0; i < x.length; i++)
+      {
+          y[i] = Math.exp(x[i]);
+      }
+      return y;
+  }
 
 }
