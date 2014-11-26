@@ -1,5 +1,7 @@
 package blang.variables;
 
+import bayonet.math.NumericalUtils;
+import bayonet.opt.DoubleArrays;
 import blang.annotations.Processors;
 import blang.annotations.Samplers;
 import blang.factors.IIDRealVectorGenerativeFactor.VectorNormProcessor;
@@ -28,6 +30,15 @@ public class ProbabilitySimplex implements RealVectorInterface
 	{
 		return new ProbabilitySimplex(RealVector.rep(dim, val).getVector());
 	}
+		
+	public static ProbabilitySimplex repNormalize(int dim, double val)
+    {
+	    double[] prob = new double[dim];
+	    DoubleArrays.initialize(prob, val);
+	    double sum = NumericalUtils.getNormalization(prob);
+	    return new ProbabilitySimplex(DoubleArrays.multiply(prob, (1 / sum)));
+    }
+
 		
 	@Override
   public double [] getVector() 
