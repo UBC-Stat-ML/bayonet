@@ -1,5 +1,9 @@
 ## Alex's code to create discrete valued cdf, and pmf
 ## https://github.com/alexandrebouchard/coda-discrete-utils
+list.of.packages <- c("descr")
+new.packages <- list.of.packages[!(list.of.packages %in% installed.packages()[,"Package"])]
+if(length(new.packages)) install.packages(new.packages, repos="http://cran.us.r-project.org")
+
 require(descr)
 my.matrix <- as.matrix(@{javaDoublesToRVector(getData())})
 numLabels <- 10
