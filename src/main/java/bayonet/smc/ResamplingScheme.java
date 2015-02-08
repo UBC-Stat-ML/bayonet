@@ -1,6 +1,11 @@
 package bayonet.smc;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.Random;
+
+import com.google.common.primitives.Doubles;
 
 import bayonet.distributions.Uniform;
 
@@ -30,6 +35,20 @@ public enum ResamplingScheme
       }
       return result;
     }
+  },
+  MULTINOMIAL {
+    @Override
+    public double[] getSortedCumulativeProbabilities(Random rand, int nDarts)
+    {
+      // Note: uses an n log(n) algo. Linear is possible using normalized exponentials,
+      // but constant is larger than the sorting-based algorithm.
+      List<Double> darts = new ArrayList<>(nDarts);
+      for (int i = 0; i < nDarts; i++)
+        darts.add(rand.nextDouble());
+      Collections.sort(darts);
+      return Doubles.toArray(darts);
+    }
+    
   };
   
   /**
