@@ -4,7 +4,6 @@ import blang.annotations.Processors;
 import blang.annotations.Samplers;
 import blang.mcmc.RealVariableOverRelaxedSlice;
 import blang.mcmc.RealVariablePeskunTypeMove;
-import blang.mcmc.RealVariableSliceMove;
 
 
 

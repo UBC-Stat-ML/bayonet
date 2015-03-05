@@ -10,8 +10,6 @@ import blang.MCMCAlgorithm;
 import blang.MCMCFactory;
 import blang.MCMCRunner;
 import blang.annotations.DefineFactor;
-import blang.mcmc.RealVariablePeskunTypeMove;
-import blang.mcmc.RealVariableSliceMove;
 import blang.validation.CheckStationarity;
 import blang.variables.RealVariable;
 
