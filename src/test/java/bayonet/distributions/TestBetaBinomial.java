@@ -38,7 +38,8 @@ public class TestBetaBinomial extends MCMCRunner
   protected void setupMCMC(MCMCFactory factory)
   {
     factory.excludeNodeMove(RealVariablePeskunTypeMove.class);
-    factory.addNodeMove(RealVariable.class, RealVariableMHProposal.class);
+//  factory.excludeNodeMove(RealVariableOverRelaxedSlice.class);
+//  factory.addNodeMove(RealVariable.class, RealVariableMHProposal.class);
  }
   
   @Test

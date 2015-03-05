@@ -10,6 +10,7 @@ import blang.MCMCFactory;
 import blang.MCMCRunner;
 import blang.annotations.DefineFactor;
 import blang.mcmc.RealVariableMHProposal;
+import blang.mcmc.RealVariableOverRelaxedSlice;
 import blang.mcmc.RealVariablePeskunTypeMove;
 import blang.validation.CheckStationarity;
 import blang.variables.IntegerVariable;
@@ -28,7 +29,8 @@ public class TestBinomial extends MCMCRunner
   protected void setupMCMC(MCMCFactory factory)
   {
     factory.excludeNodeMove(RealVariablePeskunTypeMove.class);
-    factory.addNodeMove(RealVariable.class, RealVariableMHProposal.class);
+//    factory.excludeNodeMove(RealVariableOverRelaxedSlice.class);
+//    factory.addNodeMove(RealVariable.class, RealVariableMHProposal.class);
  }
   
   @Test
