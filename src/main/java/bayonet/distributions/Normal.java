@@ -135,6 +135,34 @@ public class Normal<P extends Normal.Parameters> implements GenerativeFactor, Un
     }
   }
   
+  public static class MeanPrecisionParameterization implements Parameters
+  {
+    @FactorArgument
+    public final RealVariable mean; 
+    
+    @FactorArgument
+    public final RealVariable precision;
+      
+    public MeanPrecisionParameterization(RealVariable mean, RealVariable precision)
+    {
+        this.mean = mean; 
+        this.precision = precision;
+    }
+    
+    @Override
+    public double getMean()
+    {
+        return mean.getValue();
+    }
+
+    @Override
+    public double getVariance()
+    {
+        return (1 / precision.getValue());
+    }
+      
+  }
+  
   /* Syntactic sugar/method chaining */
   
   public static Normal<MeanVarianceParameterization> on(RealVariable realization)
@@ -146,4 +174,11 @@ public class Normal<P extends Normal.Parameters> implements GenerativeFactor, Un
   {
     return Normal.on(RealVariable.real(0.0));
   }
+    
+  public Normal<MeanPrecisionParameterization> withMeanPrecision(RealVariable mean, RealVariable precision)
+  {
+      return new Normal<MeanPrecisionParameterization>(realization, new MeanPrecisionParameterization(mean, precision)); 
+  }
+    
+ 
 }
