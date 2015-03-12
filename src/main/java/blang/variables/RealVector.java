@@ -1,18 +1,16 @@
 package blang.variables;
 
 import blang.annotations.Processors;
-import blang.annotations.Samplers;
 import blang.factors.IIDRealVectorGenerativeFactor.VectorNormProcessor;
-import blang.mcmc.RealVectorMHProposal;
 
 /**
  * Simplest implementation of RealVectorInterface
  * @author Seong-Hwan Jun (s2jun.uw@gmail.com)
  *
  */
-@Samplers({
-	RealVectorMHProposal.class
-})
+//@Samplers({ // see Issue #25
+//	RealVectorMHProposal.class
+//})
 @Processors({
 	VectorNormProcessor.class
 })
