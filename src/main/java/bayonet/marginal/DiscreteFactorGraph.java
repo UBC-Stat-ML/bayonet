@@ -129,7 +129,6 @@ public class DiscreteFactorGraph<V> implements FactorGraph<V>
    * @param node The label of the variable for which the unary will be updated in place.
    * @param newOne The unary to multiply/set.
    */
-  @SuppressWarnings("unchecked")
   public void unaryTimesEqual(V node, UnaryFactor<V> newOne)
   {
     UnaryFactor<V> oldOne = unaries.get(node);

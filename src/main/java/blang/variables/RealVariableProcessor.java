@@ -10,7 +10,6 @@ import org.apache.commons.math3.stat.descriptive.SummaryStatistics;
 import bayonet.coda.CodaParser;
 import bayonet.coda.EffectiveSize;
 import bayonet.coda.SimpleCodaPlots;
-import bayonet.rplot.RUtils;
 import blang.processing.NodeProcessor;
 import blang.processing.ProcessorContext;
 import briefj.OutputManager;
