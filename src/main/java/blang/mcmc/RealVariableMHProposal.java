@@ -21,14 +21,17 @@ public class RealVariableMHProposal implements MHProposalDistribution
   @Override
   public Proposal propose(Random rand)
   {
-    if (!Double.isNaN(savedValue))
-      throw new RuntimeException();
-    savedValue = variable.getValue();
-    double nextGaussian = rand.nextGaussian();
-    
-    final double newValue = savedValue + nextGaussian;
-    variable.setValue(newValue);
-    return new ProposalRealization();
+      briefj.BriefLog.warnOnce("RealVariableMHProposal is invalid. See #25.");
+
+
+      if (!Double.isNaN(savedValue))
+          throw new RuntimeException();
+      savedValue = variable.getValue();
+      double nextGaussian = rand.nextGaussian();
+
+      final double newValue = savedValue + nextGaussian;
+      variable.setValue(newValue);
+      return new ProposalRealization();
   }
   
   private class ProposalRealization implements Proposal

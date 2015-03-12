@@ -11,7 +11,9 @@ import blang.MCMCAlgorithm;
 import blang.MCMCFactory;
 import blang.MCMCRunner;
 import blang.annotations.DefineFactor;
+import blang.mcmc.MultiplicativeRealVariableMHProposal;
 import blang.mcmc.RealVariableMHProposal;
+import blang.mcmc.RealVariableOverRelaxedSlice;
 import blang.mcmc.RealVariablePeskunTypeMove;
 import blang.validation.CheckStationarity;
 import blang.variables.RealVariable;
@@ -39,9 +41,9 @@ public class TestNormalExponential extends MCMCRunner
   protected void setupMCMC(MCMCFactory factory)
   {
     factory.excludeNodeMove(RealVariablePeskunTypeMove.class);
+    factory.excludeNodeMove(RealVariableOverRelaxedSlice.class);
     factory.addNodeMove(RealVariable.class, RealVariableMHProposal.class);
     
-//    factory.excludeNodeMove(RealVariablePeskunTypeMove.class);
 //    factory.addNodeMove(RealVariable.class, MultiplicativeRealVariableMHProposal.class);
   }
   

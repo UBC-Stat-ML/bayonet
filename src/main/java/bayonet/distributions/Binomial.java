@@ -97,8 +97,12 @@ import blang.variables.RealVariable;
     {
        if( point < 0 || point > trials || prob < 0 || prob > 1 || trials <= 0)
          return Double.NEGATIVE_INFINITY;
-       return CombinatoricsUtils.binomialCoefficientLog(trials, point) + 
-           point * Math.log(prob) + (trials - point) * Math.log(1 - prob);
+       
+       double logDensity = CombinatoricsUtils.binomialCoefficientLog(trials, point);
+       logDensity += point > 0 ? point * Math.log(prob) : 0; // avoids situations such as 0 * -inf
+       logDensity += (trials - point) > 0 ? (trials - point) * Math.log(1 - prob) : 0; 
+             
+       return logDensity;   
     }
     
     
