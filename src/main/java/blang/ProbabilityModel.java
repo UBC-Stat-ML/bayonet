@@ -318,7 +318,7 @@ public class ProbabilityModel
       Object variable = argument.getRight();
       if (argumentField.getAnnotation(FactorArgument.class).makeStochastic())
         stochasticVariables.add(variableNode(variable));
-      ensureVariableAdded(variable, fieldsPath.extendBy(argumentField)); 
+      ensureVariableAdded(variable, argument.getLeft());//fieldsPath.extendBy(argumentField)); 
       graph.addEdge(variableNode(variable), factorNode(f));
     }
   }
@@ -403,7 +403,10 @@ public class ProbabilityModel
       return result;
     }
     else
-      return variableNode.getPayload().toString();
+    {
+      Object payload = variableNode.getPayload();
+      return payload == null ? null : payload.toString();
+    }
   }
   
   private Node factorNode(Factor f) 
