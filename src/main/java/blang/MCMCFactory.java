@@ -92,10 +92,10 @@ public class MCMCFactory
   
   public static class Factories<T, S extends T>
   {
-    private final List<T> factories = Lists.newArrayList();
+    public final List<T> factories = Lists.newArrayList();
     private final S standardFactory;
     
-    private Factories(S standardFactory)
+    public Factories(S standardFactory)
     {
       this.standardFactory = standardFactory;
       factories.add(standardFactory);

@@ -85,7 +85,7 @@ public class CheckStationarity
             "copies of the forward simulated dataset were rejected. Build a smaller test " +
             "with less volatility, increase the number of indep samples, remove the rank " +
             "based test (less numerically stable?) or relax the p threshold " +
-            "value threshold.");
+            "value.");
       else
         Assert.fail("Stationary test suggests further investigations " +
           "(e.g. try one move at a time to narrow possibilities):\n" + toString(testResults));
