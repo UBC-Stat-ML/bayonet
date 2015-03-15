@@ -6,7 +6,6 @@ import org.junit.Test;
 
 import bayonet.distributions.Gamma.RateShapeParameterization;
 import bayonet.distributions.Poisson.MeanParameterization;
-import bayonet.distributions.Uniform.MinMaxParameterization;
 import blang.MCMCAlgorithm;
 import blang.MCMCFactory;
 import blang.MCMCRunner;
@@ -23,7 +22,6 @@ public class TestPoisson extends MCMCRunner
   public final IntegerVariable observation = IntegerVariable.intVar(1);
   @DefineFactor public final Poisson<MeanParameterization> likelihood = Poisson.on(observation);
   @DefineFactor public final Gamma<RateShapeParameterization> priorMean = Gamma.on(likelihood.parameters.mean);
-//  @DefineFactor public final Uniform<MinMaxParameterization> priorMean = Uniform.on(likelihood.parameters.mean).withBounds(0.8, 1.2);
   
   @Override
   protected void setupMCMC(MCMCFactory factory)
@@ -44,8 +42,6 @@ public class TestPoisson extends MCMCRunner
     algo.options.nMCMCSweeps = 10;
     CheckStationarity check = new CheckStationarity();
     System.out.println("List of tests: " + check.getTests().toString());
-    check.getTests().remove(2);
-    System.out.println("List of tests with rank based test removed: " + check.getTests().toString());
     check.setShowSampleSummaryStats(true);
     check.check(algo, 10000, 0.05);
   }
