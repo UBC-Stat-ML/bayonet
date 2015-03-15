@@ -243,9 +243,9 @@ public class CheckStationarity
    * 
    */
   private List<Test> tests = Lists.newArrayList(
-      mannWhitneyTest,    // note: seems numerically unstable (under/over flows?)
+//      mannWhitneyTest,    // note: seems numerically unstable (under/over flows?) see issue #30
       higherMomentTTest, 
-      wilcoxonSignedRank, // note: seems numerically unstable (under/over flows?)
+//      wilcoxonSignedRank, // note: seems numerically unstable (under/over flows?) see issue #30
       tTest);
   
   /**
