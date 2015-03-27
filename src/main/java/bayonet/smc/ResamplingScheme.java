@@ -8,6 +8,7 @@ import java.util.Random;
 import com.google.common.primitives.Doubles;
 
 import bayonet.distributions.Uniform;
+import bayonet.math.NumericalUtils;
 
 
 /**
@@ -57,4 +58,47 @@ public enum ResamplingScheme
    * @return The location of the n darts, sorted in ascending order.
    */
   public abstract double[] getSortedCumulativeProbabilities(Random rand, int nDarts);
+  
+  public <T> List<T> resample(
+      final Random rand, 
+      final double [] w, 
+      final List<T> particles)
+  {
+    return resample(rand, w, particles, particles.size());
+  }
+  
+  public <T> List<T> resample(
+      final Random rand, 
+      final double [] w, 
+      final List<T> particles, 
+      final int nSamples)
+  {
+    final double [] darts = getSortedCumulativeProbabilities(rand, nSamples); 
+    final List<T> result = new ArrayList<>(nSamples);
+    double sum = 0.0;
+    int nxtDartIdx = 0;
+    for (int i = 0; i < w.length; i++)
+    {
+      final double curLen = w[i];
+      if (curLen < 0 - NumericalUtils.THRESHOLD)
+        throw new RuntimeException();
+      final double right = sum + curLen;
+      
+      innerLoop : for (int dartIdx = nxtDartIdx; dartIdx < darts.length; dartIdx++)
+        if (darts[dartIdx] < right)
+        {
+          result.add(particles.get(i)); //result.incrementCount(i, 1.0);
+          nxtDartIdx++;
+        }
+        else 
+          break innerLoop;
+      sum = right;
+    }
+    if (Double.isNaN(sum))
+      throw new RuntimeException();
+    NumericalUtils.checkIsClose(1.0, sum);
+    if (result.size() != nSamples)
+      throw new RuntimeException();
+    return result;
+  }
 }

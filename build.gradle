@@ -5,7 +5,7 @@ apply plugin: 'eclipse'
 uploadArchives {
   repositories.mavenDeployer {
     repository(url: "file:///Users/bouchard/Documents/web/public_html/maven/")
-    pom.version = "2.3.13"
+    pom.version = "2.3.14"
     pom.artifactId = "bayonet"
     pom.groupId = "ca.ubc.stat"
   }
@@ -87,3 +87,13 @@ buildscript {
   }
 }
 
+if (JavaVersion.current().isJava8Compatible()) {
+    allprojects {
+        //noinspection SpellCheckingInspection
+        tasks.withType(Javadoc) {
+            // disable the crazy super-strict doclint tool in Java 8
+            //noinspection SpellCheckingInspection
+            options.addStringOption('Xdoclint:none', '-quiet')
+        }
+    }
+}
