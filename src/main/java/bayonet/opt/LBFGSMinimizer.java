@@ -12,6 +12,7 @@ public class LBFGSMinimizer implements GradientMinimizer {
   int maxHistorySize = 5;
   LinkedList<double[]> inputDifferenceVectorList = new LinkedList<double[]>();
   LinkedList<double[]> derivativeDifferenceVectorList = new LinkedList<double[]>();
+  public boolean verbose = false;
 
   private int nRequiredIterations;
   public double[] minimize(DifferentiableFunction function, double[] initial, double tolerance) {
@@ -20,6 +21,8 @@ public class LBFGSMinimizer implements GradientMinimizer {
     int iteration;
     for (iteration = 0; iteration < maxIterations; iteration++) {
       double value = function.valueAt(guess);
+      if (verbose)
+        System.out.println("Value before iteration " + iteration + ": " + value);
       double[] derivative = function.derivativeAt(guess);
       double[] initialInverseHessianDiagonal = getInitialInverseHessianDiagonal(function);
       double[] direction = implicitMultiply(initialInverseHessianDiagonal, derivative);
