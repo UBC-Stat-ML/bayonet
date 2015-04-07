@@ -2,7 +2,6 @@ package bayonet.regression;
 
 
 import java.io.Serializable;
-import java.util.Random;
 import java.util.Set;
 import java.util.SortedSet;
 
@@ -16,11 +15,9 @@ import bayonet.regression.MaxentClassifier;
 import org.apache.commons.lang3.tuple.Pair;
 
 import bayonet.distributions.Multinomial;
-import bayonet.distributions.Normal;
 import bayonet.math.NumericalUtils;
 import bayonet.math.SparseVector;
 import bayonet.opt.DifferentiableFunction;
-import bayonet.opt.GradientMinimizer;
 import bayonet.opt.LBFGSMinimizer;
 import briefj.collections.Counter;
 import briefj.opt.Option;
@@ -29,14 +26,13 @@ import briefj.opt.Option;
 
 
 /**
- * A multiclass logistic regression model
+ * A multi-class logistic regression model and a built in training method built
+ * on LBFGS. 
  * 
- * Regularization options: L1 and L2
- * 
- * Training: 
- *  -maximum likelihood training using the LBFGS and Orthan-Wise/LBFGS algorithms
- *  -sampling from posterior using MH or the Hamiltonian Hybrid MCMC algorithms
- * 
+ * In contrast to most existing package, for an input x and output y, 
+ * the prediction is given by f(x,y).w instead of f_y(x).w_y. This makes it much 
+ * easier to build hierarchical models and to deal with large numbers 
+ * of labels.
  * 
  * @author Alexandre Bouchard
  *
@@ -78,8 +74,10 @@ public final class MaxentClassifier<I,L,F> implements Serializable
     this.featureVectors = FeatureVectors.createFeatureVectors(baseMeasures, data, extractor);
     this.regularizationCenters = featureVectors.createInitialWeight(regularizerCenters);
   }
-  private MaxentClassifier(BaseMeasures<I, L> baseMeasures,
-      Counter<F> weights, FeatureExtractor<LabeledInstance<I, L>, F> extractor)
+  private MaxentClassifier(
+      BaseMeasures<I, L> baseMeasures,
+      Counter<F> weights, 
+      FeatureExtractor<LabeledInstance<I, L>, F> extractor)
   {
     this.baseMeasures = baseMeasures;
     this.featureVectors = FeatureVectors.createFeatureVectorsFromSet(weights.keySet(), extractor);
@@ -116,6 +114,7 @@ public final class MaxentClassifier<I,L,F> implements Serializable
   {
     MaxentClassifier<I, L, F> result = new MaxentClassifier<I, L, F>(
         baseMeasures, trainingData.keySet(), extractor, regularizerCenters);
+    result.verbose = learningOptions.verbose;
     result.learn(trainingData, learningOptions);
     return result;
   }
@@ -236,7 +235,12 @@ public final class MaxentClassifier<I,L,F> implements Serializable
     return result;
   }
   
-  private void logs(Object o){}
+  private boolean verbose = false;
+  private void logs(Object o)
+  {
+    if (verbose)
+      System.out.println(o.toString());
+  }
   
   // 
   // Learning related
@@ -251,70 +255,31 @@ public final class MaxentClassifier<I,L,F> implements Serializable
     double [] init = featureVectors.createInitialWeight(options.initialWeights);
     final ObjectiveFunction objective = objectiveFunction(suffStats, options.sigma);
     logs("featureVectors.dim()=" + featureVectors.dim() );
-    if (options.learningAlgo == LearningAlgorithm.LBFGS)
-    {
-      logs("Optimization using LBFGS");
-      LBFGSMinimizer minimizer = new LBFGSMinimizer(options.iterations);
-      minimizer.verbose = options.verbose ;
-      this.weights = minimizer.minimize(objective, init, options.tolerance);
-    }
-    else if (options.learningAlgo == LearningAlgorithm.MH)
-    {
-      double [] prev = init, cur = new double[init.length];
-      double prevLogPr = -objective.valueAt(prev);
-      long initTime = System.currentTimeMillis();
-      for (int iter = 0; iter < options.iterations; iter++)
-      {
-        for (int i = 0; i < cur.length; i++)
-          cur[i] = prev[i] + options.proposalStdDev * Normal.generateStandardNormal(options.rand);
-        final double curLogPr = -objective.valueAt(cur);
-        final double ratio = Math.min(1, Math.exp(curLogPr-prevLogPr));
-        if (options.rand.nextDouble() < ratio)
-        {
-          // accept
-          for (int i = 0; i < cur.length; i++)
-            prev[i] = cur[i];
-          prevLogPr = curLogPr;
-        }
-        logs("MH-iteration " + (iter+1) + "/" + options.iterations + " " + 
-            (System.currentTimeMillis()-initTime) + " " +
-            curLogPr);
-        
-      }
-      this.weights = prev;
-    }
-    else throw new RuntimeException();
-  }
-  public ObjectiveFunction objectiveFunction(
-      Counter<LabeledInstance<I, L>> suffStats, 
-      double sigma, boolean useL1) 
-  { 
-    return new ObjectiveFunction(suffStats, sigma, useL1);
+    
+    logs("Optimization using LBFGS");
+    LBFGSMinimizer minimizer = new LBFGSMinimizer(options.iterations);
+    minimizer.verbose = options.verbose ;
+    this.weights = minimizer.minimize(objective, init, options.tolerance);
   }
   public ObjectiveFunction objectiveFunction(
       Counter<LabeledInstance<I, L>> suffStats, 
       double sigma) 
   { 
-    return new ObjectiveFunction(suffStats, sigma, false);
+    return new ObjectiveFunction(suffStats, sigma);
   }
-  public static enum LearningAlgorithm 
-  { 
-    LBFGS(false), MH(true); 
-    public final boolean isSampling;
-    private LearningAlgorithm(boolean isSampling) { this.isSampling = isSampling; }
-  }
+
+
   public static class MaxentOptions<F> implements Cloneable
   {
-    @Option public boolean verbose = false;
-    @Option public double regResamplingPriorShape = 2.0;
-    @Option public double regResamplingPriorRate = 2.0;
-    @Option public Random rand = new Random(1);
-    @Option public LearningAlgorithm learningAlgo = LearningAlgorithm.LBFGS;
-    @Option public double proposalStdDev = 0.05;
+    @Option(gloss = "Show information message when performing weight fitting") 
+    public boolean verbose = false;
+    
     @Option(gloss="Default regularization factor") 
     public double sigma = 1.0;
-    @Option(gloss="Max number of learning iterations") 
+    
+    @Option(gloss="Max number of LBFGS iterations for weight fitting") 
     public int iterations = 100;
+    
     @Option(gloss="Under this delta, stop LBFGS optimization") 
     public double tolerance = 1e-8;
     /**
@@ -349,10 +314,8 @@ public final class MaxentClassifier<I,L,F> implements Serializable
     private final Counter<LabeledInstance<I, L>> trainingCounts;
     private final SparseVector actualExpectedFeatureVector;
     private final  Counter<I> marginalExpectedCounts;
-    private final boolean useL1;
-    public ObjectiveFunction(Counter<LabeledInstance<I, L>> expectedCounts, double sigma, boolean useL1)
+    public ObjectiveFunction(Counter<LabeledInstance<I, L>> expectedCounts, double sigma)
     {
-      this.useL1 = useL1;
       this.sigma = sigma;
       expectedCounts = restrictToValidTrainingData(expectedCounts, baseMeasures);
       // precompute some quantities for efficiency
@@ -414,26 +377,10 @@ public final class MaxentClassifier<I,L,F> implements Serializable
         final double diff = x[j] - regularizationCenters[j]; //mu;
         // for the gradient
         final double sigma = this.sigma * featureVectors.getRegularizationFactor(j);
-        if (useL1)
-        {
-          if (diff == 0.0)
-          {
-                 if (gradient[j] < -1.0/2/sigma) gradient[j] -= +1.0/2/sigma;
-            else if (gradient[j] > +1.0/2/sigma) gradient[j] -= -1.0/2/sigma;
-            else  
-              gradient[j] = 0;
-          }
-          else
-            gradient[j] += (diff < 0 ? -1 : +1) / 2 / sigma;
-          
-          result += Math.abs(diff) / 2/ sigma;
-        }
-        else
-        {
-          gradient[j] += diff/sigma;
-          // for the fValue
-          result += diff*diff/2.0/sigma;
-        }
+
+        gradient[j] += diff/sigma;
+        // for the fValue
+        result += diff*diff/2.0/sigma;
       }
       return result;
     }
