@@ -102,7 +102,7 @@ public class TestStreamingBootstrap
 
   private static DiscreteFactorGraph<Integer> createHMM(List<Integer> observations)
   {
-    UndirectedGraph<Integer, ?> topology = createChainTopology();
+    UndirectedGraph<Integer, ?> topology = GraphUtils.createChainTopology(len);
     DiscreteFactorGraph<Integer> result = new DiscreteFactorGraph<Integer>(topology);
     
     // initial distribution
@@ -121,19 +121,6 @@ public class TestStreamingBootstrap
         curEmissionPrs[s] = emissionPrs[s][currentObs];
       result.unaryTimesEqual(i, new double[][]{curEmissionPrs});
     }
-    
-    return result;
-  }
-
-  private static UndirectedGraph<Integer, ?> createChainTopology()
-  {
-    UndirectedGraph<Integer, ?> result = GraphUtils.newUndirectedGraph();
-    
-    for (int i = 0; i < len; i++)
-      result.addVertex(i);
-    
-    for (int i = 0; i < len - 1; i++)
-      result.addEdge(i, i+1);
     
     return result;
   }

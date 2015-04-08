@@ -242,6 +242,19 @@ public class GraphUtils
     return result;
   }
   
+  public static UndirectedGraph<Integer, ?> createChainTopology(int len)
+  {
+    UndirectedGraph<Integer, ?> result = GraphUtils.newUndirectedGraph();
+    
+    for (int i = 0; i < len; i++)
+      result.addVertex(i);
+    
+    for (int i = 0; i < len - 1; i++)
+      result.addEdge(i, i+1);
+    
+    return result;
+  }
+  
   /**
    * Pick the end of an edge other than the one in variable node
    * 
