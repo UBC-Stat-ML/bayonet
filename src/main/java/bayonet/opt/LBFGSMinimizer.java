@@ -15,8 +15,10 @@ public class LBFGSMinimizer implements GradientMinimizer {
   public boolean verbose = false;
 
   private int nRequiredIterations;
+  private Boolean converged = null;
   public double[] minimize(DifferentiableFunction function, double[] initial, double tolerance) {
     BacktrackingLineSearcher lineSearcher = new BacktrackingLineSearcher();
+    converged = false;
     double[] guess = DoubleArrays.clone(initial);
     int iteration;
     for (iteration = 0; iteration < maxIterations; iteration++) {
@@ -35,7 +37,10 @@ public class LBFGSMinimizer implements GradientMinimizer {
       double nextValue = function.valueAt(nextGuess);
       double[] nextDerivative = function.derivativeAt(nextGuess);
       if (converged(value, nextValue, tolerance))
+      {
+        converged = true;
         return nextGuess;
+      }
       updateHistories(guess, nextGuess, derivative,  nextDerivative);
       guess = nextGuess;
       value = nextValue;
@@ -44,6 +49,13 @@ public class LBFGSMinimizer implements GradientMinimizer {
     this.nRequiredIterations = iteration;
     System.out.println("LBFGSMinimizer.minimize: Exceeded maxIterations without converging.");
     return guess;
+  }
+  
+  public boolean converged()
+  {
+    if (converged == null)
+      throw new RuntimeException("Convergence status undefined before calling miminize()");
+    return converged;
   }
 
   private boolean converged(double value, double nextValue, double tolerance) {
