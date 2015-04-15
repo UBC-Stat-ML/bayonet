@@ -48,6 +48,8 @@ public final class ParticlePopulation<P> implements Serializable
       final List<P> particles, 
       final double logScaling)
   {
+    if (logWeights.length != particles.size())
+      throw new RuntimeException("Dimensionality of weights should match the dim of particles");
     double logWeightsScaling = Multinomial.expNormalize(logWeights);
     return new ParticlePopulation<>(particles, logWeights, logScaling + logWeightsScaling);
   }
