@@ -17,7 +17,15 @@ import blang.variables.RealVariable;
 import blang.variables.RealVectorInterface;
 
 
-
+/**
+ * 
+ * 
+ * Note: consider using List<Factor> or Factor[] in the model declaration directly. In certain 
+ *   cases, this could lead to significant savings.
+ * @author Alexandre Bouchard (alexandre.bouchard@gmail.com)
+ *
+ * @param <P>
+ */
 public class IIDRealVectorGenerativeFactor<P> implements GenerativeFactor
 {
   private final UnivariateRealDistribution marginalDistribution;
@@ -114,7 +122,6 @@ public class IIDRealVectorGenerativeFactor<P> implements GenerativeFactor
     
   }
 
-  
   public static IIDRealVectorGenerativeFactor<MeanVarianceParameterization> iidNormalOn(RealVectorInterface variable)
   {
     Normal<MeanVarianceParameterization> marginal = Normal.newNormal();

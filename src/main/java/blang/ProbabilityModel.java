@@ -5,6 +5,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -28,6 +29,8 @@ import briefj.BriefLists;
 import briefj.BriefStrings;
 import briefj.ReflexionUtils;
 
+
+
 //import com.esotericsoftware.kryo.Kryo;
 //import com.esotericsoftware.kryo.Registration;
 //import com.esotericsoftware.kryo.serializers.FieldSerializer;
@@ -50,11 +53,6 @@ import com.rits.cloning.Cloner;
  */
 public class ProbabilityModel
 {
-  
-  /*
-     TODO: RandomVariable<T> instead of VariableNode
-   */
-  
   private final UndirectedGraph<Node,?> graph = GraphUtils.newUndirectedGraph();
   
   private final Set<Node> 
@@ -72,7 +70,6 @@ public class ProbabilityModel
     variableName2Object = createVariableNameInverseMap(variableNames);
   }
 
-
   public static ProbabilityModel parse(Object modelSpecification)
   {
     return new ProbabilityModel(modelSpecification);
@@ -88,30 +85,6 @@ public class ProbabilityModel
   
   public static ProbabilityModel cloneAndParse(Object specification)
   {
-    /*
-     Note: we are not using Kryo because it requires no arg constructors
-           deep clone library (https://code.google.com/p/cloning/wiki/Usage) supports it through objenesis (http:objenesis.org/)
-    
-     Note: this issue is due to a limitation of the reflection API. objenesis is a workaround hack not fully JVM indep
-    
-     Addendum: actually, might need kryo/xstream anyways for check points/reload? deep clone lib does not do this
-               see https:github.com/eishay/jvm-serializers/wiki for speed comparison of different methods
-    
-     Problem with kryo: dumps are binary. some fast JSON are attractive but JSON does have limitations. probably too naive
-     use binary with good tooling (main issue is versioning)
-    
-     Kryo version:
-    
-          Kryo kryo = new Kryo();
-          FieldSerializer<ModelRunner> fs = new FieldSerializer<ModelRunner>(kryo,ModelRunner.class); 
-          for (Field f : ReflexionUtils.getDeclaredFields(ModelRunner.class, true))
-            fs.removeField(f.getName());
-           Use your specific serializer instance with an excluded field for the Bla class
-          kryo.register(ModelRunner.class, fs); 
-          Object clonedSpec = kryo.copy(specification);
-          return new ProbabilityModel(clonedSpec);
-    */
-    
     Cloner cloner = new Cloner();
     // avoid infinite loops if used in conjunction with the ModelRunner
     cloner.setNullTransient(true);
@@ -134,6 +107,8 @@ public class ProbabilityModel
       throw new RuntimeException("Problem in " + fieldsPath + ": a factor should contain at least one FactorArgument " +
       		"defining a random variable, or at least one FactorComponent recursively satisfying that property. " +
       		"See FactorArgument.makeStochastic()");
+    if (fieldsPath.getLastField().getAnnotation(DefineFactor.class).onObservations())
+      setVariablesInFactorAsObserved(f);
   }
   
   public double logDensity()
@@ -157,15 +132,6 @@ public class ProbabilityModel
         result.add(n.getAsVariable());
     return result;
   }
-  
-//  public List<RandomVariable<?>> getLatentRandomVariables()
-//  {
-//    List<RandomVariable<?>> result = Lists.newArrayList();
-//    for (Node n : stochasticVariables)
-//      if (!observedVariables.contains(n))
-//        result.add(n);
-//    return result;
-//  }
   
   public List<String> getLatentVariableNames()
   {
@@ -205,15 +171,6 @@ public class ProbabilityModel
   {
     return ReflexionUtils.sublistOfGivenType(getLatentVariables(), ofType);
   }
-  
-//  public <T> List<RandomVariable<T>> getLatentRandomVariables(Class<T> ofType)
-//  {
-//    List<RandomVariable<T>> result = Lists.newArrayList();
-//    for (RandomVariable rv : getLatentRandomVariables())
-//      if (ofType.isAssignableFrom(rv.getRealization().getClass())) 
-//        result.add(rv);
-//    return result;
-//  }
   
   public List<Factor> linearizedFactors()
   {
@@ -283,6 +240,15 @@ public class ProbabilityModel
     List<Factor> result = Lists.newArrayList();
     for (Node n : Graphs.neighborListOf(graph, variableNode(variable)))
       result.add(n.getAsFactor());
+    return result;
+  }
+  
+  public List<Object> neighborLatentVariables(Factor f)
+  {
+    List<Object> result = Lists.newArrayList();
+    for (Node n : Graphs.neighborListOf(graph, factorNode(f)))
+      if (!observedVariables.contains(n))
+      result.add(n.getAsVariable());
     return result;
   }
   
@@ -366,16 +332,30 @@ public class ProbabilityModel
     {
       Object toAdd = ReflexionUtils.getFieldValue(field, o);
       if (toAdd == null) continue;
-      boolean isFactor = toAdd instanceof Factor;
-      if (!isFactor)
-        throw new RuntimeException("@Factor annotation only permitted on objects of type of Factor");
-        
-      Factor factor = (Factor) toAdd;
-      addFactor(factor, fieldsPath.extendBy(field));
-      if (field.getAnnotation(DefineFactor.class).onObservations())
-        setVariablesInFactorAsObserved(factor);
       
-      parse(toAdd, fieldsPath.extendBy(field));
+      if (toAdd instanceof Factor)
+      {
+        Factor factor = (Factor) toAdd;
+        FieldPath path = fieldsPath.extendBy(field);
+        addFactor(factor, path);
+        parse(factor, path);
+      }
+      else if (toAdd instanceof List || toAdd instanceof Factor[])
+      {
+        @SuppressWarnings({ "rawtypes", "unchecked" })
+        List<Factor> factorList = (toAdd instanceof List ? 
+            (List) toAdd :
+            Arrays.asList((Factor[]) toAdd));
+        for (int i = 0; i < factorList.size(); i++)
+        {
+          Factor factor = factorList.get(i);
+          FieldPath path = fieldsPath.extendBy(field, i);
+          addFactor(factor, path);
+          parse(factor, path);
+        }
+      }
+      else
+        throw new RuntimeException("@Factor annotation only permitted on objects of type of Factor, List<Factor>, or Factor[]");
     }
   }
   
@@ -436,15 +416,8 @@ public class ProbabilityModel
     return result;
   }
   
-  private static <T> List<T> growList(List<T> old, T newItem)
-  {
-    List<T> result = Lists.newArrayList(old);
-    result.add(newItem);
-    return result;
-  }
-  
   @SuppressWarnings("unchecked")
-  private static final FieldPath rootFieldPath = new FieldPath(Collections.EMPTY_LIST);
+  private static final FieldPath rootFieldPath = new FieldPath(Collections.EMPTY_LIST, Collections.EMPTY_LIST);
   
   // private static classes
   
@@ -456,7 +429,7 @@ public class ProbabilityModel
    * have the same value, because after resampling they might take on different 
    * values.
    * 
-   * At the same time, makes encapsulates the type heterogeity of the factor graph's
+   * At the same time, makes encapsulates the type heterogeneity of the factor graph's
    * vertices.
    * 
    * Note that in principle this could have been done using identity hash maps, except that this
@@ -522,36 +495,15 @@ public class ProbabilityModel
     {
       return payload;
     }
-    
 
-
-//    @Override
-//    public Object getRealization()
-//    {
-//      return getAsVariable();
-//    }
-//    
-//    @Override
-//    public String toString()
-//    {
-//      if (isFactor)
-//        return payload.toString();
-//      else
-//        return getName(payload);
-//    }
   }
   
-//  public static interface RandomVariable<T>
-//  {
-//    public T getRealization();
-//  }
-  
   /**
-   * Creates unique names for variables. If possible, use only the 
-   * name of the first field pointing to that variable (shortName). In case of 
-   * conflict (cases where two such names would be identical), back 
-   * off to using the names of the sequence of fields (FieldPath) 
+   * Creates unique names for variables. This is done by using the names 
+   * of the sequence of fields (FieldPath) 
    * by which the variable was first discovered, joined by '.' (longName).
+   * When some of theses fields are arrays or lists, '[i]' is added to
+   * take into account the index.
    * 
    * @author Alexandre Bouchard (alexandre.bouchard@gmail.com)
    *
@@ -560,7 +512,6 @@ public class ProbabilityModel
   {
     private final Map<Node,FieldPath> longNames = Maps.newHashMap();
 
-    
     public void add(Node variable, FieldPath fieldsPath)
     {
       if (variable.isFactor())
@@ -587,15 +538,22 @@ public class ProbabilityModel
   private static class FieldPath
   {
     private final List<Field> sequence;
+    private final List<Integer> listIndices;
     
-    private FieldPath(List<Field> seq) 
+    private FieldPath(List<Field> seq, List<Integer> listIndices) 
     { 
       this.sequence = seq; 
+      this.listIndices= listIndices;
     }
 
     public FieldPath extendBy(Field field)
     {
-      return new FieldPath(growList(this.sequence, field));
+      return new FieldPath(BriefLists.concat(this.sequence, field), BriefLists.concat(this.listIndices, null));
+    }
+    
+    public FieldPath extendBy(Field field, int listIndex)
+    {
+      return new FieldPath(BriefLists.concat(this.sequence, field), BriefLists.concat(this.listIndices, listIndex));
     }
     
     public Field getLastField()
@@ -607,13 +565,13 @@ public class ProbabilityModel
     public String toString()
     {
       List<String> result = Lists.newArrayList();
-      for (Field f : sequence)
-        result.add(f.getName());
+      for (int i = 0; i < sequence.size(); i++)
+      {
+        Field f = sequence.get(i);
+        Integer index = listIndices.get(i);
+        result.add(f.getName() + (index == null ? "" : "[" + index + "]"));
+      }
       return Joiner.on(".").join(result);
     }
   }
-
-
-
-
 }
