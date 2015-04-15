@@ -5,7 +5,7 @@ apply plugin: 'eclipse'
 uploadArchives {
   repositories.mavenDeployer {
     repository(url: "file:///Users/bouchard/Documents/web/public_html/maven/")
-    pom.version = "2.3.17"
+    pom.version = "2.3.18"
     pom.artifactId = "bayonet"
     pom.groupId = "ca.ubc.stat"
   }
@@ -33,8 +33,8 @@ dependencies {
   testCompile group: 'junit', name: 'junit', version: '4.12'
   compile group: 'junit', name: 'junit', version: '4.12'
   compile group: 'com.beust', name: 'jcommander', version: '1.30'
-  compile group: 'ca.ubc.stat', name: 'tutorialj', version: '2.0.2'
-  compile group: 'ca.ubc.stat', name: 'briefj', version: '2.4.7'
+  compile group: 'ca.ubc.stat', name: 'tutorialj', version: '2.0.4'
+  compile group: 'ca.ubc.stat', name: 'briefj', version: '2.4.11'
   compile group: 'ca.ubc.stat', name: 'binc', version: '1.2.1'
   compile group: 'rcaller', name: 'RCaller', version: '2.1.1'
   compile 'net.sf.opencsv:opencsv:2.3'

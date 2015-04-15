@@ -1,0 +1,8 @@
+x  <- @{javaDoublesToRVector(x)}
+y  <- @{javaDoublesToRVector(y)}
+
+pdf('@{getOutput()}')
+    
+plot(x, y)
+
+dev.off()
