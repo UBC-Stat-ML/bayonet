@@ -1,7 +1,9 @@
 package bayonet.rplot;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.function.DoubleFunction;
 
 import com.google.common.primitives.Doubles;
 
@@ -27,6 +29,22 @@ public class PlotLine extends RJavaBridge
   public static PlotLine from(List<? extends Number> x, List<? extends Number> y)
   {
     return new PlotLine(x, y);
+  }
+  
+  public static PlotLine fromFunction(DoubleFunction<Double> function, double minX, double maxX)
+  {
+    List<Double> 
+      xs = new ArrayList<>(),
+      ys = new ArrayList<>();
+    double deltaX = (maxX - minX) / 1000;
+    if (deltaX <= 0)
+      throw new RuntimeException();
+    for (double x = minX; x <= maxX; x += deltaX)
+    {
+      xs.add(x);
+      ys.add(function.apply(x));
+    }
+    return new PlotLine(xs, ys);
   }
   
   public static PlotLine from(List<? extends Number> y)

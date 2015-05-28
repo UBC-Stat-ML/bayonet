@@ -6,6 +6,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Random;
 
+import org.jblas.DoubleMatrix;
+
 
 
 public class SamplingUtils
@@ -42,6 +44,15 @@ public class SamplingUtils
         iter.next();
       return iter.next();
     }
-    
+  }
+  
+  public static double[] randomUnitNormVector(Random random, int nDim)
+  {
+    double [] result = new double[nDim];
+    for (int d = 0; d < nDim; d++)
+      result[d] = random.nextGaussian();
+    DoubleMatrix resultMatrix = new DoubleMatrix(result);
+    resultMatrix.muli(1.0/resultMatrix.norm2());
+    return resultMatrix.data;
   }
 }

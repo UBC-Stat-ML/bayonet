@@ -216,18 +216,4 @@ public class EJMLUtils
     BriefIO.ensureUSLocale();
     return matrix.toString().replaceFirst("^.*\\n", "").replaceAll("\\n$", "");
   }
-  
-  public static void main(String [] args)
-  {
-    double [][] data = new double[][]{{-1,1},{2,-2}};
-    SimpleMatrix test = new SimpleMatrix(data);
-    double t = 0.01;
-    SimpleEigenDecomposition rateDecomp = simpleEigenDecomposition(test);
-    SimpleMatrix p = matrixExponential(rateDecomp,t);
-    System.out.println(toString(p));
-    System.out.println(simpleEigenDecomposition(p.transpose()));
-    System.out.println(toString(matrixExponential(rateDecomp, 100)));
-//    MatrixVisualization.show(test.getMatrix(), "test");
-  }
-
 }

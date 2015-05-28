@@ -5,6 +5,9 @@ import java.util.Collection;
 
 import org.apache.commons.lang3.tuple.Pair;
 
+import binc.Command;
+import briefj.BriefFiles;
+
 
 
 
@@ -45,12 +48,12 @@ public class PlotHistogram extends RJavaBridge
     return new PlotHistogram(data);
   }
   
-  public static PlotHistogram from(Collection<Double> data)
+  public static PlotHistogram from(Collection<? extends Number> data)
   {
     double [] converted = new double[data.size()];
     int i = 0;
-    for (double item : data)
-      converted[i++] = item;
+    for (Number item : data)
+      converted[i++] = item.doubleValue();
     return from(converted);
   }
   
@@ -58,6 +61,15 @@ public class PlotHistogram extends RJavaBridge
   {
     this.output = output;
     RUtils.callRBridge(this);
+  }
+  
+  private static Command open = Command.byPath(new File("/usr/bin/open"));
+  
+  public void openTemporaryPDF()
+  {
+    this.output = BriefFiles.createTempFile("pdf");
+    RUtils.callRBridge(this);
+    Command.call(open.withArg(this.output.getAbsolutePath()));
   }
   
   private transient File output;
