@@ -125,7 +125,7 @@ public class CheckStationarity
    * 
    *
    */
-  private static interface Test
+  public static interface Test
   {
     public double pValue(List<Double> sample1, List<Double> sample2);
   }
