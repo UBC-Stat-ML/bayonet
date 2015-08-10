@@ -172,8 +172,12 @@ public class ProbabilityModel
     return ReflexionUtils.sublistOfGivenType(getLatentVariables(), ofType);
   }
   
+  private List<Factor> cachedLinearization = null;
   public List<Factor> linearizedFactors()
   {
+    if (cachedLinearization != null)
+      return cachedLinearization;
+    
     DirectedGraph<Node, ?> directedGraph = GraphUtils.newDirectedGraph();
     for (Node factorNode : factors)
     {
@@ -198,16 +202,16 @@ public class ProbabilityModel
             FactorArgument.class.getSimpleName() + " with makeStochastic set to true: " + factorNode.getClass());
     }
     List<Node> linearizedNodes = GraphUtils.linearization(directedGraph);
-    List<Factor> result = Lists.newArrayList();
+    cachedLinearization = Lists.newArrayList();
     for (Node node : linearizedNodes)
       if (node.isFactor())
-        result.add(node.getAsFactor());
-    return result;
+        cachedLinearization.add(node.getAsFactor());
+    cachedLinearization = Collections.unmodifiableList(cachedLinearization);
+    return cachedLinearization;
   }
   
   public class BlangStringProvider extends StringNameProvider<Node>
   {
-    
     @Override
     public String getVertexName(Node vertex)
     {
@@ -215,9 +219,7 @@ public class ProbabilityModel
         if (name == "")
             name = vertex.toString();
         return "<" + name + ">"; 
-        
     }
-      
   }
     
   @SuppressWarnings({ "unchecked", "rawtypes" })
