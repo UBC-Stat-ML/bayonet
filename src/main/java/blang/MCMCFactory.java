@@ -102,6 +102,11 @@ public class MCMCFactory
     }
   }
   
+  public void disableNodeMoveFactory()
+  {
+    moveFactories.factories.remove(moveFactories.standardFactory);
+  } 
+  
   private NodeMoveFactory getNodeMoveFactory()
   {
     return moveFactories.standardFactory;

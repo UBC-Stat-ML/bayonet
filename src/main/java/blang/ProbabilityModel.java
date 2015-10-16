@@ -7,6 +7,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -28,6 +29,7 @@ import blang.factors.Factor;
 import briefj.BriefLists;
 import briefj.BriefStrings;
 import briefj.ReflexionUtils;
+
 
 
 
@@ -153,7 +155,7 @@ public class ProbabilityModel
   
   private void setVariablesInFactorAsObserved(Factor factor)
   {
-    for (Pair<ProbabilityModel.FieldPath, Object> pair : listArguments(factor, ProbabilityModel.rootFieldPath))
+    for (Pair<ProbabilityModel.FieldPath, Object> pair : listArguments(factor))
     {
       Field field = pair.getLeft().getLastField();
       FactorArgument annotation = field.getAnnotation(FactorArgument.class);
@@ -183,7 +185,7 @@ public class ProbabilityModel
     {
       directedGraph.addVertex(factorNode);
       boolean outgoingEdgeFound = false;
-      for (Pair<FieldPath,Object> argument : listArguments(factorNode.getAsFactor(), rootFieldPath))
+      for (Pair<FieldPath,Object> argument : listArguments(factorNode.getAsFactor()))
       {
         Node variableNode = variableNode(argument.getRight());
         directedGraph.addVertex(variableNode);
@@ -208,6 +210,24 @@ public class ProbabilityModel
         cachedLinearization.add(node.getAsFactor());
     cachedLinearization = Collections.unmodifiableList(cachedLinearization);
     return cachedLinearization;
+  }
+  
+  public boolean variablesMadeStochasticMoreThanOnce()
+  {
+    Set<Object> madeStochastic = new LinkedHashSet<Object>();
+    for (Node factorNode : factors)
+      for (Pair<FieldPath,Object> argument : listArguments(factorNode.getAsFactor()))
+      {
+        Object variable = argument.getRight();
+        FactorArgument annotation = argument.getLeft().getLastField().getAnnotation(FactorArgument.class);
+        if (annotation.makeStochastic())
+        {
+          if (madeStochastic.contains(variable))
+            return true;
+          madeStochastic.add(variable);
+        }
+      }
+    return false;
   }
   
   public class BlangStringProvider extends StringNameProvider<Node>
@@ -289,6 +309,11 @@ public class ProbabilityModel
       ensureVariableAdded(variable, argument.getLeft());//fieldsPath.extendBy(argumentField)); 
       graph.addEdge(variableNode(variable), factorNode(f));
     }
+  }
+  
+  private List<Pair<FieldPath, Object>> listArguments(Factor f)
+  {
+    return listArguments(f, rootFieldPath);
   }
   
   private List<Pair<FieldPath, Object>> listArguments(Factor f, FieldPath fieldPath)

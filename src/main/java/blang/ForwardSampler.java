@@ -25,6 +25,10 @@ public class ForwardSampler
   
   public void simulate(Random rand)
   {
+    // Check to avoid ill-defined generative processes:
+    if (model.variablesMadeStochasticMoreThanOnce())
+      throw new RuntimeException("At least one of the variable was made stochastic (generated) twice.");
+    
     // make graph directed
     List<Factor> linearizedFactors = model.linearizedFactors();
     
