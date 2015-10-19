@@ -7,6 +7,10 @@ public final class CoordinatePacker
   private final int sizes[];
   public final int max; // i.e. number of packed integers
   public int size() { return max; }
+  public int getSize(int dim)
+  {
+    return sizes[dim];
+  }
   public CoordinatePacker(int[] sizes)
   {
     this.sizes = sizes;

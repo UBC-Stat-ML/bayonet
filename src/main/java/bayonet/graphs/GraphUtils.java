@@ -22,6 +22,7 @@ import org.jgrapht.traverse.GraphIterator;
 import org.jgrapht.traverse.TopologicalOrderIterator;
 
 import bayonet.marginal.algo.EdgeSorter;
+import bayonet.math.CoordinatePacker;
 import briefj.collections.UnorderedPair;
 
 import com.google.common.collect.Lists;
@@ -252,6 +253,29 @@ public class GraphUtils
     for (int i = 0; i < len - 1; i++)
       result.addEdge(i, i+1);
     
+    return result;
+  }
+  
+  public static UndirectedGraph<Integer, UnorderedPair<Integer, Integer>> grid(CoordinatePacker packer)
+  {
+    UndirectedGraph<Integer, UnorderedPair<Integer, Integer>> result = GraphUtils.newUndirectedGraph();
+    for (int node = 0; node < packer.max; node++)
+      result.addVertex(node);
+    for (int node = 0; node < packer.max; node++)
+    {
+      int [] nodeCoord = packer.int2coord(node);
+      for (int dim = 0; dim < 2; dim++)
+        for (int delta = -1; delta <= +1; delta += 2)
+        {
+          int [] otherCoord = nodeCoord.clone();
+          otherCoord[dim] += delta;
+          if (otherCoord[dim] >= 0 && otherCoord[dim] < packer.getSize(dim))
+          {
+            int otherNode = packer.coord2int(otherCoord);
+            result.addEdge(node, otherNode);
+          }
+        }
+    }
     return result;
   }
   
