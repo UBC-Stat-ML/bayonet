@@ -18,7 +18,7 @@ public class MCMCAlgorithm
   public final MoveSet sampler;
   public final List<Processor> processors;
   public final MCMCOptions options;
-  MCMCAlgorithm(
+  public MCMCAlgorithm(
       ProbabilityModel model,
       MoveSet sampler, 
       List<Processor> processors,
