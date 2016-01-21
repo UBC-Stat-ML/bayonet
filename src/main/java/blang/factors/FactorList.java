@@ -20,7 +20,8 @@ public class FactorList<T>
 {
   public static <T> FactorList<T> ofComponents(List<T> list)
   {
-    return new FactorList<T>(list, 0, true, false);
+    list = Collections.unmodifiableList(new ArrayList<T>(list));
+    return new FactorList<T>(list, 0, list.size(), true, false);
   }
   
   /**
@@ -31,7 +32,8 @@ public class FactorList<T>
    */
   public static <T> FactorList<T> ofArguments(List<T> list, boolean makeStochastic)
   {
-    return new FactorList<T>(list, 0, false, makeStochastic);
+    list = Collections.unmodifiableList(new ArrayList<T>(list));
+    return new FactorList<T>(list, 0, list.size(), false, makeStochastic);
   }
   
   public final List<T> list;
@@ -46,25 +48,40 @@ public class FactorList<T>
   private final T argumentStoch;
   
   @FactorComponent
-  private final FactorList<T> next;
+  private final FactorList<T> left;
   
-  private FactorList(List<T> list, int index, boolean asComponent, boolean makeStoch)
+  @FactorComponent
+  private final FactorList<T> right;
+  
+  private FactorList(List<T> list, int leftIncl, int rightExcl, boolean asComponent, boolean makeStoch)
   {
-    this.list = Collections.unmodifiableList(new ArrayList<T>(list));
-    this.component = asComponent ? list.get(index) : null;
-    if (!asComponent)
+    this.list = list;
+    if (rightExcl == leftIncl)
     {
-      this.argumentStoch = makeStoch ? list.get(index) : null;
-      this.argumentNonStoch = makeStoch ? null : list.get(index);
+      component = null;
+      argumentNonStoch = null;
+      argumentStoch = null;
+      left = null;
+      right = null;
     }
     else
     {
-      this.argumentNonStoch = null;
-      this.argumentStoch = null;
+      int index = leftIncl;
+      this.component = asComponent ? list.get(index) : null;
+      if (!asComponent)
+      {
+        this.argumentStoch = makeStoch ? list.get(index) : null;
+        this.argumentNonStoch = makeStoch ? null : list.get(index);
+      }
+      else
+      {
+        this.argumentNonStoch = null;
+        this.argumentStoch = null;
+      }
+      int recLeftIncl = leftIncl + 1;
+      int mid = recLeftIncl + (rightExcl - recLeftIncl) / 2;
+      left  = new FactorList<T>(list, recLeftIncl, mid,       asComponent, makeStoch);
+      right = new FactorList<T>(list, mid,         rightExcl, asComponent, makeStoch);
     }
-    int nextIndex = index + 1;
-    next = nextIndex < list.size() 
-        ? new FactorList<T>(list, nextIndex, asComponent, makeStoch)
-        : null;
   }
 }

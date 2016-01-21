@@ -15,6 +15,5 @@ hist(
 
 d <- density(data)
 lines(d, col="red", lwd=@{lineWidth})
-rug(data, col="red")
 
 dev.off()
