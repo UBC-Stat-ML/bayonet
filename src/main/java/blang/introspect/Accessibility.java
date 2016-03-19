@@ -2,34 +2,62 @@ package blang.introspect;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.IdentityHashMap;
+import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Set;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.jgrapht.DirectedGraph;
 
+import bayonet.graphs.GraphUtils;
+import briefj.ReflexionUtils;
 
 
 
+/**
+ * An accessibility provides the low level data structure used to construct the factor graph. It is 
+ * a directed graph that keeps track of accessibility relationships between java objects. This is used to answer 
+ * questions such as: does factor f1 and f2 both have access to an object with mutable fields which 
+ * is unobserved? Note that accessibility via global (static) fields is ignored.
+ * 
+ * @author Alexandre Bouchard (alexandre.bouchard@gmail.com)
+ *
+ */
 public class Accessibility
 {
   /**
-   * A node (factor, variable, or component) in the factor graph.
+   * A node (factor, variable, or component) in the accessibility graph.
    * 
    * Each such node is associated to an address in memory.
    * 
-   * This association could be done via:
+   * This association could be done in one of two ways:
    * 
    * 1. a reference to an object o (with hashCode and equals based on o's identity instead of potential overloaded hashCode and equal)
    * 2. a reference to a container c (e.g., an array, or List) as well as a key k (in this case, hashCode and equal are based on a 
    *    combination of the identity of c, and the standard hashCode and equal of k)
-   * 3. Possible future extension: a reference to an object as well as one of the fields of this object
+   *    
+   * Case (1) is called an object node, and case (2) is called a constituent node. 
    * 
-   * The main use is (1), but (2) will be needed for example to obtain slices of 
-   * a matrix. [The rest of this entry is development note, to erase later] This last feature is done via a custom interface of the form:
+   * An important special case of a constituent node: the container c being any class, and the key k being a Field
+   * 
+   * Constituent nodes are needed for example to obtain slices of 
+   * a matrix, partially observed arrays, etc. 
+   * 
+   * Note that in the graph, object nodes points to constituent nodes only; and constituent nodes points to object nodes only. 
+   * Also, constituent nodes have exactly one incoming edge, while object nodes can have zero (for the root), one, or more. 
+   * Constituent nodes have at most one outgoing edge (zero in the case of primitives), and object nodes can have zero, one, or 
+   * more constituents. TODO: use these properties to create test cases.
+   * 
+   * @author Alexandre Bouchard (alexandre.bouchard@gmail.com)
+   *
+   */
+  public static interface Node
+  {
+  }
+  
+  /**
+   * TODO: This comment block is development note, to be erased later.
+   * Example of how to create a slice:
    * 
    * class MyArrayView implements ArrayView
    * {
@@ -46,339 +74,195 @@ public class Accessibility
    * with a custom rule that by passes the array reference.
    * 
    * Same for sublist, etc.
-   * 
-   * @author Alexandre Bouchard (alexandre.bouchard@gmail.com)
-   *
    */
-  public static interface Node
+  
+  public static class ObjectNode implements Node
   {
-    /**
-     * 
-     * 
-     * @return Either null, if this node is associated with a primitive, else, a reference to the object associated to this node.
-     */
-    public Object resolve();
+    private final Object object;
     
-    public int hashCode();
-    public boolean equals(Object obj); 
-  }
-  
-  public static Node getObjectNode(Object o)
-  {
-    throw new RuntimeException();
-  }
-  
-  public static <K> Node getConstituentNode(Object container, K key)
-  {
-    throw new RuntimeException();
-  }
-  
-  public static class Edge
-  {
-    /**
-     * The pointer holding the reference
-     */
-    private final Node source;
+    public ObjectNode(Object object)
+    {
+      if (object == null)
+        throw new RuntimeException();
+      this.object = object;
+    }
     
+    @Override
+    public int hashCode()
+    {
+      return System.identityHashCode(object);
+    }
+  
+    @Override
+    public boolean equals(Object obj)
+    {
+      if (this == obj)
+        return true;
+      if (!(obj instanceof ObjectNode))
+        return false;
+      return ((ObjectNode) obj).object == this.object;
+    }
+  }
+  
+  public static abstract class ConstituentNode<K> implements Node
+  {
     /**
      * 
+     * @return null if a primitive, the object referred to otherwise
      */
-    private final Node destination;
+    public abstract Object resolve();
     
-    /**
-     * Null if destination is a ConstituentNode, otherwise, the field 
-     * in source that refers to destination.
-     * 
-     * Note: the related information is not needed for ConstituentNode's since it
-     * can be accessed via destination's key. On the other hand, the field information is not 
-     * stored in the destination Node, as several different nodes can refer to a given object node, 
-     * in contrast to constituent nodes, which are only possessed by their constituent.
-     */
-    private final Field field;
+    protected final Object container;
+    protected final K key;
+    
+    public ConstituentNode(Object container, K key)
+    {
+      if (container == null)
+        throw new RuntimeException();
+      this.container = container;
+      this.key = key;
+    }
+    
+    @Override
+    public int hashCode()
+    {
+      final int prime = 31;
+      int result = 1;
+      result = prime * result
+          + ((container == null) ? 0 : 
+            // IMPORTANT distinction from automatically generated hashCode():
+            // use identity hash code for the container (but not the key),
+            // as e.g. large integer keys will not point to the same address
+            System.identityHashCode(container));
+      result = prime * result + ((key == null) ? 0 : key.hashCode());
+      return result;
+    }
+    @Override
+    public boolean equals(Object obj)
+    {
+      if (this == obj)
+        return true;
+      if (obj == null)
+        return false;
+      if (getClass() != obj.getClass())
+        return false;
+      @SuppressWarnings("rawtypes")
+      ConstituentNode other = (ConstituentNode) obj;
+      if (container == null)
+      {
+        if (other.container != null)
+          return false;
+      } else if (
+          // IMPORTANT: see similar comment in hashCode()
+          container != other.container)
+          //!container.equals(other.container))
+        return false;
+      if (key == null)
+      {
+        if (other.key != null)
+          return false;
+      } else if (!key.equals(other.key))
+        return false;
+      return true;
+    }
   }
   
-  public static interface EdgeProcessor<K>
+  public static class FieldConstituentNode extends ConstituentNode<Field> 
   {
-//    public void processPrimitive(K key);
-//    public void processObject(K key, Object child);
+    public FieldConstituentNode(Object container, Field key)
+    {
+      super(container, key);
+    }
+
+    @Override
+    public Object resolve()
+    {
+      if (key.getType().isPrimitive())
+        return null;
+      return ReflexionUtils.getFieldValue(key, container);
+    }
+  }
+  
+  public static class ArrayConstituentNode extends ConstituentNode<Integer>
+  {
+    public ArrayConstituentNode(Object container, Integer key)
+    {
+      super(container, key);
+    }
+
+    @Override
+    public Object resolve()
+    {
+      if (container.getClass().getComponentType().isPrimitive())
+        return null;
+      Object [] array = (Object[]) container;
+      return array[key];
+    }
+    
   }
   
   public static interface ExplorationRule
   {
-    public boolean apply(Object o, EdgeProcessor e);
+    /**
+     * return null if the rule does not apply to this object, else, a list of constituents to recurse to 
+     */
+    public List<? extends ConstituentNode<?>> explore(Object object);
   }
   
-  // TODO: use functional interface instead, static defaults, etc
+  public final List<ExplorationRule> defaultExplorationRules = Arrays.asList(Accessibility::arrayExplorationRule);
   
-  public static class DefaultExplorationRule implements ExplorationRule
+  public static List<? extends ConstituentNode<?>> arrayExplorationRule(Object object)
   {
-
-    @Override
-    public boolean apply(Object o, EdgeProcessor e)
-    {
-      // go over all fields (incl super, containing, others?)
-      
-        // call processor.processChildObjectNode
-      
-      return true;
-    }
+    Class<? extends Object> c = object.getClass();
+    if (!c.isArray())
+      return null;
+    ArrayList<ArrayConstituentNode> result = new ArrayList<>();
+    Object [] array = (Object []) object;
+    for (int i = 0; i < array.length; i++)
+      result.add(new ArrayConstituentNode(object, i));
+    return result;
+  }
+  
+  // TODO: defaultExplorationRule, which looks into all fields
+  
+  public static DirectedGraph<Node, Pair<Node, Node>> buildAccessibilityGraph(Object root, List<ExplorationRule> rules)
+  {
+    // vertex set doubles as a set of explored nodes
+    DirectedGraph<Node, Pair<Node, Node>> result = GraphUtils.newDirectedGraph();
     
-  }
-  
-  public static class 
-  
-  
-  public static void buildAccessibilityGraph(Object root, List<? extends ExplorationRule> rules)
-  {
     final LinkedList<? super Object> toExploreQueue = new LinkedList<>();
     toExploreQueue.add(root);
     
-    EdgeProcessor processor = null;
-//        new EdgeProcessor<K>() {
-//  
-//      @Override
-//      public void processPrimitive(blang.introspect.K key)
-//      {
-//        // TODO Auto-generated method stub
-//        
-//      }
-//  
-//      @Override
-//      public void processObject(blang.introspect.K key, Object child)
-//      {
-//        // TODO Auto-generated method stub
-//        
-//      }
-//    };
-//    
-    Set<? super Object> explored = Collections.newSetFromMap(new IdentityHashMap<>());
-    
     while (!toExploreQueue.isEmpty())
     {
-      Object current = toExploreQueue.poll();
+      ObjectNode current = new ObjectNode(toExploreQueue.poll());
+      result.addVertex(current);
       
-      // add to explored first to handle the case an object has a pointer to itself without causing an infinite loop
-      explored.add(current);
-      
+      List<? extends ConstituentNode<?>> constituents = null;
       ruleApplication : for (ExplorationRule rule : rules)
       {
-        boolean done = rule.apply(current, processor);
-        if (done)
+        constituents = rule.explore(current.object);
+        if (constituents != null)
           break ruleApplication;
       }
+      if (constituents == null)
+        throw new RuntimeException("No rule found to apply to object " + current.object);
+      
+      for (ConstituentNode<?> constituent : constituents)
+      {
+        result.addVertex(constituent);
+        result.addEdge(current, constituent);
+        Object nextObject = constituent.resolve();
+        if (nextObject != null) // i.e., if this constituent does not refer to a primitive or to null
+        {
+          ObjectNode next = new ObjectNode(nextObject);
+          if (!result.vertexSet().contains(next))
+            toExploreQueue.add(nextObject);
+        }
+      }
     }
+    
+    return result;
   }
-  
-
-//  
-//  public static class Pointer<K>
-//  {
-//    does not work: eg if two list point to the same object!
-//    
-//    // first: the object holding the pointer
-//    // second: either a Field, Integer (for arrays), or some other key in fixed collection
-//    private final Pair<IdentityHashCodeEqual,K> coordinates;
-//    
-//    public Pointer(Object referent, K key)
-//    {
-//      coordinates = Pair.of(new IdentityHashCodeEqual(referent), key);
-//    }
-//
-//    @Override
-//    public int hashCode()
-//    {
-//      return coordinates.hashCode();
-//    }
-//
-//    @Override
-//    public boolean equals(Object obj)
-//    {
-//      if (getClass() != obj.getClass())
-//        return false;
-//      @SuppressWarnings("unchecked")
-//      Pointer<K> other = (Pointer<K> ) obj;
-//      return this.coordinates.equals(other.coordinates);
-//    }
-//    
-//    
-//  }
-//  
-//  
-//  private static class IdentityHashCodeEqual
-//  {
-//    private final Object contents;
-//    
-//    private IdentityHashCodeEqual(Object contents)
-//    {
-//      this.contents = contents;
-//    }
-//
-//    @Override
-//    public int hashCode()
-//    {
-//      return System.identityHashCode(contents);
-//    }
-//
-//    @Override
-//    public boolean equals(Object obj)
-//    {
-//      if (!(obj instanceof IdentityHashCodeEqual))
-//        return false;
-//      return ((IdentityHashCodeEqual) obj).contents == this.contents;
-//    }
-//  }
-//  
-//  
-//////  private final Set<Pointer> accessible
-////  
-////  private final DirectedGraph<? extends Pointer, AccessEdge> graph;
-////  
-////  TODO: need to decide if primitives are included in graph? useful for marking stuff as observed? seems true for array, but not for fields??
-//// 
-//  
-//  
-//  public static interface ExplorationRule<K>
-//  {
-//    public boolean apply(Object currentObject, EdgeProcessor<K> processor);
-//  }
-//  
-//  public static interface EdgeProcessor<K>
-//  {
-//    public void processPrimitive(K key);
-//    public void processObject(K key, Object child);
-//  }
-//
-////  public static class EdgeProcessor<K>
-////  {
-////    public void processPrimitive(K key)
-////    {
-////      throw new RuntimeException();
-////    }
-////    
-////    public void processObject(K key, Object child)
-////    {
-////      throw new RuntimeException();
-////    }
-////  }
-//  
-//  private final ArrayList<ExplorationRule<?>> rules;
-//  
-//  private void explore(Object root)
-//  {
-//    final LinkedList<? super Object> remainingToExplore = new LinkedList<>();
-//    remainingToExplore.add(root);
-//    
-//    String [] test = new double[3];
-//    Object o = test;
-//    
-//    
-//    EdgeProcessor processor = new EdgeProcessor<K>() {
-//
-//      @Override
-//      public void processPrimitive(blang.introspect.K key)
-//      {
-//        // TODO Auto-generated method stub
-//        
-//      }
-//
-//      @Override
-//      public void processObject(blang.introspect.K key, Object child)
-//      {
-//        // TODO Auto-generated method stub
-//        
-//      }
-//    };
-//    
-//    Set<? super Object> explored = Collections.newSetFromMap(new IdentityHashMap<>());
-//    
-//    while (!remainingToExplore.isEmpty())
-//    {
-//      Object toExplore = remainingToExplore.poll();
-//      
-//      for (ExplorationRule<?> rule : rules)
-//      {
-//        boolean applies = apply(toExplore, )
-//      }
-//    }
-//  }
-//  
-//  
-////  
-////  public static class AccessEdge
-////  {
-////    // TODO: in, out, field?
-////  }
-//  
-////  public static interface Pointer
-////  {
-////    public int hashCode();
-////    public boolean equals(Object obj);
-////  }
-////  
-////  public static class ElementPointer<K> implements Pointer
-////  {
-////    private final ObjectPointer container;
-////    private final K key;
-////    
-////    public ElementPointer(ObjectPointer container, K key)
-////    {
-////      if (container == null)
-////        throw new RuntimeException();
-////      this.container = container;
-////      this.key = key;
-////    }
-////
-////    @Override
-////    public int hashCode()
-////    {
-////      int result = container.hashCode();
-////      result = 29 * result + (key != null ? key.hashCode() : 0);
-////      return result;
-////    }
-////    
-////    @Override
-////    public boolean equals(Object obj)
-////    {
-////      if (this == obj)
-////        return true;
-////      if (!(obj instanceof ElementPointer))
-////        return false;
-////
-////      @SuppressWarnings("unchecked")
-////      final ElementPointer<K> otherPointer = (ElementPointer<K>) obj;
-////
-////      if (!this.container.equals(otherPointer.container))
-////        return false;
-////      if (this.key != null ? !this.key.equals(otherPointer.key) : otherPointer.key != null)
-////        return false;
-////
-////      return true;
-////    }
-////  }
-////  
-////  public static class ObjectPointer implements Pointer
-////  {
-////    private final Object contents;
-////    
-////    public ObjectPointer(Object contents)
-////    {
-////      this.contents = contents;
-////    }
-////
-////    @Override
-////    public int hashCode()
-////    {
-////      return System.identityHashCode(contents);
-////    }
-////
-////    @Override
-////    public boolean equals(Object obj)
-////    {
-////      if (!(obj instanceof ObjectPointer))
-////        return false;
-////      return ((ObjectPointer) obj).contents == this.contents;
-////    }
-////  }
 }
-
 
