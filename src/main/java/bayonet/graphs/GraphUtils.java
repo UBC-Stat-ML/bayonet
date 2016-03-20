@@ -1,5 +1,7 @@
 package bayonet.graphs;
 
+import java.io.File;
+import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -8,6 +10,7 @@ import java.util.Set;
 import org.apache.commons.lang3.tuple.Pair;
 import org.jgrapht.DirectedGraph;
 import org.jgrapht.EdgeFactory;
+import org.jgrapht.Graph;
 import org.jgrapht.Graphs;
 import org.jgrapht.UndirectedGraph;
 import org.jgrapht.alg.ConnectivityInspector;
@@ -15,6 +18,9 @@ import org.jgrapht.event.ConnectedComponentTraversalEvent;
 import org.jgrapht.event.EdgeTraversalEvent;
 import org.jgrapht.event.TraversalListener;
 import org.jgrapht.event.VertexTraversalEvent;
+import org.jgrapht.ext.DOTExporter;
+import org.jgrapht.ext.IntegerNameProvider;
+import org.jgrapht.ext.StringNameProvider;
 import org.jgrapht.graph.SimpleDirectedGraph;
 import org.jgrapht.graph.SimpleGraph;
 import org.jgrapht.traverse.DepthFirstIterator;
@@ -23,6 +29,7 @@ import org.jgrapht.traverse.TopologicalOrderIterator;
 
 import bayonet.marginal.algo.EdgeSorter;
 import bayonet.math.CoordinatePacker;
+import briefj.BriefIO;
 import briefj.collections.UnorderedPair;
 
 import com.google.common.collect.Lists;
@@ -338,5 +345,11 @@ public class GraphUtils
     return topology.degreeOf(edge.getFirst()) == 1 || topology.degreeOf(edge.getSecond()) == 1;
   }
 
-
+  public static <V,E> void toDotFile(Graph<V, E> graph, File f)
+  {
+    PrintWriter output = BriefIO.output(f);
+    DOTExporter<V, E> exporter = new DOTExporter<>(new IntegerNameProvider<>(), new StringNameProvider<>(), null);
+    exporter.export(output, graph);
+    output.close();
+  }
 }
