@@ -1,20 +1,22 @@
 package blang.accessibility;
 
 import java.io.File;
-import java.lang.reflect.Array;
-import java.lang.reflect.Field;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
+import java.io.PrintWriter;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.jgrapht.DirectedGraph;
+import org.jgrapht.ext.ComponentAttributeProvider;
+import org.jgrapht.ext.DOTExporter;
+import org.jgrapht.ext.IntegerNameProvider;
+import org.jgrapht.ext.VertexNameProvider;
 
 import bayonet.graphs.GraphUtils;
-import briefj.ReflexionUtils;
+import briefj.BriefIO;
 
 
 
@@ -55,7 +57,6 @@ public class AccessibilityGraph
    * Constituent nodes are needed for example to obtain slices of 
    * a matrix, partially observed arrays, etc. 
    * 
-   * 
    * @author Alexandre Bouchard (alexandre.bouchard@gmail.com)
    *
    */
@@ -75,10 +76,8 @@ public class AccessibilityGraph
   
   /**
    * Note that in the graph, object nodes points to constituent nodes only; and constituent nodes points to object nodes only. 
-   * Also, (under the default rules, defined below) constituent nodes have exactly one incoming edge (but this can change to more than one 
-   * with custom rules?), while object nodes can always have zero (for the root), one, or more. 
    * Constituent nodes always have at most one outgoing edge (zero in the case of primitives), and object nodes can have zero, one, or 
-   * more constituents. TODO: use these properties to create test cases.
+   * more constituents. 
    */
   private <K> void addEdgeAndVertices(ObjectNode objectNode, ConstituentNode<K> constituentNode)
   {
@@ -100,253 +99,11 @@ public class AccessibilityGraph
     graph.addEdge(source, destination);
   }
   
-  /**
-   * TODO: This comment block is development note, to be erased later.
-   * Example of how to create a slice:
-   * 
-   * class MyArrayView implements ArrayView
-   * {
-   *   @PartiallyAccessedArray
-   *   private double [] theArray;
-   *   
-   *   @Override
-   *   public Collection<Integer> getAccessibleIndices()
-   *   {
-   *     ...
-   *   }
-   * }
-   * 
-   * with a custom rule that by passes the array reference.
-   * 
-   * Same for sublist, etc.
-   */
-  
-  public static class ObjectNode implements Node
-  {
-    private final Object object;
-    
-    public ObjectNode(Object object)
-    {
-      if (object == null)
-        throw new RuntimeException();
-      this.object = object;
-    }
-    
-    @Override
-    public int hashCode()
-    {
-      return System.identityHashCode(object);
-    }
-    
-    @Override
-    public String toString()
-    {
-      return "ObjectNode[class=" + object.getClass().getName() + ",objectId=" + System.identityHashCode(object) + "]";
-    }
-  
-    @Override
-    public boolean equals(Object obj)
-    {
-      if (this == obj)
-        return true;
-      if (!(obj instanceof ObjectNode))
-        return false;
-      return ((ObjectNode) obj).object == this.object;
-    }
-  }
-  
-  public static abstract class ConstituentNode<K> implements Node
-  {
-    /**
-     * 
-     * @return null if a primitive, the object referred to otherwise
-     */
-    public abstract Object resolve();
-    
-    public boolean resolvesToObject()
-    {
-      return resolve() != null;
-    }
-    
-    protected final Object container;
-    protected final K key;
-    
-    public ConstituentNode(Object container, K key)
-    {
-      if (container == null)
-        throw new RuntimeException();
-      this.container = container;
-      this.key = key;
-    }
-    
-    @Override
-    public String toString()
-    {
-      return "ConstituentNode[containerClass=" + container.getClass() + ",containerObjectId=" + System.identityHashCode(container) + ",key=" + key + "]";
-    }
-    
-    @Override
-    public int hashCode()
-    {
-      final int prime = 31;
-      int result = 1;
-      result = prime * result
-          + ((container == null) ? 0 : 
-            // IMPORTANT distinction from automatically generated hashCode():
-            // use identity hash code for the container (but not the key),
-            // as e.g. large integer keys will not point to the same address
-            System.identityHashCode(container));
-      result = prime * result + ((key == null) ? 0 : key.hashCode());
-      return result;
-    }
-    @Override
-    public boolean equals(Object obj)
-    {
-      if (this == obj)
-        return true;
-      if (obj == null)
-        return false;
-      if (getClass() != obj.getClass())
-        return false;
-      @SuppressWarnings("rawtypes")
-      ConstituentNode other = (ConstituentNode) obj;
-      if (container == null)
-      {
-        if (other.container != null)
-          return false;
-      } else if (
-          // IMPORTANT: see similar comment in hashCode()
-          container != other.container)
-          //!container.equals(other.container))
-        return false;
-      if (key == null)
-      {
-        if (other.key != null)
-          return false;
-      } else if (!key.equals(other.key))
-        return false;
-      return true;
-    }
-  }
-  
-  public static class FieldConstituentNode extends ConstituentNode<Field> 
-  {
-    public FieldConstituentNode(Object container, Field key)
-    {
-      super(container, key);
-    }
-
-    @Override
-    public Object resolve()
-    {
-      if (key.getType().isPrimitive())
-        return null;
-      return ReflexionUtils.getFieldValue(key, container);
-    }
-  }
-  
-  public static class ArrayConstituentNode extends ConstituentNode<Integer>
-  {
-    public ArrayConstituentNode(Object container, Integer key)
-    {
-      super(container, key);
-    }
-
-    @Override
-    public Object resolve()
-    {
-      if (container.getClass().getComponentType().isPrimitive())
-        return null;
-      Object [] array = (Object[]) container;
-      return array[key];
-    }
-  }
-  
-  public static class ListConstituentNode extends ConstituentNode<Integer>
-  {
-    public ListConstituentNode(Object container, Integer key)
-    {
-      super(container, key);
-    }
-
-    @Override
-    public Object resolve()
-    {
-      @SuppressWarnings("rawtypes")
-      List list = (List) container;
-      return list.get(key);
-    }
-  }
-  
-  public static interface ExplorationRule
-  {
-    /**
-     * return null if the rule does not apply to this object, else, a list of constituents to recurse to 
-     */
-    public List<? extends ConstituentNode<?>> explore(Object object);
-  }
-  
-  private static List<ExplorationRule> defaultExplorationRules = Arrays.asList(
-      AccessibilityGraph::listExplorationRule,
-      AccessibilityGraph::arrayExplorationRule,
-      AccessibilityGraph::basicImmutableJavaObjectsRule,
-      AccessibilityGraph::standardObjectExplorationRule);
-  
-  
-  public static List<ArrayConstituentNode> arrayExplorationRule(Object object)
-  {
-    Class<? extends Object> c = object.getClass();
-    if (!c.isArray())
-      return null;
-    ArrayList<ArrayConstituentNode> result = new ArrayList<>();
-    final int length = Array.getLength(object);
-    for (int i = 0; i < length; i++)
-      result.add(new ArrayConstituentNode(object, i));
-    return result;
-  }
-  
-  public static List<ListConstituentNode> listExplorationRule(Object object)
-  {
-    if (!(object instanceof List))
-      return null;
-    @SuppressWarnings({ "unchecked" })
-    List<? extends Object> list = (List<? extends Object>) object;
-    ArrayList<ListConstituentNode> result = new ArrayList<>();
-    for (int i = 0; i < list.size(); i++)
-      result.add(new ListConstituentNode(object, i));
-    return result;
-  }
-  
-  public static List<? extends ConstituentNode<?>> basicImmutableJavaObjectsRule(Object object)
-  {
-    if (object instanceof String || object instanceof Number)
-      return Collections.emptyList();
-    else
-      return null;
-  }
-  
-  // standard object as in not an array object
-  public static List<FieldConstituentNode> standardObjectExplorationRule(Object object)
-  {
-    ArrayList<FieldConstituentNode> result = new ArrayList<>();
-    
-    // process all enclosing classes, if any
-    Object outerObject = ReflexionUtils.getOuterClass(object);
-    if (outerObject != null)
-      result.addAll(standardObjectExplorationRule(outerObject));
-  
-    // find all fields (including those of super class(es), recursively, if any
-    for (Field f : ReflexionUtils.getDeclaredFields(object.getClass(), true))
-      result.add(new FieldConstituentNode(object, f));
-    
-    return result;
-  }
-  
   // TODO: interface+annotation-based views
   
   public static AccessibilityGraph inferGraph(Object root)
   {
-    return inferGraph(root, defaultExplorationRules);
+    return inferGraph(root, ExplorationRules.defaultExplorationRules);
   }
   
   public static AccessibilityGraph inferGraph(Object root, List<ExplorationRule> explorationRules)
@@ -394,7 +151,51 @@ public class AccessibilityGraph
   
   public void toDotFile(File f)
   {
-    GraphUtils.toDotFile(graph, f);
+    PrintWriter output = BriefIO.output(f);
+    
+    final VertexNameProvider<Node> nameProvider = new VertexNameProvider<Node>() {
+
+      @Override
+      public String getVertexName(Node vertex)
+      {
+        if (vertex instanceof ObjectNode)
+        {
+          Object object = ((ObjectNode) vertex).object;
+          return "" + object.getClass().getName() + "@" + System.identityHashCode(object);
+        }
+        else if (vertex instanceof FieldConstituentNode)
+          return "" + ((FieldConstituentNode) vertex).key.getName();
+        else if (vertex instanceof ConstituentNode<?>)
+          return "" + ((ConstituentNode<?>) vertex).key;
+        else
+          throw new RuntimeException();
+      }
+    };
+    
+    ComponentAttributeProvider<Node> attributeProvider = new ComponentAttributeProvider<Node>() {
+
+      @Override
+      public Map<String, String> getComponentAttributes(Node component)
+      {
+        Map<String, String> result = new LinkedHashMap<>();
+        result.put("shape", "box");
+        if (component instanceof ConstituentNode)
+          result.put("style", "dotted");
+        return result;
+      }
+    };
+    
+    DOTExporter<Node,Pair<Node,Node>> exporter = new DOTExporter<>(
+        new IntegerNameProvider<>(),
+        nameProvider,
+        null,
+        attributeProvider,
+        null
+        );
+    exporter.export(output, graph);
+    output.close();
+    
+//    GraphUtils.toDotFile(graph, f);
   }
 }
 

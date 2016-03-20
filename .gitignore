@@ -20,3 +20,6 @@ results/all/jarjar.org.gradle.process.internal.launcher.GradleWorkerMain-CwfOJ2J
 results/all/jarjar.org.gradle.process.internal.launcher.GradleWorkerMain-CwfOJ2JZ.exec/variance-csv/variance.csv
 results/latest
 results
+doc/example-accessibility-graph.dot
+doc/example-accessibility-graph2.dot
+doc/example-accessibility-graph3.dot
