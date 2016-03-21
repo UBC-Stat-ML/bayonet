@@ -57,6 +57,9 @@ public class AccessibilityGraph
    * Constituent nodes are needed for example to obtain slices of 
    * a matrix, partially observed arrays, etc. 
    * 
+   * We assume all implementation provide appropriate hashCode and equal, in particular, by-passing custom hashCode and
+   * equals of enclosed objects.
+   * 
    * @author Alexandre Bouchard (alexandre.bouchard@gmail.com)
    *
    */
@@ -99,7 +102,12 @@ public class AccessibilityGraph
     graph.addEdge(source, destination);
   }
   
-  // TODO: interface+annotation-based views
+  /**
+   *  use AccessibilityGraph.infer(..)
+   */
+  private AccessibilityGraph()
+  {
+  }
   
   public static AccessibilityGraph inferGraph(Object root)
   {
@@ -180,7 +188,15 @@ public class AccessibilityGraph
         Map<String, String> result = new LinkedHashMap<>();
         result.put("shape", "box");
         if (component instanceof ConstituentNode)
+        { 
+          ConstituentNode<?> constituentNode = (ConstituentNode<?>) component;
           result.put("style", "dotted");
+          if (constituentNode.isMutable())
+          {
+            result.put("color", "red");
+            result.put("fontcolor", "red");
+          }
+        }
         return result;
       }
     };
@@ -194,8 +210,6 @@ public class AccessibilityGraph
         );
     exporter.export(output, graph);
     output.close();
-    
-//    GraphUtils.toDotFile(graph, f);
   }
 }
 

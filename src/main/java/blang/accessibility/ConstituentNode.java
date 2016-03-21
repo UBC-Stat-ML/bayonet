@@ -13,6 +13,8 @@ public abstract class ConstituentNode<K> implements Node
    */
   public abstract Object resolve();
   
+  public abstract boolean isMutable();
+  
   public boolean resolvesToObject()
   {
     return resolve() != null;

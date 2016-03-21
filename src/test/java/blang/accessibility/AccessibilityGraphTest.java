@@ -9,8 +9,8 @@ import org.junit.Test;
 
 import com.google.common.collect.ImmutableList;
 
+import bayonet.math.CoordinatePacker;
 import blang.accessibility.AccessibilityGraph.Node;
-import blang.accessibility.ExplorationRules.ObjectArrayView;
 
 
 
@@ -104,20 +104,20 @@ public class AccessibilityGraphTest
     AccessibilityGraph g = AccessibilityGraph.inferGraph(c4);
     Assert.assertTrue(g.graph.vertexSet().size() == 10);
     g.toDotFile(new File("doc/example-accessibility-graph2.dot"));
-  }
-  
-  static class C1
-  {
-    int i1;
-  }
-  
-  static class C2 extends C1
-  {
-    int i2;
     
-    class C3 extends C1
+    checkInvariants(g);
+  }
+  
+  static class C2 extends TestClass1
+  {
+    // test private field too
+    @SuppressWarnings("unused")
+    private int i2;
+    
+    class C3 extends TestClass1
     {
-      int i3;
+      @SuppressWarnings("unused")
+      private int i3;
       
       class C4
       {
@@ -132,9 +132,10 @@ public class AccessibilityGraphTest
   public void testAnon()
   {
     Outer out = new Outer();
-    Object anon = out.newAnon();
-    AccessibilityGraph g = AccessibilityGraph.inferGraph(anon);
-    Assert.assertTrue(g.graph.vertexSet().size() == 5);
+    Sneaky s = new Sneaky();
+    Object anon = out.newAnon(s);
+    AccessibilityGraph g = AccessibilityGraph.inferGraph(Arrays.asList(anon,s));
+    Assert.assertTrue(g.graph.inDegreeOf(new ObjectNode(s)) == 2);
     g.toDotFile(new File("doc/example-accessibility-graph3.dot"));
   }
   
@@ -142,13 +143,202 @@ public class AccessibilityGraphTest
   {
     String s1;
     
-    public Object newAnon()
+    public Object newAnon(final Sneaky s)
     {
       return new Object() 
       {
         @SuppressWarnings("unused")
         String s2;
+        
+        @Override
+        public String toString()
+        {
+          return "" + s.sneaky;
+        }
       };
     }
   }
+  
+  static class Sneaky
+  {
+    int sneaky = 123;
+  }
+  
+  // model e.g. scaffold
+  @Test
+  public void testModelModel()
+  {
+    DoubleMatrix rates = new DoubleMatrix(2,2);
+    
+    GammaDistribution gd1 = new GammaDistribution(rates.entry(0, 1), null);
+    GammaDistribution gd2 = new GammaDistribution(rates.entry(1, 0), null);
+    
+    IntMatrix backbone = new IntMatrix(3, 1);
+    
+    CategoricalDistribution cd1 = new CategoricalDistribution(backbone.entry(0), null);
+    CategoricalDistribution cd2 = new CategoricalDistribution(backbone.entry(1), new MyCatParams(backbone.entry(0), rates, 1.0));
+    CategoricalDistribution cd3 = new CategoricalDistribution(backbone.entry(2), new MyCatParams(backbone.entry(1), rates, 1.0));
+    
+    AccessibilityGraph g = AccessibilityGraph.inferGraph(Arrays.asList(gd1, gd2, cd1, cd2, cd3));
+    g.toDotFile(new File("doc/example-accessibility-graph4.dot"));
+    
+    checkInvariants(g);
+  }
+  
+  static class MyCatParams implements CatParams
+  {
+    final Int prev;
+    final DoubleMatrix rates;
+    final double delta;
+    
+    public MyCatParams(Int prev, DoubleMatrix rates, double delta)
+    {
+      this.prev = prev;
+      this.rates = rates;
+      this.delta = delta;
+    }
+
+    @Override
+    public DoubleMatrix probabilities()
+    {
+      // set diagonals
+      // P = exp(rates)
+      // return P.row(prev.get());
+      return null;
+    }
+  }
+  
+  static interface Real
+  {
+    public double get();
+    public void set(double value);
+  }
+  
+  static interface Int
+  {
+    public int get();
+    public void set(int value);
+  }
+  
+  static interface Factor
+  {
+    
+  }
+  
+  static class GammaDistribution implements Factor
+  {
+    @SuppressWarnings("unused")
+    private final Real realization;
+    @SuppressWarnings("unused")
+    private final GammaParams params;
+    public GammaDistribution(Real realization, GammaParams params)
+    {
+      this.realization = realization;
+      this.params = params;
+    }
+  }
+  
+  static interface GammaParams
+  {
+  }
+  
+  static class CategoricalDistribution implements Factor
+  {
+    @SuppressWarnings("unused")
+    private final Int realization;
+    @SuppressWarnings("unused")
+    private final CatParams params;
+    public CategoricalDistribution(Int realization, CatParams params)
+    {
+      this.realization = realization;
+      this.params = params;
+    }
+  }
+  
+  static interface CatParams
+  {
+    public DoubleMatrix probabilities();
+  }
+  
+  static class RealEntry implements Real
+  {
+    final DoubleArrayView view;
+    public RealEntry(DoubleArrayView view)
+    {
+      this.view = view;
+    }
+    @Override
+    public double get()
+    {
+      return view.get(0);
+    }
+    @Override
+    public void set(double value)
+    {
+      view.set(0, value);
+    }
+  }
+  
+  static class IntEntry implements Int
+  {
+    final IntArrayView view;
+    public IntEntry(IntArrayView view)
+    {
+      this.view = view;
+    }
+    @Override
+    public int get()
+    {
+      return view.get(0);
+    }
+    @Override
+    public void set(int value)
+    {
+      view.set(0, value);
+    }
+  }
+
+  static class DoubleMatrix
+  {
+    private final double[] data;
+    private final CoordinatePacker packer; // todo: replace by more efficient stuff
+    
+    public DoubleMatrix(int rows, int cols)
+    {
+      this.data = new double[rows*cols];
+      this.packer = new CoordinatePacker(new int[]{rows, cols});
+    }
+
+    public Real entry(int i, int j)
+    {
+      final int entryIndex = packer.coord2int(i,j);
+      final DoubleArrayView view = new DoubleArrayView(ImmutableList.of(entryIndex), data);
+      return new RealEntry(view);
+    }
+  }
+  
+  static class IntMatrix
+  {
+    private final int[] data;
+    private final CoordinatePacker packer; // todo: replace by more efficient stuff
+    
+    public IntMatrix(int rows, int cols)
+    {
+      this.data = new int[rows*cols];
+      this.packer = new CoordinatePacker(new int[]{rows, cols});
+    }
+    
+    public Int entry(final int entryIndex)
+    {
+      final IntArrayView view = new IntArrayView(ImmutableList.of(entryIndex), data);
+      return new IntEntry(view);
+    }
+
+    public Int entry(int i, int j)
+    {
+      final int entryIndex = packer.coord2int(i,j);
+      return entry(entryIndex);
+    }
+  }
+  
 }

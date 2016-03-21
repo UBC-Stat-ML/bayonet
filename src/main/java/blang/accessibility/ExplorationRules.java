@@ -1,9 +1,5 @@
 package blang.accessibility;
 
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
 import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
@@ -52,7 +48,7 @@ public class ExplorationRules
     return result;
   }
   
-  private static abstract class ArrayView
+  static abstract class ArrayView
   {
     public final ImmutableList<Integer> viewedIndices;
 
@@ -62,92 +58,6 @@ public class ExplorationRules
     }
   }
   
-  public static final class ObjectArrayView<T> extends ArrayView
-  {
-    @ViewedArray
-    private final T[] viewedArray;
-    
-    public ObjectArrayView(ImmutableList<Integer> viewedIndices, T[] viewedArray)
-    {
-      super(viewedIndices);
-      this.viewedArray = viewedArray;
-    }
-
-    public T get(int indexIndex)
-    {
-      return viewedArray[viewedIndices.get(indexIndex)];
-    }
-    
-    public void set(int indexIndex, T object)
-    {
-      viewedArray[viewedIndices.get(indexIndex)] = object;
-    }
-  }
-  
-  public static final class DoubleArrayView<T> extends ArrayView
-  {
-    @ViewedArray
-    private final double[] viewedArray;
-    
-    public DoubleArrayView(ImmutableList<Integer> viewedIndices, double[] viewedArray)
-    {
-      super(viewedIndices);
-      this.viewedArray = viewedArray;
-    }
-
-    public double get(int indexIndex)
-    {
-      return viewedArray[viewedIndices.get(indexIndex)];
-    }
-    
-    public void set(int indexIndex, double object)
-    {
-      viewedArray[viewedIndices.get(indexIndex)] = object;
-    }
-  }
-  
-  @Retention(RetentionPolicy.RUNTIME)
-  @Target({ElementType.FIELD})
-  public static @interface ViewedArray
-  {
-  }
-  
-  // bad idea, since other fields will then not be processed!
-//  public static interface ArrayView
-//  {
-//  }
-//  
-//  @Retention(RetentionPolicy.RUNTIME)
-//  @Target({ElementType.FIELD})
-//  public static @interface ViewedArray
-//  {
-//    public int index() default 0;
-//  }
-//  
-//  @Retention(RetentionPolicy.RUNTIME)
-//  @Target({ElementType.FIELD})
-//  public static @interface ViewedIndices
-//  {
-//    public int index() default 0;
-//  }
-  
-  // not safe: e.g. bad behavior if a list of integer is used, with some 
-  // entries initialized to null, and a sublist is created on that. Then 
-  // the sublist will miss some dependencies. 
-  // Actually, even simpler problem: with the same example even without nulls,
-  // these dependencies will be ignored because they are on immutable objects
-//  public static List<ListConstituentNode> listExplorationRule(Object object)
-//  {
-//    if (!(object instanceof List))
-//      return null;
-//    @SuppressWarnings({ "unchecked" })
-//    List<? extends Object> list = (List<? extends Object>) object;
-//    ArrayList<ListConstituentNode> result = new ArrayList<>();
-//    for (int i = 0; i < list.size(); i++)
-//      result.add(new ListConstituentNode(object, i));
-//    return result;
-//  }
-  
   public static List<? extends ConstituentNode<?>> knownImmutableObjects(Object object)
   {
     if (object instanceof String || object instanceof Number)
@@ -156,15 +66,19 @@ public class ExplorationRules
       return null;
   }
   
-  // standard object as in not an array object
+  /**
+   * Processes objects that are not arrays.
+   * 
+   * Processes fields (including those in the scope of anonymous objects as well as 
+   * to outer class of a nested object) 
+   * @param object
+   * @return
+   */
   public static List<FieldConstituentNode> standardObjects(Object object)
   {
     ArrayList<FieldConstituentNode> result = new ArrayList<>();
     
-    // process all enclosing classes, if any
-    Object outerObject = ReflexionUtils.getOuterClass(object);
-    if (outerObject != null)
-      result.addAll(standardObjects(outerObject));
+    // note: outer class and anonymous fields handled by the  
   
     // find all fields (including those of super class(es), recursively, if any
     for (Field f : ReflexionUtils.getDeclaredFields(object.getClass(), true))
