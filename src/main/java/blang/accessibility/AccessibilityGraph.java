@@ -7,6 +7,7 @@ import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Stream;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.jgrapht.DirectedGraph;
@@ -16,6 +17,7 @@ import org.jgrapht.ext.IntegerNameProvider;
 import org.jgrapht.ext.VertexNameProvider;
 
 import bayonet.graphs.GraphUtils;
+import blang.accessibility.FactorAccessibilityGraphAnalyzer.Factor;
 import briefj.BriefIO;
 
 
@@ -76,6 +78,11 @@ public class AccessibilityGraph
    * absence of edge is informative strictly speaking.. 
    */
   public final DirectedGraph<Node, Pair<Node, Node>> graph = GraphUtils.newDirectedGraph();
+  
+  /**
+   * The root of the graph, i.e. where the accessibility analysis was initiated
+   */
+  public final LinkedHashSet<ObjectNode<? extends Factor>> roots = new LinkedHashSet<>();
   
   /**
    * Note that in the graph, object nodes points to constituent nodes only; and constituent nodes points to object nodes only. 
@@ -210,6 +217,11 @@ public class AccessibilityGraph
         );
     exporter.export(output, graph);
     output.close();
+  }
+  
+  public Stream<Node> getMutableNodes()
+  {
+    return graph.vertexSet().stream().filter(node -> node instanceof ConstituentNode<?>).filter(node -> ((ConstituentNode<?>) node).isMutable());
   }
 }
 
