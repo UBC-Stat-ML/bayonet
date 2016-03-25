@@ -38,7 +38,7 @@ public class AccessibilityGraphTest
     Assert.assertTrue(AccessibilityGraph.toStream(new BreadthFirstIterator<>(g.graph)).count() == 13);
     
     Assert.assertTrue(g.getAccessibleNodes(obj1.array).count() == 9);
-    Assert.assertTrue(g.getAccessibleNodes(obj1.array).filter(AccessibilityGraph.MUTABLE_FILTER).count() == 4);
+    Assert.assertTrue(g.getAccessibleNodes(obj1.array).filter(node -> node.isMutable()).count() == 4);
 
     checkInvariants(g);
   }

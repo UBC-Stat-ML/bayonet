@@ -36,7 +36,7 @@ public class GraphAnalysisTest
     dotExporter.addVertexAttribute("style", node -> generator.contains(node) ? "filled" : "");
     dotExporter.export(new File("doc/before-gen.dot"));
     
-    LinkedHashSet<Node> closure = GraphAnalysis.closure(ag.graph, generator);
+    LinkedHashSet<Node> closure = GraphAnalysis.closure(ag.graph, generator, true);
     
     dotExporter = ag.toDotExporter();
     dotExporter.addVertexAttribute("fillcolor", node -> closure.contains(node) ? "grey" : "white");
@@ -44,6 +44,13 @@ public class GraphAnalysisTest
     dotExporter.export(new File("doc/after-gen.dot"));
     
     check(closure, ag.graph);
+    
+    LinkedHashSet<Node> ancestors = GraphAnalysis.closure(ag.graph, closure, false);
+    
+    dotExporter = ag.toDotExporter();
+    dotExporter.addVertexAttribute("fillcolor", node -> ancestors.contains(node) ? "grey" : "white");
+    dotExporter.addVertexAttribute("style", node -> ancestors.contains(node) ? "filled" : "");
+    dotExporter.export(new File("doc/final-gen.dot"));
     
 //    DotExporter<Node, Pair<Node, Node>> dotExporter = ag.toDotExporter();
   }

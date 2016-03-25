@@ -9,7 +9,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
-import java.util.function.Predicate;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
@@ -48,10 +47,33 @@ import briefj.BriefIO;
  */
 public class AccessibilityGraph
 {
+  
+  
+//  public static interface NewNode<T>
+//  {
+//    public T resolve();
+//  }
+//  
+//  public static class ReferenceNode<T>
+//  {
+//    
+//  }
+//  
+//  public static class ConstituentNode<T>
+//  {
+//    private final ConstituentResolver<T,?,?> resolver = null;
+//  }
+//  
+//  static abstract class ConstituentResolver<T,C,K>
+//  {
+//    public abstract T resolve();
+//  }
+  
+  
   /**
    * A node (factor, variable, or component) in the accessibility graph.
    * 
-   * Each such node is associated to a unique address in memory.
+   * Each such node is associated to a unique address in memory (i.e. an instance is essentially a pointer).
    * To be more precise, this association is established in one of two ways:
    * 
    * 1. a reference to an object o (with hashCode and equals based on o's identity instead of o's potentially overloaded hashCode and equal)
@@ -253,16 +275,15 @@ public class AccessibilityGraph
     return toStream(new BreadthFirstIterator<>(graph, from));
   }
   
+  public Stream<Node> getAccessibleNodes()
+  {
+    return graph.vertexSet().stream();
+  }
+  
   public static <T> Stream<T> toStream(Iterator<T> iter)
   {
     Iterable<T> iterable = () -> iter;
     return StreamSupport.stream(iterable.spliterator(), false);
   }
-  
-  public static final Predicate<Node> MUTABLE_FILTER = 
-      node -> 
-        node instanceof ConstituentNode<?> 
-          ? ((ConstituentNode<?>) node).isMutable() 
-          : false;
 }
 

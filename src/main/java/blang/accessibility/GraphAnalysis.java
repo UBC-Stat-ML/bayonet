@@ -2,7 +2,10 @@ package blang.accessibility;
 
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Set;
+import java.util.function.Predicate;
+import java.util.stream.Stream;
 
 import org.jgrapht.DirectedGraph;
 
@@ -36,12 +39,50 @@ public class GraphAnalysis
 //      factorAccessibilityGraphs.add()
 //  }
   
+//  public static class Inputs
+//  {
+//    private final List<? extends Factor> factors;
+//  }
+//  
+//  public static GraphAnalysis perform(Inputs inputs)
+//  {
+//    // 1- compute the full accessibility graph
+//    AccessibilityGraph accessibilityGraph = new AccessibilityGraph();
+//    for (Factor f : inputs.factors)
+//      accessibilityGraph.add(f);
+//    
+//    // 2- identify the subset of classes
+//  }
+  
+  private GraphAnalysis() 
+  {
+    
+  }
+  
   public static interface Factor
   {
     
   }
   
-  static <V,E> LinkedHashSet<V> closure(DirectedGraph<V, E> graph, final Set<V> generatingSet)
+  static LinkedHashSet<ObjectNode<?>> latentVariables(
+      Stream<Node> accessibleNodes, 
+      final Set<Node> observedNodesClosure,
+      Set<Class<?>> variableClasses
+      )
+  {
+    LinkedHashSet<ObjectNode<?>> result = new LinkedHashSet<>();
+    accessibleNodes
+        .filter(node -> !observedNodesClosure.contains(node))
+        .filter(node -> variableClasses.contains(node.getClass()))
+        .map(node -> (ObjectNode<?>) node)
+        .forEachOrdered(result::add);  
+    return result;
+  }
+  
+  static <V,E> LinkedHashSet<V> closure(
+      DirectedGraph<V, E> graph, 
+      final Set<V> generatingSet,
+      boolean forward)
   {
     final LinkedHashSet<V> result = new LinkedHashSet<>();
     LinkedList<V> toExploreQueue = new LinkedList<>(generatingSet);
@@ -50,9 +91,9 @@ public class GraphAnalysis
     {
       V current = toExploreQueue.poll();
       result.add(current);
-      for (E e : graph.outgoingEdgesOf(current))
+      for (E e : forward ? graph.outgoingEdgesOf(current) : graph.incomingEdgesOf(current))
       {
-        V next = graph.getEdgeTarget(e);
+        V next = forward ? graph.getEdgeTarget(e) : graph.getEdgeSource(e);
         if (!result.contains(next))
           toExploreQueue.add(next);
       }
@@ -70,7 +111,7 @@ public class GraphAnalysis
         throw new RuntimeException("Top level model elements should be instances of Factor");
       @SuppressWarnings("unchecked")
       final ObjectNode<? extends Factor> factorNode = (ObjectNode<? extends Factor>) root;
-      accessibilityGraph.getAccessibleNodes(factorNode).filter(AccessibilityGraph.MUTABLE_FILTER).forEach(node -> result.put(factorNode, node));
+      accessibilityGraph.getAccessibleNodes(factorNode).filter(node -> node.isMutable()).forEach(node -> result.put(factorNode, node));
     }
     return result;
   }
