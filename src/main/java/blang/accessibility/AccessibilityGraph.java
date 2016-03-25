@@ -47,29 +47,6 @@ import briefj.BriefIO;
  */
 public class AccessibilityGraph
 {
-  
-  
-//  public static interface NewNode<T>
-//  {
-//    public T resolve();
-//  }
-//  
-//  public static class ReferenceNode<T>
-//  {
-//    
-//  }
-//  
-//  public static class ConstituentNode<T>
-//  {
-//    private final ConstituentResolver<T,?,?> resolver = null;
-//  }
-//  
-//  static abstract class ConstituentResolver<T,C,K>
-//  {
-//    public abstract T resolve();
-//  }
-  
-  
   /**
    * A node (factor, variable, or component) in the accessibility graph.
    * 

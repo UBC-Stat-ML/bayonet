@@ -10,8 +10,10 @@ import java.util.stream.Stream;
 import org.jgrapht.DirectedGraph;
 
 import blang.accessibility.AccessibilityGraph.Node;
+import briefj.BriefCollections;
 
 import com.google.common.collect.LinkedHashMultimap;
+import com.sun.accessibility.internal.resources.accessibility;
 
 
 /**
@@ -39,20 +41,37 @@ public class GraphAnalysis
 //      factorAccessibilityGraphs.add()
 //  }
   
-//  public static class Inputs
-//  {
-//    private final List<? extends Factor> factors;
-//  }
-//  
-//  public static GraphAnalysis perform(Inputs inputs)
-//  {
-//    // 1- compute the full accessibility graph
-//    AccessibilityGraph accessibilityGraph = new AccessibilityGraph();
-//    for (Factor f : inputs.factors)
-//      accessibilityGraph.add(f);
-//    
-//    // 2- identify the subset of classes
-//  }
+  public static class Inputs
+  {
+    private final AccessibilityGraph accessibilityGraph;
+    private final Set<Node> nonRecursiveObservedNodes, recursiveObservedNodes;
+    private final Predicate<Class<?>> isVariablePredicate;
+  }
+  
+  public static GraphAnalysis create(Inputs inputs)
+  {
+    if (!inputs.accessibilityGraph.graph.vertexSet().containsAll(inputs.nonRecursiveObservedNodes) ||
+        !inputs.accessibilityGraph.graph.vertexSet().containsAll(inputs.recursiveObservedNodes))
+      throw new RuntimeException("Observed variables should be subsets of the accessibility graph");
+    
+    if (BriefCollections.intersects(inputs.nonRecursiveObservedNodes, inputs.recursiveObservedNodes))
+      throw new RuntimeException("A variable should be either recursively observable, observable, or neither");
+    
+    // 1- compute the closure of observed variables
+    LinkedHashSet<Node> observedNodesClosure = new LinkedHashSet<>();
+    observedNodesClosure.addAll(inputs.nonRecursiveObservedNodes);
+    observedNodesClosure.addAll(closure(inputs.accessibilityGraph.graph, inputs.recursiveObservedNodes, true));
+    
+    // 2- find the nodes that are ancestor to some observed variables
+    //    (i.e. nodes n such that there is an n' accessible from n and where n' is observed
+    LinkedHashSet<Node> ancestorsToObserved = closure(inputs.accessibilityGraph.graph, observedNodesClosure, false);
+    
+    // 2- identify the variables
+    LinkedHashSet<ObjectNode<?>> latentVariables = latentVariables(inputs.accessibilityGraph, observedNodesClosure, inputs.isVariablePredicate);
+    
+    // 3- subset of variables that only accept non-recursive samplers
+    
+  }
   
   private GraphAnalysis() 
   {
@@ -64,17 +83,53 @@ public class GraphAnalysis
     
   }
   
+  /*
+   * Terminology:
+   * 
+   *   - variable = attach point for a sampler
+   *   - mutables = things we need to take care of in the fully observed case
+   *   - observed = mechanism that subsets the mutables
+   * 
+   * 
+   * Responsabilities:
+   * 
+   *   - making sure all mutable unobserved are covered
+   *   - proving facilities to samplers to know what is observed [and skip matches where nothing under is unobserved mutable]
+   *   - providing sublists of connected factors to each latent variable
+   * 
+   */
+  
   static LinkedHashSet<ObjectNode<?>> latentVariables(
-      Stream<Node> accessibleNodes, 
+      AccessibilityGraph accessibilityGraph,
       final Set<Node> observedNodesClosure,
-      Set<Class<?>> variableClasses
+      Predicate<Class<?>> isVariablePredicate
       )
   {
-    LinkedHashSet<ObjectNode<?>> result = new LinkedHashSet<>();
-    accessibleNodes
-        .filter(node -> !observedNodesClosure.contains(node))
-        .filter(node -> variableClasses.contains(node.getClass()))
+    // find the ObjectNode's which are not in the closure of the observed nodes
+    LinkedHashSet<ObjectNode<?>> unobservedNodes = new LinkedHashSet<>();
+    accessibilityGraph.getAccessibleNodes()
+        .filter(node -> node instanceof ObjectNode<?>)
         .map(node -> (ObjectNode<?>) node)
+        .filter(node -> !observedNodesClosure.contains(node))
+        .forEachOrdered(unobservedNodes::add);
+    
+    // for efficiency, apply the predicate on the set of the associated classes
+    LinkedHashSet<Class<?>> matchedVariableClasses = new LinkedHashSet<>();
+    {
+      LinkedHashSet<Class<?>> associatedClasses = new LinkedHashSet<>();
+      unobservedNodes.stream()
+          .map(node -> node.object.getClass())
+          .forEachOrdered(associatedClasses::add);
+      
+      associatedClasses.stream()
+          .filter(isVariablePredicate)
+          .forEachOrdered(matchedVariableClasses::add);
+    }
+    
+    // return the unobserved nodes which have a class identified to be a variable
+    LinkedHashSet<ObjectNode<?>> result = new LinkedHashSet<>();
+    unobservedNodes.stream()
+        .filter(node -> matchedVariableClasses.contains(node.getClass()))
         .forEachOrdered(result::add);  
     return result;
   }
