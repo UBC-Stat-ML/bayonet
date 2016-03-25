@@ -2,22 +2,28 @@ package blang.accessibility;
 
 import java.io.File;
 import java.io.PrintWriter;
-import java.util.HashSet;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.jgrapht.DirectedGraph;
+import org.jgrapht.Graph;
 import org.jgrapht.ext.ComponentAttributeProvider;
 import org.jgrapht.ext.DOTExporter;
+import org.jgrapht.ext.EdgeNameProvider;
 import org.jgrapht.ext.IntegerNameProvider;
 import org.jgrapht.ext.VertexNameProvider;
+import org.jgrapht.traverse.BreadthFirstIterator;
 
 import bayonet.graphs.GraphUtils;
-import blang.accessibility.FactorAccessibilityGraphAnalyzer.Factor;
 import briefj.BriefIO;
 
 
@@ -67,6 +73,11 @@ public class AccessibilityGraph
    */
   public static interface Node
   {
+    public default String toStringSummary()
+    {
+      return toString();
+    }
+    public boolean isMutable();
   }
   
   /**
@@ -82,14 +93,14 @@ public class AccessibilityGraph
   /**
    * The root of the graph, i.e. where the accessibility analysis was initiated
    */
-  public final LinkedHashSet<ObjectNode<? extends Factor>> roots = new LinkedHashSet<>();
+  public final LinkedHashSet<ObjectNode<?>> roots = new LinkedHashSet<>();
   
   /**
    * Note that in the graph, object nodes points to constituent nodes only; and constituent nodes points to object nodes only. 
    * Constituent nodes always have at most one outgoing edge (zero in the case of primitives), and object nodes can have zero, one, or 
    * more constituents. 
    */
-  private <K> void addEdgeAndVertices(ObjectNode objectNode, ConstituentNode<K> constituentNode)
+  private <K> void addEdgeAndVertices(ObjectNode<?> objectNode, ConstituentNode<K> constituentNode)
   {
     _addEdgeAndVertices(objectNode, constituentNode);
   }
@@ -97,7 +108,7 @@ public class AccessibilityGraph
   /**
    * See addEdgeAndVertices(ObjectNode objectNode, ConstituentNode<K> constituentNode)
    */
-  private <K> void addEdgeAndVertices(ConstituentNode<K> constituentNode, ObjectNode objectNode)
+  private <K> void addEdgeAndVertices(ConstituentNode<K> constituentNode, ObjectNode<?> objectNode)
   {
     _addEdgeAndVertices(constituentNode, objectNode);
   }
@@ -110,32 +121,38 @@ public class AccessibilityGraph
   }
   
   /**
-   *  use AccessibilityGraph.infer(..)
    */
-  private AccessibilityGraph()
+  public AccessibilityGraph()
   {
+    this(ExplorationRules.defaultExplorationRules);
   }
   
-  public static AccessibilityGraph inferGraph(Object root)
+  public AccessibilityGraph(List<ExplorationRule> explorationRules)
   {
-    return inferGraph(root, ExplorationRules.defaultExplorationRules);
+    this.explorationRules = explorationRules;
   }
   
-  public static AccessibilityGraph inferGraph(Object root, List<ExplorationRule> explorationRules)
+  private final List<ExplorationRule> explorationRules;
+  
+  public void add(Object root)
   {
-    AccessibilityGraph result = new AccessibilityGraph();
+    add(new ObjectNode<>(root));
+  }
+  
+  public void add(ObjectNode<?> root)
+  {
+    roots.add(root);
     
-    final LinkedList<? super Object> toExploreQueue = new LinkedList<>();
+    if (graph.vertexSet().contains(root))
+      return; // in case a root is a subset of another
+    
+    final LinkedList<ObjectNode<?>> toExploreQueue = new LinkedList<>();
     toExploreQueue.add(root);
-    
-    final HashSet<ObjectNode> explored = new HashSet<>();
     
     while (!toExploreQueue.isEmpty())
     {
-      ObjectNode current = new ObjectNode(toExploreQueue.poll());
-
-      explored.add(current);
-      result.graph.addVertex(current);
+      ObjectNode<?> current = toExploreQueue.poll();
+      graph.addVertex(current); // in case there are no constituent
       
       List<? extends ConstituentNode<?>> constituents = null;
       ruleApplication : for (ExplorationRule rule : explorationRules)
@@ -149,79 +166,103 @@ public class AccessibilityGraph
       
       for (ConstituentNode<?> constituent : constituents)
       {
-        result.addEdgeAndVertices(current, constituent);
+        addEdgeAndVertices(current, constituent);
         if (constituent.resolvesToObject()) 
         {
-          Object nextObject = constituent.resolve();
-          ObjectNode next = new ObjectNode(nextObject);
-          result.addEdgeAndVertices(constituent, next);
-          if (!explored.contains(next))
-            toExploreQueue.add(nextObject);
+          ObjectNode<?> next = new ObjectNode<>(constituent.resolve());
+          if (!graph.vertexSet().contains(next))
+            toExploreQueue.add(next);
+          addEdgeAndVertices(constituent, next);
         }
       } // of constituent loop
     } // of exploration
-    
-    return result;
-  }
+  } // of method
   
-  public void toDotFile(File f)
+  // TODO: move
+  public static class DotExporter<V,E>
   {
-    PrintWriter output = BriefIO.output(f);
+    public DotExporter(Graph<V, E> graph)
+    {
+      this.graph = graph;
+    }
     
-    final VertexNameProvider<Node> nameProvider = new VertexNameProvider<Node>() {
-
-      @Override
-      public String getVertexName(Node vertex)
+    private final Graph<V, E> graph;
+    public VertexNameProvider<V> vertexNameProvider = node -> node.toString();
+    public EdgeNameProvider<E> edgeNameProvide = null;
+    private LinkedHashMap<String,Function<V, String>> vertexAttributeProviders = new LinkedHashMap<>();
+    private LinkedHashMap<String,Function<E, String>> edgeAttributeProviders = new LinkedHashMap<>();
+    public void addVertexAttribute(String attributeName, Function<V, String> attributeProvider)
+    {
+      vertexAttributeProviders.put(attributeName, attributeProvider);
+    }
+    public void addEdgeAttribute(String attributeName, Function<E, String> attributeProvider)
+    {
+      edgeAttributeProviders.put(attributeName, attributeProvider);
+    }
+    private static class AttributeProvideAdaptor<T> implements ComponentAttributeProvider<T>
+    {
+      private final LinkedHashMap<String,Function<T, String>> attributeProviders;
+      
+      private AttributeProvideAdaptor(
+          LinkedHashMap<String, Function<T, String>> attributeProviders)
       {
-        if (vertex instanceof ObjectNode)
-        {
-          Object object = ((ObjectNode) vertex).object;
-          return "" + object.getClass().getName() + "@" + System.identityHashCode(object);
-        }
-        else if (vertex instanceof FieldConstituentNode)
-          return "" + ((FieldConstituentNode) vertex).key.getName();
-        else if (vertex instanceof ConstituentNode<?>)
-          return "" + ((ConstituentNode<?>) vertex).key;
-        else
-          throw new RuntimeException();
+        this.attributeProviders = attributeProviders;
       }
-    };
-    
-    ComponentAttributeProvider<Node> attributeProvider = new ComponentAttributeProvider<Node>() {
-
       @Override
-      public Map<String, String> getComponentAttributes(Node component)
+      public Map<String, String> getComponentAttributes(T component)
       {
-        Map<String, String> result = new LinkedHashMap<>();
-        result.put("shape", "box");
-        if (component instanceof ConstituentNode)
-        { 
-          ConstituentNode<?> constituentNode = (ConstituentNode<?>) component;
-          result.put("style", "dotted");
-          if (constituentNode.isMutable())
-          {
-            result.put("color", "red");
-            result.put("fontcolor", "red");
-          }
-        }
+        LinkedHashMap<String,String> result = new LinkedHashMap<>();
+        for (String key : attributeProviders.keySet())
+          result.put(key, attributeProviders.get(key).apply(component));
         return result;
       }
-    };
-    
-    DOTExporter<Node,Pair<Node,Node>> exporter = new DOTExporter<>(
-        new IntegerNameProvider<>(),
-        nameProvider,
-        null,
-        attributeProvider,
-        null
-        );
-    exporter.export(output, graph);
-    output.close();
+    }
+    public void export(File f)
+    {
+      DOTExporter<V,E> exporter = new DOTExporter<>(
+          new IntegerNameProvider<>(),
+          vertexNameProvider,
+          edgeNameProvide,
+          new AttributeProvideAdaptor<>(vertexAttributeProviders),
+          new AttributeProvideAdaptor<>(edgeAttributeProviders)
+          );
+      PrintWriter output = BriefIO.output(f);
+      exporter.export(output, graph);
+      output.close();
+    }
   }
   
-  public Stream<Node> getMutableNodes()
+  public DotExporter<Node, Pair<Node,Node>> toDotExporter()
   {
-    return graph.vertexSet().stream().filter(node -> node instanceof ConstituentNode<?>).filter(node -> ((ConstituentNode<?>) node).isMutable());
+    DotExporter<Node, Pair<Node,Node>> result = new DotExporter<>(graph);
+    result.vertexNameProvider = node -> node.toStringSummary();
+    result.addVertexAttribute("shape", node -> "box");
+    result.addVertexAttribute("style", node -> node instanceof ConstituentNode<?> ? "dotted" : "plain");
+    result.addVertexAttribute("color",     node -> node.isMutable() ? "red" : "black");
+    result.addVertexAttribute("fontcolor", node -> node.isMutable() ? "red" : "black");
+    return result;
   }
+
+  public Stream<Node> getAccessibleNodes(Object from)
+  {
+    return getAccessibleNodes(new ObjectNode<>(from));
+  }
+  
+  public Stream<Node> getAccessibleNodes(ObjectNode<?> from)
+  {
+    return toStream(new BreadthFirstIterator<>(graph, from));
+  }
+  
+  public static <T> Stream<T> toStream(Iterator<T> iter)
+  {
+    Iterable<T> iterable = () -> iter;
+    return StreamSupport.stream(iterable.spliterator(), false);
+  }
+  
+  public static final Predicate<Node> MUTABLE_FILTER = 
+      node -> 
+        node instanceof ConstituentNode<?> 
+          ? ((ConstituentNode<?>) node).isMutable() 
+          : false;
 }
 

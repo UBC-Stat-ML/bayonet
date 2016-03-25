@@ -27,4 +27,10 @@ public class FieldConstituentNode extends ConstituentNode<Field>
   {
     return !Modifier.isFinal(key.getModifiers());
   }
+  
+  @Override
+  public String toStringSummary()
+  {
+    return key.getName();
+  }
 }

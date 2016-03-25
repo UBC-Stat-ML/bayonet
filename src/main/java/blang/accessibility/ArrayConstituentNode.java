@@ -17,6 +17,12 @@ public class ArrayConstituentNode extends ConstituentNode<Integer>
     Object [] array = (Object[]) container;
     return array[key];
   }
+  
+  @Override
+  public String toStringSummary()
+  {
+    return "" + key;
+  }
 
   @Override
   public boolean isMutable()

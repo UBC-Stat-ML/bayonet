@@ -26,11 +26,11 @@ import blang.accessibility.AccessibilityGraph.Node;
  * Same for sublist, etc.
  */
 
-public class ObjectNode implements Node
+public class ObjectNode<T> implements Node
 {
-  final Object object;
+  final T object;
   
-  public ObjectNode(Object object)
+  public ObjectNode(T object)
   {
     if (object == null)
       throw new RuntimeException();
@@ -48,6 +48,12 @@ public class ObjectNode implements Node
   {
     return "ObjectNode[class=" + object.getClass().getName() + ",objectId=" + System.identityHashCode(object) + "]";
   }
+  
+  @Override
+  public String toStringSummary()
+  {
+    return "" + object.getClass().getName() + "@" + System.identityHashCode(object);
+  }
 
   @Override
   public boolean equals(Object obj)
@@ -56,6 +62,12 @@ public class ObjectNode implements Node
       return true;
     if (!(obj instanceof ObjectNode))
       return false;
-    return ((ObjectNode) obj).object == this.object;
+    return ((ObjectNode<?>) obj).object == this.object;
+  }
+
+  @Override
+  public boolean isMutable()
+  {
+    return false; // fields or array entries only are deemed mutable
   }
 }

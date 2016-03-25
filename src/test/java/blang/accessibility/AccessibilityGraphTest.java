@@ -1,9 +1,9 @@
 package blang.accessibility;
 
 import java.io.File;
-import java.util.Arrays;
 
 import org.apache.commons.lang3.tuple.Pair;
+import org.jgrapht.traverse.BreadthFirstIterator;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -24,14 +24,21 @@ public class AccessibilityGraphTest
     
     ObjectArrayView<Mutable> obj2 = new ObjectArrayView<>(ImmutableList.of(1), obj1.array);
     
-    AccessibilityGraph g = AccessibilityGraph.inferGraph(Arrays.asList(obj1, obj2));
+    AccessibilityGraph g = new AccessibilityGraph();
+    g.add(obj1);
+    g.add(obj2);
     
-    g.toDotFile(new File("doc/example-accessibility-graph.dot"));
+    g.toDotExporter().export(new File("doc/example-accessibility-graph.dot"));
     
-    Assert.assertTrue(g.graph.outDegreeOf(new ObjectNode(obj1)) == 2);
-    Assert.assertTrue(g.graph.outDegreeOf(new ObjectNode(obj1.array)) == 2);
-    Assert.assertTrue(g.graph.outDegreeOf(new ObjectNode(obj2)) == 1);
-    Assert.assertTrue(g.graph.vertexSet().size() == 21);
+    Assert.assertTrue(g.graph.outDegreeOf(new ObjectNode<>(obj1)) == 2);
+    Assert.assertTrue(g.graph.outDegreeOf(new ObjectNode<>(obj1.array)) == 2);
+    Assert.assertTrue(g.graph.outDegreeOf(new ObjectNode<>(obj2)) == 1);
+    Assert.assertTrue(g.graph.vertexSet().size() == 13);
+    
+    Assert.assertTrue(AccessibilityGraph.toStream(new BreadthFirstIterator<>(g.graph)).count() == 13);
+    
+    Assert.assertTrue(g.getAccessibleNodes(obj1.array).count() == 9);
+    Assert.assertTrue(g.getAccessibleNodes(obj1.array).filter(AccessibilityGraph.MUTABLE_FILTER).count() == 4);
 
     checkInvariants(g);
   }
@@ -76,7 +83,7 @@ public class AccessibilityGraphTest
   }
   
   
-  static class TestComplexClass
+  public static class TestComplexClass implements Factor
   {
     TestComplexClass selfRef;
     final Mutable [] array;
@@ -101,9 +108,10 @@ public class AccessibilityGraphTest
     C2 c2 = new C2();
     C2.C3 c3 = c2.new C3();
     C2.C3.C4 c4 = c3.new C4();
-    AccessibilityGraph g = AccessibilityGraph.inferGraph(c4);
+    AccessibilityGraph g = new AccessibilityGraph();
+    g.add(c4);
     Assert.assertTrue(g.graph.vertexSet().size() == 10);
-    g.toDotFile(new File("doc/example-accessibility-graph2.dot"));
+    g.toDotExporter().export(new File("doc/example-accessibility-graph2.dot"));
     
     checkInvariants(g);
   }
@@ -134,9 +142,12 @@ public class AccessibilityGraphTest
     Outer out = new Outer();
     Sneaky s = new Sneaky();
     Object anon = out.newAnon(s);
-    AccessibilityGraph g = AccessibilityGraph.inferGraph(Arrays.asList(anon,s));
-    Assert.assertTrue(g.graph.inDegreeOf(new ObjectNode(s)) == 2);
-    g.toDotFile(new File("doc/example-accessibility-graph3.dot"));
+    AccessibilityGraph g = new AccessibilityGraph();
+    g.add(anon);
+//    g.add(s);
+    g.toDotExporter().export(new File("doc/example-accessibility-graph3.dot"));
+    Assert.assertTrue(g.graph.vertexSet().size() == 8);
+    Assert.assertTrue(AccessibilityGraph.toStream(new BreadthFirstIterator<>(g.graph)).count() == 8);
   }
   
   static class Outer
@@ -168,6 +179,16 @@ public class AccessibilityGraphTest
   @Test
   public void testModelModel()
   {
+    AccessibilityGraph g = buildModelModel();
+    g.toDotExporter().export(new File("doc/example-accessibility-graph4.dot"));
+    
+//    Assert.assertTrue(g.graph.vertexSet().size() == 72);
+    
+    checkInvariants(g);
+  }
+  
+  public static class ModelModel
+  {
     DoubleMatrix rates = new DoubleMatrix(2,2);
     
     GammaDistribution gd1 = new GammaDistribution(rates.entry(0, 1), null);
@@ -178,11 +199,19 @@ public class AccessibilityGraphTest
     CategoricalDistribution cd1 = new CategoricalDistribution(backbone.entry(0), null);
     CategoricalDistribution cd2 = new CategoricalDistribution(backbone.entry(1), new MyCatParams(backbone.entry(0), rates, 1.0));
     CategoricalDistribution cd3 = new CategoricalDistribution(backbone.entry(2), new MyCatParams(backbone.entry(1), rates, 1.0));
+  }
+  
+  public AccessibilityGraph buildModelModel()
+  {
+    ModelModel m = new ModelModel();
     
-    AccessibilityGraph g = AccessibilityGraph.inferGraph(Arrays.asList(gd1, gd2, cd1, cd2, cd3));
-    g.toDotFile(new File("doc/example-accessibility-graph4.dot"));
-    
-    checkInvariants(g);
+    AccessibilityGraph g = new AccessibilityGraph();
+    g.add(m.gd1);
+    g.add(m.gd2);
+    g.add(m.cd1);
+    g.add(m.cd2);
+    g.add(m.cd3);
+    return g;
   }
   
   static class MyCatParams implements CatParams
@@ -339,6 +368,20 @@ public class AccessibilityGraphTest
       final int entryIndex = packer.coord2int(i,j);
       return entry(entryIndex);
     }
+  }
+  
+  @Test
+  public void testBFSFunctionality()
+  {
+    TestComplexClass 
+      buildComplexClass1 = buildComplexClass(),
+      buildComplexClass2 = buildComplexClass();
+    
+    AccessibilityGraph ag = new AccessibilityGraph();
+    ag.add(buildComplexClass1);
+    ag.add(buildComplexClass2);
+    
+    Assert.assertTrue(AccessibilityGraph.toStream(new BreadthFirstIterator<>(ag.graph)).count() == 24);
   }
   
 }
