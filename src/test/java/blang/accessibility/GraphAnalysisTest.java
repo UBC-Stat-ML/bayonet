@@ -9,7 +9,7 @@ import org.jgrapht.DirectedGraph;
 import org.junit.Assert;
 import org.junit.Test;
 
-import blang.accessibility.AccessibilityGraph.DotExporter;
+import bayonet.graphs.DotExporter;
 import blang.accessibility.AccessibilityGraph.Node;
 import blang.accessibility.AccessibilityGraphTest.ModelModel;
 

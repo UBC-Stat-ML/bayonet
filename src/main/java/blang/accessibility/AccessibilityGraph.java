@@ -1,29 +1,18 @@
 package blang.accessibility;
 
-import java.io.File;
-import java.io.PrintWriter;
 import java.util.Iterator;
-import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
-import java.util.function.Function;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.jgrapht.DirectedGraph;
-import org.jgrapht.Graph;
-import org.jgrapht.ext.ComponentAttributeProvider;
-import org.jgrapht.ext.DOTExporter;
-import org.jgrapht.ext.EdgeNameProvider;
-import org.jgrapht.ext.IntegerNameProvider;
-import org.jgrapht.ext.VertexNameProvider;
 import org.jgrapht.traverse.BreadthFirstIterator;
 
+import bayonet.graphs.DotExporter;
 import bayonet.graphs.GraphUtils;
-import briefj.BriefIO;
 
 
 
@@ -176,60 +165,6 @@ public class AccessibilityGraph
       } // of constituent loop
     } // of exploration
   } // of method
-  
-  // TODO: move
-  public static class DotExporter<V,E>
-  {
-    public DotExporter(Graph<V, E> graph)
-    {
-      this.graph = graph;
-    }
-    
-    private final Graph<V, E> graph;
-    public VertexNameProvider<V> vertexNameProvider = node -> node.toString();
-    public EdgeNameProvider<E> edgeNameProvide = null;
-    private LinkedHashMap<String,Function<V, String>> vertexAttributeProviders = new LinkedHashMap<>();
-    private LinkedHashMap<String,Function<E, String>> edgeAttributeProviders = new LinkedHashMap<>();
-    public void addVertexAttribute(String attributeName, Function<V, String> attributeProvider)
-    {
-      vertexAttributeProviders.put(attributeName, attributeProvider);
-    }
-    public void addEdgeAttribute(String attributeName, Function<E, String> attributeProvider)
-    {
-      edgeAttributeProviders.put(attributeName, attributeProvider);
-    }
-    private static class AttributeProvideAdaptor<T> implements ComponentAttributeProvider<T>
-    {
-      private final LinkedHashMap<String,Function<T, String>> attributeProviders;
-      
-      private AttributeProvideAdaptor(
-          LinkedHashMap<String, Function<T, String>> attributeProviders)
-      {
-        this.attributeProviders = attributeProviders;
-      }
-      @Override
-      public Map<String, String> getComponentAttributes(T component)
-      {
-        LinkedHashMap<String,String> result = new LinkedHashMap<>();
-        for (String key : attributeProviders.keySet())
-          result.put(key, attributeProviders.get(key).apply(component));
-        return result;
-      }
-    }
-    public void export(File f)
-    {
-      DOTExporter<V,E> exporter = new DOTExporter<>(
-          new IntegerNameProvider<>(),
-          vertexNameProvider,
-          edgeNameProvide,
-          new AttributeProvideAdaptor<>(vertexAttributeProviders),
-          new AttributeProvideAdaptor<>(edgeAttributeProviders)
-          );
-      PrintWriter output = BriefIO.output(f);
-      exporter.export(output, graph);
-      output.close();
-    }
-  }
   
   public DotExporter<Node, Pair<Node,Node>> toDotExporter()
   {

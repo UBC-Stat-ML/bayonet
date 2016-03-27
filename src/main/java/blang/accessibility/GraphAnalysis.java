@@ -2,10 +2,8 @@ package blang.accessibility;
 
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
-import java.util.List;
 import java.util.Set;
 import java.util.function.Predicate;
-import java.util.stream.Stream;
 
 import org.jgrapht.DirectedGraph;
 
@@ -13,7 +11,6 @@ import blang.accessibility.AccessibilityGraph.Node;
 import briefj.BriefCollections;
 
 import com.google.common.collect.LinkedHashMultimap;
-import com.sun.accessibility.internal.resources.accessibility;
 
 
 /**
@@ -25,31 +22,30 @@ import com.sun.accessibility.internal.resources.accessibility;
  */
 public class GraphAnalysis
 {
-  // note: can include nested factors
-//  private final ArrayList<AccessibilityGraph> factorAccessibilityGraphs;
-//  
-//  private final LinkedHashSet<Node> observed;
-  
-//  question: is the savings of having all the factors in the AccessibilityGraph worth it?
-      
-//  todo: use predicates to print dot files
-  
-//  public FactorAccessibilityGraphAnalyzer(List<Factor> factors, List<Node> recursivelyObserved, List<Node> nonRecursivelyObserved)
-//  {
-//    factorAccessibilityGraphs = new ArrayList<>();
-//    for (Factor f : factors)
-//      factorAccessibilityGraphs.add()
-//  }
-  
   public static class Inputs
   {
-    private final AccessibilityGraph accessibilityGraph;
-    private final Set<Node> nonRecursiveObservedNodes, recursiveObservedNodes;
+    private final AccessibilityGraph accessibilityGraph = new AccessibilityGraph();
+    private final LinkedHashSet<Node> 
+      nonRecursiveObservedNodes = new LinkedHashSet<>(), 
+      recursiveObservedNodes = new LinkedHashSet<>();
+    
+    /*
+     * This will typically be based on annotations, but perhaps additional hooks 
+     * needed for built-in types?
+     */
     private final Predicate<Class<?>> isVariablePredicate;
+
+    public Inputs(Predicate<Class<?>> isVariablePredicate)
+    {
+      this.isVariablePredicate = isVariablePredicate;
+    } 
   }
   
   public static GraphAnalysis create(Inputs inputs)
   {
+    GraphAnalysis result = new GraphAnalysis();
+    result.accessibilityGraph = inputs.accessibilityGraph;
+    
     if (!inputs.accessibilityGraph.graph.vertexSet().containsAll(inputs.nonRecursiveObservedNodes) ||
         !inputs.accessibilityGraph.graph.vertexSet().containsAll(inputs.recursiveObservedNodes))
       throw new RuntimeException("Observed variables should be subsets of the accessibility graph");
@@ -58,24 +54,53 @@ public class GraphAnalysis
       throw new RuntimeException("A variable should be either recursively observable, observable, or neither");
     
     // 1- compute the closure of observed variables
-    LinkedHashSet<Node> observedNodesClosure = new LinkedHashSet<>();
-    observedNodesClosure.addAll(inputs.nonRecursiveObservedNodes);
-    observedNodesClosure.addAll(closure(inputs.accessibilityGraph.graph, inputs.recursiveObservedNodes, true));
+    result.observedNodesClosure = new LinkedHashSet<>();
+    result.observedNodesClosure.addAll(inputs.nonRecursiveObservedNodes);
+    result.observedNodesClosure.addAll(closure(inputs.accessibilityGraph.graph, inputs.recursiveObservedNodes, true));
     
-    // 2- find the nodes that are ancestor to some observed variables
-    //    (i.e. nodes n such that there is an n' accessible from n and where n' is observed
-    LinkedHashSet<Node> ancestorsToObserved = closure(inputs.accessibilityGraph.graph, observedNodesClosure, false);
+    // 2- find the unobserved mutable nodes
+    result.unobservedMutableNodes = new LinkedHashSet<>();
+    inputs.accessibilityGraph.getAccessibleNodes()
+        .filter(node -> node.isMutable())
+        .filter(node -> !result.observedNodesClosure.contains(node))
+        .forEachOrdered(result.unobservedMutableNodes::add);
     
-    // 2- identify the variables
-    LinkedHashSet<ObjectNode<?>> latentVariables = latentVariables(inputs.accessibilityGraph, observedNodesClosure, inputs.isVariablePredicate);
+    // 3- identify the latent variables
+    result.latentVariables = latentVariables(inputs.accessibilityGraph, result.unobservedMutableNodes, inputs.isVariablePredicate);
     
-    // 3- subset of variables that only accept non-recursive samplers
+    // 4- prepare the cache
+    result.mutableToFactorCache = createMutableToFactorCache(inputs.accessibilityGraph, result.unobservedMutableNodes);
     
+    return result;
   }
+  
+  private AccessibilityGraph accessibilityGraph;
+  private LinkedHashSet<Node> observedNodesClosure;
+  private LinkedHashSet<Node> unobservedMutableNodes;
+  private LinkedHashSet<ObjectNode<?>> latentVariables;
+  private LinkedHashMultimap<Node, ObjectNode<? extends Factor>> mutableToFactorCache;
   
   private GraphAnalysis() 
   {
-    
+  }
+  
+//  next: 
+//    - instead of a factor graph object, use injections to annotated fields in the sampler?
+//    - use dot stuff to create a factor graph viz based on getConnFactor
+//    - naming facilities (based on AccessibilityGraph)
+//    - mcmc matching (reuse blang2's NodeMoveUtils)
+//    - parsing stuff (to make things observed, etc)
+//    - question: how to deal with gradients?
+//    - need to think about RF vs MH infrastructure
+        
+  
+  public LinkedHashSet<ObjectNode<? extends Factor>> getConnectedFactor(ObjectNode<?> latentVariable)
+  {
+    LinkedHashSet<ObjectNode<? extends Factor>> result = new LinkedHashSet<>();
+    accessibilityGraph.getAccessibleNodes(latentVariable)
+        .filter(node -> unobservedMutableNodes.contains(node))
+        .forEachOrdered(node -> result.addAll(mutableToFactorCache.get(node)));
+    return result;
   }
   
   public static interface Factor
@@ -83,52 +108,40 @@ public class GraphAnalysis
     
   }
   
-  /*
-   * Terminology:
-   * 
-   *   - variable = attach point for a sampler
-   *   - mutables = things we need to take care of in the fully observed case
-   *   - observed = mechanism that subsets the mutables
-   * 
-   * 
-   * Responsabilities:
-   * 
-   *   - making sure all mutable unobserved are covered
-   *   - proving facilities to samplers to know what is observed [and skip matches where nothing under is unobserved mutable]
-   *   - providing sublists of connected factors to each latent variable
-   * 
+  /**
+   * A latent variable is an ObjectNode which has:
+   * 1. some unobserved mutable nodes under it 
+   * 2. AND a class identified to be a variable (i.e. such that samplers can attach to them)
    */
-  
-  static LinkedHashSet<ObjectNode<?>> latentVariables(
+  private static LinkedHashSet<ObjectNode<?>> latentVariables(
       AccessibilityGraph accessibilityGraph,
-      final Set<Node> observedNodesClosure,
+      final Set<Node> unobservedMutableNodes,
       Predicate<Class<?>> isVariablePredicate
       )
   {
-    // find the ObjectNode's which are not in the closure of the observed nodes
-    LinkedHashSet<ObjectNode<?>> unobservedNodes = new LinkedHashSet<>();
-    accessibilityGraph.getAccessibleNodes()
+    // find the ObjectNode's which have some unobserved mutable nodes under them
+    LinkedHashSet<ObjectNode<?>> ancestorsOfUnobservedMutableNodes = new LinkedHashSet<>();
+    closure(accessibilityGraph.graph, unobservedMutableNodes, false).stream()
         .filter(node -> node instanceof ObjectNode<?>)
         .map(node -> (ObjectNode<?>) node)
-        .filter(node -> !observedNodesClosure.contains(node))
-        .forEachOrdered(unobservedNodes::add);
+        .forEachOrdered(ancestorsOfUnobservedMutableNodes::add);
     
     // for efficiency, apply the predicate on the set of the associated classes
     LinkedHashSet<Class<?>> matchedVariableClasses = new LinkedHashSet<>();
     {
       LinkedHashSet<Class<?>> associatedClasses = new LinkedHashSet<>();
-      unobservedNodes.stream()
+      ancestorsOfUnobservedMutableNodes.stream()
           .map(node -> node.object.getClass())
           .forEachOrdered(associatedClasses::add);
-      
       associatedClasses.stream()
           .filter(isVariablePredicate)
           .forEachOrdered(matchedVariableClasses::add);
     }
     
-    // return the unobserved nodes which have a class identified to be a variable
+    // return the ObjectNode's which have some unobserved mutable nodes under them 
+    // AND which have a class identified to be a variable (i.e. such that samplers can attach to them)
     LinkedHashSet<ObjectNode<?>> result = new LinkedHashSet<>();
-    unobservedNodes.stream()
+    ancestorsOfUnobservedMutableNodes.stream()
         .filter(node -> matchedVariableClasses.contains(node.getClass()))
         .forEachOrdered(result::add);  
     return result;
@@ -157,23 +170,23 @@ public class GraphAnalysis
     return result;
   }
   
-  static LinkedHashMultimap<ObjectNode<? extends Factor>, Node> createMutableToFactorCache(AccessibilityGraph accessibilityGraph)
+  static LinkedHashMultimap<Node, ObjectNode<? extends Factor>> createMutableToFactorCache(
+      AccessibilityGraph accessibilityGraph,
+      LinkedHashSet<Node> unobservedMutableNodes
+      )
   {
-    final LinkedHashMultimap<ObjectNode<? extends Factor>, Node> result = LinkedHashMultimap.create();
+    final LinkedHashMultimap<Node, ObjectNode<? extends Factor>> result = LinkedHashMultimap.create();
     for (ObjectNode<?> root : accessibilityGraph.roots)
     {
       if (!(root.object instanceof Factor))
         throw new RuntimeException("Top level model elements should be instances of Factor");
       @SuppressWarnings("unchecked")
       final ObjectNode<? extends Factor> factorNode = (ObjectNode<? extends Factor>) root;
-      accessibilityGraph.getAccessibleNodes(factorNode).filter(node -> node.isMutable()).forEach(node -> result.put(factorNode, node));
+      
+      accessibilityGraph.getAccessibleNodes(factorNode)
+        .filter(node -> unobservedMutableNodes.contains(node))
+        .forEachOrdered(node -> result.put(node, factorNode));
     }
     return result;
-  }
-  
-  public static void main(String [] args)
-  {
-//    AccessibilityGraph g = AccessibilityGraph.inferGraph(new Object());
-//    g.graph.vertexSet().stream().filter(node -> node instanceof ObjectNode).; //node instanceof ObjectNode)
   }
 }
