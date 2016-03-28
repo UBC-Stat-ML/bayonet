@@ -28,3 +28,5 @@ example-accessibility-graph4.pdf
 doc/after-gen.dot
 doc/before-gen.dot
 final-gen.dot
+doc/corresponding-access-graph.dot
+doc/factor-graph.dot

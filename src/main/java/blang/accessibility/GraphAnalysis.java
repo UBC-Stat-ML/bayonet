@@ -1,14 +1,20 @@
 package blang.accessibility;
 
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.Set;
 import java.util.function.Predicate;
 
 import org.jgrapht.DirectedGraph;
+import org.jgrapht.UndirectedGraph;
 
+import bayonet.graphs.DotExporter;
+import bayonet.graphs.GraphUtils;
 import blang.accessibility.AccessibilityGraph.Node;
 import briefj.BriefCollections;
+import briefj.collections.UnorderedPair;
 
 import com.google.common.collect.LinkedHashMultimap;
 
@@ -24,10 +30,12 @@ public class GraphAnalysis
 {
   public static class Inputs
   {
-    private final AccessibilityGraph accessibilityGraph = new AccessibilityGraph();
+    public final AccessibilityGraph accessibilityGraph = new AccessibilityGraph();
     private final LinkedHashSet<Node> 
       nonRecursiveObservedNodes = new LinkedHashSet<>(), 
       recursiveObservedNodes = new LinkedHashSet<>();
+    
+    private final LinkedHashSet<ObjectNode<? extends Factor>> factors = new LinkedHashSet<>();
     
     /*
      * This will typically be based on annotations, but perhaps additional hooks 
@@ -38,13 +46,27 @@ public class GraphAnalysis
     public Inputs(Predicate<Class<?>> isVariablePredicate)
     {
       this.isVariablePredicate = isVariablePredicate;
-    } 
+    }
+    
+    public void addFactor(Factor f)
+    {
+      ObjectNode<Factor> factorNode = new ObjectNode<>(f);
+      accessibilityGraph.add(factorNode);
+      factors.add(factorNode);
+    }
+    
+    public void addVariable(Object variable)
+    {
+      // TODO: discover names
+      accessibilityGraph.add(variable);
+    }
   }
   
   public static GraphAnalysis create(Inputs inputs)
   {
     GraphAnalysis result = new GraphAnalysis();
     result.accessibilityGraph = inputs.accessibilityGraph;
+    result.factorNodes = inputs.factors;
     
     if (!inputs.accessibilityGraph.graph.vertexSet().containsAll(inputs.nonRecursiveObservedNodes) ||
         !inputs.accessibilityGraph.graph.vertexSet().containsAll(inputs.recursiveObservedNodes))
@@ -69,7 +91,11 @@ public class GraphAnalysis
     result.latentVariables = latentVariables(inputs.accessibilityGraph, result.unobservedMutableNodes, inputs.isVariablePredicate);
     
     // 4- prepare the cache
-    result.mutableToFactorCache = createMutableToFactorCache(inputs.accessibilityGraph, result.unobservedMutableNodes);
+    result.mutableToFactorCache = LinkedHashMultimap.create();
+    for (ObjectNode<? extends Factor> factorNode : inputs.factors) 
+      inputs.accessibilityGraph.getAccessibleNodes(factorNode)
+        .filter(node -> result.unobservedMutableNodes.contains(node))
+        .forEachOrdered(node -> result.mutableToFactorCache.put(node, factorNode));
     
     return result;
   }
@@ -79,6 +105,7 @@ public class GraphAnalysis
   private LinkedHashSet<Node> unobservedMutableNodes;
   private LinkedHashSet<ObjectNode<?>> latentVariables;
   private LinkedHashMultimap<Node, ObjectNode<? extends Factor>> mutableToFactorCache;
+  private LinkedHashSet<ObjectNode<? extends Factor>> factorNodes;
   
   private GraphAnalysis() 
   {
@@ -92,6 +119,30 @@ public class GraphAnalysis
 //    - parsing stuff (to make things observed, etc)
 //    - question: how to deal with gradients?
 //    - need to think about RF vs MH infrastructure
+  
+  public DotExporter<Node, UnorderedPair<Node, Node>> factorGraphVisualization()
+  {
+    
+    UndirectedGraph<Node, UnorderedPair<Node, Node>> factorGraph = GraphUtils.newUndirectedGraph();
+    
+    // add factors
+    for (ObjectNode<? extends Factor> f : factorNodes)
+      factorGraph.addVertex(f);
+    
+    // add latent variables and connect them
+    for (ObjectNode<?> l : latentVariables)
+    {
+      factorGraph.addVertex(l);
+      for (Node n : getConnectedFactor(l))
+        factorGraph.addEdge(n, l);
+    }
+    
+    DotExporter<Node, UnorderedPair<Node,Node>> result = new DotExporter<>(factorGraph);
+    result.vertexNameProvider = node -> node.toStringSummary();
+    result.addVertexAttribute("shape", node -> factorNodes.contains(node) ? "box" : "");
+    
+    return result;
+  }
         
   
   public LinkedHashSet<ObjectNode<? extends Factor>> getConnectedFactor(ObjectNode<?> latentVariable)
@@ -104,6 +155,12 @@ public class GraphAnalysis
   }
   
   public static interface Factor
+  {
+    
+  }
+  
+  @Retention(RetentionPolicy.RUNTIME)
+  public static @interface Variable
   {
     
   }
@@ -142,7 +199,7 @@ public class GraphAnalysis
     // AND which have a class identified to be a variable (i.e. such that samplers can attach to them)
     LinkedHashSet<ObjectNode<?>> result = new LinkedHashSet<>();
     ancestorsOfUnobservedMutableNodes.stream()
-        .filter(node -> matchedVariableClasses.contains(node.getClass()))
+        .filter(node -> matchedVariableClasses.contains(node.object.getClass()))
         .forEachOrdered(result::add);  
     return result;
   }
@@ -167,26 +224,6 @@ public class GraphAnalysis
       }
     }
     
-    return result;
-  }
-  
-  static LinkedHashMultimap<Node, ObjectNode<? extends Factor>> createMutableToFactorCache(
-      AccessibilityGraph accessibilityGraph,
-      LinkedHashSet<Node> unobservedMutableNodes
-      )
-  {
-    final LinkedHashMultimap<Node, ObjectNode<? extends Factor>> result = LinkedHashMultimap.create();
-    for (ObjectNode<?> root : accessibilityGraph.roots)
-    {
-      if (!(root.object instanceof Factor))
-        throw new RuntimeException("Top level model elements should be instances of Factor");
-      @SuppressWarnings("unchecked")
-      final ObjectNode<? extends Factor> factorNode = (ObjectNode<? extends Factor>) root;
-      
-      accessibilityGraph.getAccessibleNodes(factorNode)
-        .filter(node -> unobservedMutableNodes.contains(node))
-        .forEachOrdered(node -> result.put(node, factorNode));
-    }
     return result;
   }
 }

@@ -11,6 +11,8 @@ import com.google.common.collect.ImmutableList;
 
 import bayonet.math.CoordinatePacker;
 import blang.accessibility.AccessibilityGraph.Node;
+import blang.accessibility.GraphAnalysis.Factor;
+import blang.accessibility.GraphAnalysis.Variable;
 
 
 
@@ -237,21 +239,18 @@ public class AccessibilityGraphTest
     }
   }
   
+  @Variable
   static interface Real
   {
     public double get();
     public void set(double value);
   }
   
+  @Variable
   static interface Int
   {
     public int get();
     public void set(int value);
-  }
-  
-  static interface Factor
-  {
-    
   }
   
   static class GammaDistribution implements Factor
@@ -327,6 +326,7 @@ public class AccessibilityGraphTest
     }
   }
 
+  @Variable
   static class DoubleMatrix
   {
     private final double[] data;
@@ -336,16 +336,23 @@ public class AccessibilityGraphTest
     {
       this.data = new double[rows*cols];
       this.packer = new CoordinatePacker(new int[]{rows, cols});
+      cache = new Real[rows*cols];
     }
 
+    private final Real [] cache;
     public Real entry(int i, int j)
     {
       final int entryIndex = packer.coord2int(i,j);
+      
+      if (cache[entryIndex] != null)
+        return cache[entryIndex];
+      
       final DoubleArrayView view = new DoubleArrayView(ImmutableList.of(entryIndex), data);
-      return new RealEntry(view);
+      return cache[entryIndex] = new RealEntry(view);
     }
   }
   
+  @Variable
   static class IntMatrix
   {
     private final int[] data;
@@ -355,12 +362,16 @@ public class AccessibilityGraphTest
     {
       this.data = new int[rows*cols];
       this.packer = new CoordinatePacker(new int[]{rows, cols});
+      cache = new Int[rows*cols];
     }
     
+    private final Int [] cache;
     public Int entry(final int entryIndex)
     {
+      if (cache[entryIndex] != null)
+        return cache[entryIndex];
       final IntArrayView view = new IntArrayView(ImmutableList.of(entryIndex), data);
-      return new IntEntry(view);
+      return cache[entryIndex] = new IntEntry(view);
     }
 
     public Int entry(int i, int j)
