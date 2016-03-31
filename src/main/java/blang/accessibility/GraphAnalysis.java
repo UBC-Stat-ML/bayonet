@@ -1,7 +1,5 @@
 package blang.accessibility;
 
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.Set;
@@ -13,6 +11,7 @@ import org.jgrapht.UndirectedGraph;
 import bayonet.graphs.DotExporter;
 import bayonet.graphs.GraphUtils;
 import blang.accessibility.AccessibilityGraph.Node;
+import blang.factors.Factor;
 import briefj.BriefCollections;
 import briefj.collections.UnorderedPair;
 
@@ -152,17 +151,6 @@ public class GraphAnalysis
         .filter(node -> unobservedMutableNodes.contains(node))
         .forEachOrdered(node -> result.addAll(mutableToFactorCache.get(node)));
     return result;
-  }
-  
-  public static interface Factor
-  {
-    
-  }
-  
-  @Retention(RetentionPolicy.RUNTIME)
-  public static @interface Variable
-  {
-    
   }
   
   /**

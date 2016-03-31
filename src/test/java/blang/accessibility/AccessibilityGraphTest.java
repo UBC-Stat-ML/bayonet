@@ -11,8 +11,7 @@ import com.google.common.collect.ImmutableList;
 
 import bayonet.math.CoordinatePacker;
 import blang.accessibility.AccessibilityGraph.Node;
-import blang.accessibility.GraphAnalysis.Factor;
-import blang.accessibility.GraphAnalysis.Variable;
+import blang.factors.Factor;
 
 
 
@@ -90,6 +89,11 @@ public class AccessibilityGraphTest
     TestComplexClass selfRef;
     final Mutable [] array;
     TestComplexClass(Mutable [] array) { this.array = array;}
+    @Override
+    public double logDensity()
+    {
+      throw new RuntimeException();
+    }
   }
   
   static class Mutable
@@ -264,6 +268,10 @@ public class AccessibilityGraphTest
       this.realization = realization;
       this.params = params;
     }
+    public double logDensity()
+    {
+      throw new RuntimeException();
+    }
   }
   
   static interface GammaParams
@@ -280,6 +288,10 @@ public class AccessibilityGraphTest
     {
       this.realization = realization;
       this.params = params;
+    }
+    public double logDensity()
+    {
+      throw new RuntimeException();
     }
   }
   
@@ -326,7 +338,6 @@ public class AccessibilityGraphTest
     }
   }
 
-  @Variable
   static class DoubleMatrix
   {
     private final double[] data;
@@ -352,7 +363,6 @@ public class AccessibilityGraphTest
     }
   }
   
-  @Variable
   static class IntMatrix
   {
     private final int[] data;

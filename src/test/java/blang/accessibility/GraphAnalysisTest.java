@@ -2,7 +2,6 @@ package blang.accessibility;
 
 import java.io.File;
 import java.lang.annotation.Annotation;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
@@ -18,9 +17,8 @@ import bayonet.graphs.DotExporter;
 import blang.accessibility.AccessibilityGraph.Node;
 import blang.accessibility.AccessibilityGraphTest.IntEntry;
 import blang.accessibility.AccessibilityGraphTest.ModelModel;
-import blang.accessibility.GraphAnalysis.Factor;
 import blang.accessibility.GraphAnalysis.Inputs;
-import blang.accessibility.GraphAnalysis.Variable;
+import blang.factors.Factor;
 
 
 

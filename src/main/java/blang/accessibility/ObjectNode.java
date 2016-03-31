@@ -28,7 +28,7 @@ import blang.accessibility.AccessibilityGraph.Node;
 
 public class ObjectNode<T> implements Node
 {
-  final T object;
+  public final T object;
   
   public ObjectNode(T object)
   {
