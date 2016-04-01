@@ -34,6 +34,13 @@ public class HMM
    * 
    * globalParam ~ Exponential(1.0)
    * 
+   * hiddenStates.get(0) ~ Categorical {
+   *   def int nStates() {2}
+   *   def double getLogProbability(int state) {
+   *      log(0.5)
+   *   }
+   * }
+   * 
    * for (int i = 1; i < len; i++)
    *    hiddenStates.get(i-1) | Int previous = hiddenStates.entry(i - 1), Real globalParam 
    *      ~ Categorical {
