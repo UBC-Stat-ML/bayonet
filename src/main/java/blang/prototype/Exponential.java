@@ -1,5 +1,6 @@
 package blang.prototype;
 
+import blang.core.SupportFactor;
 import blang.factors.Factor;
 
 
@@ -17,7 +18,10 @@ public class Exponential implements Factor
   public Exponential(Real realization, ExponentialParams params){
     this.params = params;
     this.realization = realization;
+    this.support = new SupportFactor(() -> realization.get() >= 0.0);
   }
+  
+  public final SupportFactor support;
 
   @Override
   public double logDensity()

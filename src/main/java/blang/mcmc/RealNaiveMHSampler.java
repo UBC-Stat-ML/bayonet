@@ -14,7 +14,7 @@ public class RealNaiveMHSampler extends MHSampler<Real>
   {
     final double oldValue = variable.get();
     callback.setProposalLogRatio(0.0);
-    variable.set(oldValue + random.nextGaussian() * random.nextGaussian());
+    variable.set(oldValue + random.nextGaussian());
     if (!callback.sampleAcceptance())
       variable.set(oldValue);
   }

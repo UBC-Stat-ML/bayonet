@@ -14,11 +14,38 @@ public class HMM
   public final Real globalParam = new RealImpl();
   public final IntMatrix hiddenStates = new IntMatrix(len, 1);
   
+  
+  /*
+   * variables {
+   * 
+   *   int len = 3;
+   *   globalParam = new RealImpl();
+   *   hiddenStates = new IntMatrix(len, 1);
+   * 
+   * }
+   * 
+   * 
+   * globalParam ~ Exponential(1.0)
+   * 
+   * for (int i = 1; i < len; i++)
+   *    hiddenStates.get(i-1) | Int previous = hiddenStates.entry(i - 1), Real globalParam 
+   *      ~ Categorical {
+   *        def int nStates() {2}
+   *        def double getLogProbability(int state) {
+   *          val prev = previous.get()
+   *          val normalization = 1.0 + globalParam.get()
+   *          log(prev == state ? 1.0 : globalParam.get()) - log(normalization)
+   *        }
+   *      }
+   * 
+   */
   public List<Factor> factors()
   {
     List<Factor> result = new ArrayList<>();
     
-    result.add(new Exponential(globalParam, () -> 1.0));
+    Exponential exponential = new Exponential(globalParam, () -> 1.0);
+    result.add(exponential);
+    result.add(exponential.support);
     
     for (int i = 1; i < len; i++)
     {
