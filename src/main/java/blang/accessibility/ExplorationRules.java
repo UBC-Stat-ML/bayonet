@@ -7,8 +7,6 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
-import com.google.common.collect.ImmutableList;
-
 import briefj.ReflexionUtils;
 
 
@@ -48,19 +46,14 @@ public class ExplorationRules
     return result;
   }
   
-  static abstract class ArrayView
-  {
-    public final ImmutableList<Integer> viewedIndices;
-
-    public ArrayView(ImmutableList<Integer> viewedIndices)
-    {
-      this.viewedIndices = viewedIndices;
-    }
-  }
-  
   public static List<? extends ConstituentNode<?>> knownImmutableObjects(Object object)
   {
-    if (object instanceof String || object instanceof Number)
+    if (object instanceof String || 
+        object instanceof Integer || 
+        object instanceof Double || 
+        object instanceof Boolean || 
+        object instanceof Short ||
+        object instanceof Long)
       return Collections.emptyList();
     else
       return null;
@@ -78,7 +71,7 @@ public class ExplorationRules
   {
     ArrayList<FieldConstituentNode> result = new ArrayList<>();
     
-    // note: outer class and anonymous fields handled by the  
+    // note: outer class and anonymous fields handled by the generated fields "x$y"
   
     // find all fields (including those of super class(es), recursively, if any
     for (Field f : ReflexionUtils.getDeclaredFields(object.getClass(), true))

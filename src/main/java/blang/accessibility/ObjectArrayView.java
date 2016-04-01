@@ -1,7 +1,5 @@
 package blang.accessibility;
 
-import blang.accessibility.ExplorationRules.ArrayView;
-
 import com.google.common.collect.ImmutableList;
 
 

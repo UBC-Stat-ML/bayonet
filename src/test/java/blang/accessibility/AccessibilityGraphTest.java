@@ -12,6 +12,9 @@ import com.google.common.collect.ImmutableList;
 import bayonet.math.CoordinatePacker;
 import blang.accessibility.AccessibilityGraph.Node;
 import blang.factors.Factor;
+import blang.prototype.Int;
+import blang.prototype.IntMatrix;
+import blang.prototype.Real;
 
 
 
@@ -243,19 +246,8 @@ public class AccessibilityGraphTest
     }
   }
   
-  @Variable
-  static interface Real
-  {
-    public double get();
-    public void set(double value);
-  }
-  
-  @Variable
-  static interface Int
-  {
-    public int get();
-    public void set(int value);
-  }
+
+
   
   static class GammaDistribution implements Factor
   {
@@ -319,24 +311,24 @@ public class AccessibilityGraphTest
     }
   }
   
-  static class IntEntry implements Int
-  {
-    final IntArrayView view;
-    public IntEntry(IntArrayView view)
-    {
-      this.view = view;
-    }
-    @Override
-    public int get()
-    {
-      return view.get(0);
-    }
-    @Override
-    public void set(int value)
-    {
-      view.set(0, value);
-    }
-  }
+//  static class IntEntry implements Int
+//  {
+//    final IntArrayView view;
+//    public IntEntry(IntArrayView view)
+//    {
+//      this.view = view;
+//    }
+//    @Override
+//    public int get()
+//    {
+//      return view.get(0);
+//    }
+//    @Override
+//    public void set(int value)
+//    {
+//      view.set(0, value);
+//    }
+//  }
 
   static class DoubleMatrix
   {
@@ -363,33 +355,33 @@ public class AccessibilityGraphTest
     }
   }
   
-  static class IntMatrix
-  {
-    private final int[] data;
-    private final CoordinatePacker packer; // todo: replace by more efficient stuff
-    
-    public IntMatrix(int rows, int cols)
-    {
-      this.data = new int[rows*cols];
-      this.packer = new CoordinatePacker(new int[]{rows, cols});
-      cache = new Int[rows*cols];
-    }
-    
-    private final Int [] cache;
-    public Int entry(final int entryIndex)
-    {
-      if (cache[entryIndex] != null)
-        return cache[entryIndex];
-      final IntArrayView view = new IntArrayView(ImmutableList.of(entryIndex), data);
-      return cache[entryIndex] = new IntEntry(view);
-    }
-
-    public Int entry(int i, int j)
-    {
-      final int entryIndex = packer.coord2int(i,j);
-      return entry(entryIndex);
-    }
-  }
+//  static class IntMatrix
+//  {
+//    private final int[] data;
+//    private final CoordinatePacker packer; // todo: replace by more efficient stuff
+//    
+//    public IntMatrix(int rows, int cols)
+//    {
+//      this.data = new int[rows*cols];
+//      this.packer = new CoordinatePacker(new int[]{rows, cols});
+//      cache = new Int[rows*cols];
+//    }
+//    
+//    private final Int [] cache;
+//    public Int entry(final int entryIndex)
+//    {
+//      if (cache[entryIndex] != null)
+//        return cache[entryIndex];
+//      final IntArrayView view = new IntArrayView(ImmutableList.of(entryIndex), data);
+//      return cache[entryIndex] = new IntEntry(view);
+//    }
+//
+//    public Int entry(int i, int j)
+//    {
+//      final int entryIndex = packer.coord2int(i,j);
+//      return entry(entryIndex);
+//    }
+//  }
   
   @Test
   public void testBFSFunctionality()

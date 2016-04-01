@@ -8,5 +8,5 @@ import blang.factors.Factor;
 
 public interface HasChildrenFactors
 {
-  public Collection<? extends Factor> getChildrenFactors();
+  public Collection<Factor> getChildrenFactors();
 }

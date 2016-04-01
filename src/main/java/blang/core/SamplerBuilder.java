@@ -1,6 +1,8 @@
 package blang.core;
 
 import java.lang.reflect.Field;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -16,21 +18,25 @@ import briefj.ReflexionUtils;
 
 public class SamplerBuilder
 {
-//  private final GraphAnalysis graphAnalysis;
+  public static List<Sampler> instantiateSamplers(GraphAnalysis graphAnalysis)
+  {
+    List<Sampler> result = new ArrayList<Sampler>();
+    for (ObjectNode<?> latent : graphAnalysis.latentVariables)
+    {
+      Collection<Class<? extends Operator>> products = graphAnalysis.typeProvider.getProducts(latent.object.getClass());
+      for (Class<? extends Operator> product : products)
+        if (Operator.class.isAssignableFrom(product))
+        {
+          Operator o = tryInstantiate(product, latent, graphAnalysis);
+          if (o != null)
+            result.add((Sampler) o);
+        }
+    }
+    return result;
+  }
   
-//  public static interface OperatorClassProvider
-//  {
-//    public List<Class<? extends Operator>> get()
-//  }
-  
-  /*
-   * TODO: 
-   *  - some kind of interface to initialize and finalize samplers
-   *  - estimate of the number of FLOPS or likelihood evals needed
-   */
-  
-  public static Operator tryInstantiate(
-      Class<? extends Operator> operatorClass, 
+  public static <O extends Operator> O tryInstantiate(
+      Class<O> operatorClass, 
       Object variable,
       GraphAnalysis graphAnalysis)
   {
@@ -45,7 +51,7 @@ public class SamplerBuilder
       return null;
     
     // instantiate via empty constructor
-    Operator instantiated = ReflexionUtils.instantiate(operatorClass);
+    O instantiated = ReflexionUtils.instantiate(operatorClass);
     
     // fill the fields via annotations
     NodeMoveUtils.assignFactorConnections(instantiated, factors, fieldsToPopulate);

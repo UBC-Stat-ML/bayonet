@@ -11,7 +11,11 @@ import org.jgrapht.UndirectedGraph;
 import bayonet.graphs.DotExporter;
 import bayonet.graphs.GraphUtils;
 import blang.accessibility.AccessibilityGraph.Node;
+import blang.annotations.Samplers;
+import blang.annotations.util.RecursiveAnnotationProducer;
+import blang.annotations.util.TypeProvider;
 import blang.factors.Factor;
+import blang.mcmc.Operator;
 import briefj.BriefCollections;
 import briefj.collections.UnorderedPair;
 
@@ -27,6 +31,12 @@ import com.google.common.collect.LinkedHashMultimap;
  */
 public class GraphAnalysis
 {
+//  /*
+//   * This will typically be based on annotations, but perhaps additional hooks 
+//   * needed for built-in types?
+//   */
+//  private static final Predicate<Class<?>> isVariablePredicate = c -> c.isAnnotationPresent(Samplers.class);
+  
   public static class Inputs
   {
     public final AccessibilityGraph accessibilityGraph = new AccessibilityGraph();
@@ -34,18 +44,9 @@ public class GraphAnalysis
       nonRecursiveObservedNodes = new LinkedHashSet<>(), 
       recursiveObservedNodes = new LinkedHashSet<>();
     
-    private final LinkedHashSet<ObjectNode<? extends Factor>> factors = new LinkedHashSet<>();
+    private final LinkedHashSet<ObjectNode<Factor>> factors = new LinkedHashSet<>();
     
-    /*
-     * This will typically be based on annotations, but perhaps additional hooks 
-     * needed for built-in types?
-     */
-    private final Predicate<Class<?>> isVariablePredicate;
-
-    public Inputs(Predicate<Class<?>> isVariablePredicate)
-    {
-      this.isVariablePredicate = isVariablePredicate;
-    }
+    public final TypeProvider<Class<? extends Operator>> typeProvider = RecursiveAnnotationProducer.ofClasses(Samplers.class, true);
     
     public void addFactor(Factor f)
     {
@@ -66,6 +67,7 @@ public class GraphAnalysis
     GraphAnalysis result = new GraphAnalysis();
     result.accessibilityGraph = inputs.accessibilityGraph;
     result.factorNodes = inputs.factors;
+    result.typeProvider = inputs.typeProvider;
     
     if (!inputs.accessibilityGraph.graph.vertexSet().containsAll(inputs.nonRecursiveObservedNodes) ||
         !inputs.accessibilityGraph.graph.vertexSet().containsAll(inputs.recursiveObservedNodes))
@@ -87,11 +89,14 @@ public class GraphAnalysis
         .forEachOrdered(result.unobservedMutableNodes::add);
     
     // 3- identify the latent variables
-    result.latentVariables = latentVariables(inputs.accessibilityGraph, result.unobservedMutableNodes, inputs.isVariablePredicate);
+    result.latentVariables = latentVariables(
+        inputs.accessibilityGraph, 
+        result.unobservedMutableNodes, 
+        c -> !inputs.typeProvider.getProducts(c).isEmpty());
     
     // 4- prepare the cache
     result.mutableToFactorCache = LinkedHashMultimap.create();
-    for (ObjectNode<? extends Factor> factorNode : inputs.factors) 
+    for (ObjectNode<Factor> factorNode : inputs.factors) 
       inputs.accessibilityGraph.getAccessibleNodes(factorNode)
         .filter(node -> result.unobservedMutableNodes.contains(node))
         .forEachOrdered(node -> result.mutableToFactorCache.put(node, factorNode));
@@ -99,12 +104,13 @@ public class GraphAnalysis
     return result;
   }
   
-  private AccessibilityGraph accessibilityGraph;
-  private LinkedHashSet<Node> observedNodesClosure;
-  private LinkedHashSet<Node> unobservedMutableNodes;
-  private LinkedHashSet<ObjectNode<?>> latentVariables;
-  private LinkedHashMultimap<Node, ObjectNode<? extends Factor>> mutableToFactorCache;
-  private LinkedHashSet<ObjectNode<? extends Factor>> factorNodes;
+  public AccessibilityGraph accessibilityGraph;
+  public LinkedHashSet<Node> observedNodesClosure;
+  public LinkedHashSet<Node> unobservedMutableNodes;
+  public LinkedHashSet<ObjectNode<?>> latentVariables;
+  private LinkedHashMultimap<Node, ObjectNode<Factor>> mutableToFactorCache;
+  public LinkedHashSet<ObjectNode<Factor>> factorNodes;
+  public TypeProvider<Class<? extends Operator>> typeProvider; 
   
   private GraphAnalysis() 
   {
@@ -118,6 +124,7 @@ public class GraphAnalysis
 //    - parsing stuff (to make things observed, etc)
 //    - question: how to deal with gradients?
 //    - need to think about RF vs MH infrastructure
+  
   
   public DotExporter<Node, UnorderedPair<Node, Node>> factorGraphVisualization()
   {
@@ -144,9 +151,9 @@ public class GraphAnalysis
   }
         
   
-  public LinkedHashSet<ObjectNode<? extends Factor>> getConnectedFactor(ObjectNode<?> latentVariable)
+  public LinkedHashSet<ObjectNode<Factor>> getConnectedFactor(ObjectNode<?> latentVariable)
   {
-    LinkedHashSet<ObjectNode<? extends Factor>> result = new LinkedHashSet<>();
+    LinkedHashSet<ObjectNode<Factor>> result = new LinkedHashSet<>();
     accessibilityGraph.getAccessibleNodes(latentVariable)
         .filter(node -> unobservedMutableNodes.contains(node))
         .forEachOrdered(node -> result.addAll(mutableToFactorCache.get(node)));
@@ -173,15 +180,17 @@ public class GraphAnalysis
     
     // for efficiency, apply the predicate on the set of the associated classes
     LinkedHashSet<Class<?>> matchedVariableClasses = new LinkedHashSet<>();
-    {
-      LinkedHashSet<Class<?>> associatedClasses = new LinkedHashSet<>();
-      ancestorsOfUnobservedMutableNodes.stream()
-          .map(node -> node.object.getClass())
-          .forEachOrdered(associatedClasses::add);
-      associatedClasses.stream()
-          .filter(isVariablePredicate)
-          .forEachOrdered(matchedVariableClasses::add);
-    }
+    ancestorsOfUnobservedMutableNodes.stream()
+      .map(node -> node.object.getClass())
+      .filter(isVariablePredicate)
+      .forEachOrdered(matchedVariableClasses::add);
+//    {
+//      LinkedHashSet<Class<?>> associatedClasses = new LinkedHashSet<>();
+//      ancestorsOfUnobservedMutableNodes.stream()
+//          .map(node -> node.object.getClass())
+//          .forEachOrdered(associatedClasses::add);
+//      
+//    }
     
     // return the ObjectNode's which have some unobserved mutable nodes under them 
     // AND which have a class identified to be a variable (i.e. such that samplers can attach to them)
