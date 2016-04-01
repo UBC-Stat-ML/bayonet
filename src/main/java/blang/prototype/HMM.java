@@ -1,8 +1,15 @@
 package blang.prototype;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
+import java.util.Random;
 
+import blang.accessibility.GraphAnalysis;
+import blang.accessibility.GraphAnalysis.Inputs;
+import blang.core.Sampler;
+import blang.core.SamplerBuilder;
 import blang.factors.Factor;
 import blang.prototype.Categorical.CategoricalParams;
 
@@ -10,7 +17,7 @@ import blang.prototype.Categorical.CategoricalParams;
 
 public class HMM
 {
-  public final int len = 3;
+  public final int len = 10;
   public final Real globalParam = new RealImpl();
   public final IntMatrix hiddenStates = new IntMatrix(len, 1);
   
@@ -39,13 +46,23 @@ public class HMM
    *      }
    * 
    */
-  public List<Factor> factors()
+  private List<Factor> factors()
   {
     List<Factor> result = new ArrayList<>();
     
     Exponential exponential = new Exponential(globalParam, () -> 1.0);
     result.add(exponential);
     result.add(exponential.support);
+    
+    Categorical init = new Categorical(hiddenStates.entry(0), new CategoricalParams() {
+      @Override public int nStates() { return 2; }
+      @Override public double getLogProbability(int state)
+      {
+        return Math.log(0.5);
+      }
+    });
+    result.add(init);
+    result.add(init.supportFactor);
     
     for (int i = 1; i < len; i++)
     {
@@ -67,5 +84,35 @@ public class HMM
     }
     
     return result;
+  }
+  
+  private List<Sampler> samplers()
+  {
+    Inputs inputs = new Inputs();
+    for (Factor f : factors())
+      inputs.addFactor(f);
+    inputs.addVariable(globalParam);
+    inputs.addVariable(hiddenStates);
+    GraphAnalysis graphAnalysis = GraphAnalysis.create(inputs);
+    return SamplerBuilder.instantiateSamplers(graphAnalysis );
+  }
+  
+  public void sample(Random rand, int nIterations)
+  {
+    List<Sampler> samplers = samplers();
+    for (int i = 0; i < nIterations; i++)
+    {
+      Collections.shuffle(samplers, rand);
+      for (Sampler s : samplers)
+        s.execute(rand);
+      if (i % 1000 == 0)
+        System.out.println(Arrays.toString(hiddenStates.data));
+    }
+  }
+  
+  public static void main(String [] args)
+  {
+    Random rand = new Random(1);
+    new HMM().sample(rand, 1_000_000);
   }
 }

@@ -9,7 +9,7 @@ import com.google.common.collect.ImmutableList;
 
 public class IntMatrix
 {
-  private final int[] data;
+  public final int[] data;
   private final CoordinatePacker packer; // todo: replace by more efficient stuff
   
   public IntMatrix(int rows, int cols)

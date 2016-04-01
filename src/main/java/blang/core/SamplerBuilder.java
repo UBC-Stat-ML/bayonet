@@ -37,11 +37,11 @@ public class SamplerBuilder
   
   public static <O extends Operator> O tryInstantiate(
       Class<O> operatorClass, 
-      Object variable,
+      ObjectNode<?> variable,
       GraphAnalysis graphAnalysis)
   {
     List<? extends Factor> factors = 
-        graphAnalysis.getConnectedFactor(new ObjectNode<>(variable)).stream()
+        graphAnalysis.getConnectedFactor(variable).stream()
           .map(node -> node.object)
           .collect(Collectors.toList());
     
@@ -57,7 +57,7 @@ public class SamplerBuilder
     NodeMoveUtils.assignFactorConnections(instantiated, factors, fieldsToPopulate);
     
     // fill the variable node too; make sure there is only one such field
-    NodeMoveUtils.assignVariable(instantiated, variable);
+    NodeMoveUtils.assignVariable(instantiated, variable.object);
     
     return instantiated;
   }
