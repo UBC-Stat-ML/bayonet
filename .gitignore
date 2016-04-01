@@ -30,3 +30,6 @@ doc/before-gen.dot
 final-gen.dot
 doc/corresponding-access-graph.dot
 doc/factor-graph.dot
+doc/hmm-accessibility.dot
+doc/hmm-factor-graph.dot
+doc/hmm.dot

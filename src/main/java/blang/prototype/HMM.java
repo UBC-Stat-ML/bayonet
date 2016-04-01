@@ -1,5 +1,6 @@
 package blang.prototype;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -17,7 +18,7 @@ import blang.prototype.Categorical.CategoricalParams;
 
 public class HMM
 {
-  public final int len = 10;
+  public final int len = 3;
   public final Real globalParam = new RealImpl();
   public final IntMatrix hiddenStates = new IntMatrix(len, 1);
   
@@ -96,11 +97,23 @@ public class HMM
   private List<Sampler> samplers()
   {
     Inputs inputs = new Inputs();
+    
+    // register the factors
     for (Factor f : factors())
       inputs.addFactor(f);
+    
+    // register the variables
     inputs.addVariable(globalParam);
     inputs.addVariable(hiddenStates);
+    
+    // analyze the object graph
     GraphAnalysis graphAnalysis = GraphAnalysis.create(inputs);
+    
+    // output visualization of the graph
+    graphAnalysis.accessibilityGraph.toDotExporter().export(new File("doc/hmm-accessibility.dot"));
+    graphAnalysis.factorGraphVisualization().export(new File("doc/hmm-factor-graph.dot"));
+    
+    // create the samplers
     return SamplerBuilder.instantiateSamplers(graphAnalysis );
   }
   
@@ -120,6 +133,6 @@ public class HMM
   public static void main(String [] args)
   {
     Random rand = new Random(1);
-    new HMM().sample(rand, 1_000_000);
+    new HMM().sample(rand, 100_000);
   }
 }
