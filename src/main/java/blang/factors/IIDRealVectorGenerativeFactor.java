@@ -26,7 +26,7 @@ import blang.variables.RealVectorInterface;
  *
  * @param <P>
  */
-public class IIDRealVectorGenerativeFactor<P> implements GenerativeFactor
+public class IIDRealVectorGenerativeFactor<P> implements GenerativeFactor, LogScaleFactor
 {
   private final UnivariateRealDistribution marginalDistribution;
   private final GenerativeFactor generativeFactor;

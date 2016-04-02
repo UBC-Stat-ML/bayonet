@@ -30,7 +30,7 @@ public class ForwardSampler
       throw new RuntimeException("At least one of the variable was made stochastic (generated) twice.");
     
     // make graph directed
-    List<Factor> linearizedFactors = model.linearizedFactors();
+    List<? extends Factor> linearizedFactors = model.linearizedFactors(); 
     
     // check at same time everything is a GenerativeSampler
     for (Factor f : linearizedFactors)

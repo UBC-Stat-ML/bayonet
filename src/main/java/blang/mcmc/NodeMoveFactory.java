@@ -8,7 +8,7 @@ import blang.ProbabilityModel;
 import blang.annotations.Samplers;
 import blang.annotations.util.AnnotationBasedFactory;
 import blang.annotations.util.AnnotationBasedFactory.Producer;
-import blang.factors.Factor;
+import blang.factors.LogScaleFactor;
 import briefj.ReflexionUtils;
 
 
@@ -64,7 +64,7 @@ public class NodeMoveFactory implements MoveFactory
         Object variable,
         Class moveType)
     {
-      List<Factor> factors = model.neighborFactors(variable);
+      List<LogScaleFactor> factors = model.neighborFactors(variable);
       
       List<Field> fieldsToPopulate = ReflexionUtils.getAnnotatedDeclaredFields(moveType, ConnectedFactor.class, true);
       if (!NodeMoveUtils.isFactorAssignmentCompatible(factors, fieldsToPopulate))

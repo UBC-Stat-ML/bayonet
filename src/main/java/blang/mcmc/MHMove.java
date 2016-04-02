@@ -5,7 +5,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 
-import blang.factors.Factor;
+import blang.factors.LogScaleFactor;
 import blang.mcmc.MHProposalDistribution.Proposal;
 
 
@@ -24,11 +24,11 @@ public class MHMove implements Move
 {
   //  final SummaryStatistics acceptanceProbabilities = new SummaryStatistics();
   private final MHProposalDistribution proposal;
-  private final Collection<Factor> connectedFactors;
+  private final Collection<LogScaleFactor> connectedFactors;
   private final List<?> variables;
   
   public MHMove(MHProposalDistribution proposal,
-      Collection<Factor> connectedFactors,
+      Collection<LogScaleFactor> connectedFactors,
       List<?> variables)
   {
     this.proposal = proposal;
@@ -61,7 +61,7 @@ public class MHMove implements Move
   private double computeLogUnnormalizedPotentials()
   {
     double result = 0.0;
-    for (Factor f : connectedFactors)
+    for (LogScaleFactor f : connectedFactors)
       result += f.logDensity();
     return result;
   }

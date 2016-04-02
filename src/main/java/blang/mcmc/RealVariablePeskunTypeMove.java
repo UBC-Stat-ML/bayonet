@@ -4,7 +4,7 @@ import java.util.List;
 import java.util.Random;
 
 import bayonet.distributions.Multinomial;
-import blang.factors.Factor;
+import blang.factors.LogScaleFactor;
 import blang.variables.RealVariable;
 
 
@@ -34,7 +34,7 @@ public class RealVariablePeskunTypeMove extends NodeMove
    * The factors connected to this variable.
    * Automatically filled in via reflection.
    */
-  @ConnectedFactor List<Factor> connectedFactors;
+  @ConnectedFactor List<LogScaleFactor> connectedFactors;
   
   /**
    * Used as temporary array when proposing.
@@ -90,7 +90,7 @@ public class RealVariablePeskunTypeMove extends NodeMove
   {
     variable.setValue(value);
     double result = 0.0;
-    for (Factor f : connectedFactors)
+    for (LogScaleFactor f : connectedFactors)
       result += f.logDensity();
     return result;
   }

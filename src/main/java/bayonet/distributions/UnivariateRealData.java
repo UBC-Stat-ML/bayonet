@@ -2,11 +2,11 @@ package bayonet.distributions;
 
 import blang.annotations.FactorArgument;
 import blang.annotations.FactorComponent;
-import blang.factors.Factor;
+import blang.factors.LogScaleFactor;
 import blang.variables.RealVariable;
 import blang.variables.ReadRealVariableData;
 
-public class UnivariateRealData<D extends UnivariateRealDistribution> implements Factor
+public class UnivariateRealData<D extends UnivariateRealDistribution> implements LogScaleFactor
 {
 	@FactorArgument(makeStochastic = true)
 	public final ReadRealVariableData data;

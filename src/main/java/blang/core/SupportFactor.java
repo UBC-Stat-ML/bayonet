@@ -1,6 +1,6 @@
 package blang.core;
 
-import blang.factors.Factor;
+import blang.factors.LogScaleFactor;
 
 
 /**
@@ -13,7 +13,7 @@ import blang.factors.Factor;
  * @author Alexandre Bouchard (alexandre.bouchard@gmail.com)
  *
  */
-public final class SupportFactor implements Factor
+public final class SupportFactor implements LogScaleFactor
 {
   private final Support support;
   

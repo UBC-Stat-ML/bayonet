@@ -6,6 +6,7 @@ import bayonet.math.NumericalUtils;
 import bayonet.math.SpecialFunctions;
 import blang.annotations.FactorArgument;
 import blang.factors.GenerativeFactor;
+import blang.factors.LogScaleFactor;
 import blang.variables.IntegerValuedVector;
 import blang.variables.ProbabilitySimplex;
 
@@ -15,7 +16,7 @@ import blang.variables.ProbabilitySimplex;
  * @author Alexandre Bouchard (alexandre.bouchard@gmail.com)
  *
  */
-public class Multinomial implements GenerativeFactor
+public class Multinomial implements GenerativeFactor, LogScaleFactor
 {
 	private int numSamples;
 

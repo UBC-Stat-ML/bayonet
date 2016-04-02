@@ -9,8 +9,8 @@ import org.junit.Test;
 
 import blang.annotations.DefineFactor;
 import blang.annotations.FactorComponent;
-import blang.factors.Factor;
 import blang.factors.FactorList;
+import blang.factors.LogScaleFactor;
 import blang.variables.RealVariable;
 
 
@@ -44,7 +44,7 @@ public class TestFactorList
     }
   }
   
-  public static class MyFactor implements Factor
+  public static class MyFactor implements LogScaleFactor
   {
     @FactorComponent
     public final FactorList<RealVariable> arguments;

@@ -12,6 +12,7 @@ import com.google.common.collect.ImmutableList;
 import bayonet.math.CoordinatePacker;
 import blang.accessibility.AccessibilityGraph.Node;
 import blang.factors.Factor;
+import blang.factors.LogScaleFactor;
 import blang.prototype.Int;
 import blang.prototype.IntMatrix;
 import blang.prototype.Real;
@@ -87,7 +88,7 @@ public class AccessibilityGraphTest
   }
   
   
-  public static class TestComplexClass implements Factor
+  public static class TestComplexClass implements LogScaleFactor
   {
     TestComplexClass selfRef;
     final Mutable [] array;

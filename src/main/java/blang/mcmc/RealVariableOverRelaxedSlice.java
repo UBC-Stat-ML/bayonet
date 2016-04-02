@@ -5,7 +5,7 @@ import java.util.Random;
 
 import org.apache.commons.math3.util.Pair;
 
-import blang.factors.Factor;
+import blang.factors.LogScaleFactor;
 import blang.variables.RealVariable;
 
 /**
@@ -46,7 +46,7 @@ public class RealVariableOverRelaxedSlice extends NodeMove
      * The factors connected to this variable.
      * Automatically filled in via reflection.
      */
-    @ConnectedFactor List<Factor> connectedFactors;
+    @ConnectedFactor List<LogScaleFactor> connectedFactors;
     
     public final double SLICE_SIZE = 2;
     public final int MAX_SLICE_SIZE = 5; // max size of slice is MAX_SLICE_SIZE * SLICE_SIZE
@@ -152,7 +152,7 @@ public class RealVariableOverRelaxedSlice extends NodeMove
     {
       variable.setValue(value);
       double result = 0.0;
-      for (Factor f : connectedFactors)
+      for (LogScaleFactor f : connectedFactors)
         result += f.logDensity();
       return result;
     }

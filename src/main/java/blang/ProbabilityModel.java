@@ -26,9 +26,11 @@ import blang.annotations.DefineFactor;
 import blang.annotations.FactorArgument;
 import blang.annotations.FactorComponent;
 import blang.factors.Factor;
+import blang.factors.LogScaleFactor;
 import briefj.BriefLists;
 import briefj.BriefStrings;
 import briefj.ReflexionUtils;
+
 
 
 
@@ -97,7 +99,7 @@ public class ProbabilityModel
     return new ProbabilityModel(clonedSpec);
   }
   
-  private void addFactor(Factor f, FieldPath fieldsPath)
+  private void addFactor(LogScaleFactor f, FieldPath fieldsPath)
   {
     Node factorNode = factorNode(f);
     if (factors.contains(factorNode))
@@ -116,7 +118,7 @@ public class ProbabilityModel
   public double logDensity()
   {
     double sum = 0.0;
-    for (Factor f : allFactors())
+    for (LogScaleFactor f : allFactors())
       sum += f.logDensity();
     return sum;
   }
@@ -153,7 +155,7 @@ public class ProbabilityModel
     observedVariables.add(variableNode(variable));
   }
   
-  private void setVariablesInFactorAsObserved(Factor factor)
+  private void setVariablesInFactorAsObserved(LogScaleFactor factor)
   {
     for (Pair<ProbabilityModel.FieldPath, Object> pair : listArguments(factor))
     {
@@ -174,8 +176,8 @@ public class ProbabilityModel
     return ReflexionUtils.sublistOfGivenType(getLatentVariables(), ofType);
   }
   
-  private List<Factor> cachedLinearization = null;
-  public List<Factor> linearizedFactors()
+  private List<LogScaleFactor> cachedLinearization = null;
+  public List<? extends Factor> linearizedFactors()
   {
     if (cachedLinearization != null)
       return cachedLinearization;
@@ -257,15 +259,15 @@ public class ProbabilityModel
       }catch (IOException e){}
   }
   
-  public List<Factor> neighborFactors(Object variable)
+  public List<LogScaleFactor> neighborFactors(Object variable)
   {
-    List<Factor> result = Lists.newArrayList();
+    List<LogScaleFactor> result = Lists.newArrayList();
     for (Node n : Graphs.neighborListOf(graph, variableNode(variable)))
       result.add(n.getAsFactor());
     return result;
   }
   
-  public List<Object> neighborLatentVariables(Factor f)
+  public List<Object> neighborLatentVariables(LogScaleFactor f)
   {
     List<Object> result = Lists.newArrayList();
     for (Node n : Graphs.neighborListOf(graph, factorNode(f)))
@@ -274,7 +276,7 @@ public class ProbabilityModel
     return result;
   }
   
-  public List<Object> neighborVariables(Factor f)
+  public List<Object> neighborVariables(LogScaleFactor f)
   {
     List<Object> result = Lists.newArrayList();
     for (Node n : Graphs.neighborListOf(graph, factorNode(f)))
@@ -282,7 +284,7 @@ public class ProbabilityModel
     return result;
   }
   
-  public String toString(Factor f)
+  public String toString(LogScaleFactor f)
   {
     return f.getClass().getSimpleName() + "(\n" + BriefStrings.indent(argumentsAndComponentsToString(f)) + "\n)"; //+ Joiner.on(", ").join(assignments) + ")";
   }
@@ -291,14 +293,14 @@ public class ProbabilityModel
   public String toString()
   {
     StringBuilder result = new StringBuilder();
-    for (Factor f : allFactors())
+    for (LogScaleFactor f : allFactors())
       result.append(toString(f) + "\n");
     return result.toString();
   }
   
   // private static utilities
   
-  private void addLinks(Factor f, FieldPath fieldsPath)
+  private void addLinks(LogScaleFactor f, FieldPath fieldsPath)
   {
     for (Pair<FieldPath, Object> argument : listArguments(f, fieldsPath))
     {
@@ -311,12 +313,12 @@ public class ProbabilityModel
     }
   }
   
-  private List<Pair<FieldPath, Object>> listArguments(Factor f)
+  private List<Pair<FieldPath, Object>> listArguments(LogScaleFactor f)
   {
     return listArguments(f, rootFieldPath);
   }
   
-  private List<Pair<FieldPath, Object>> listArguments(Factor f, FieldPath fieldPath)
+  private List<Pair<FieldPath, Object>> listArguments(LogScaleFactor f, FieldPath fieldPath)
   {
     List<Pair<FieldPath, Object>> result = Lists.newArrayList();
     listArguments(f, fieldPath, result);
@@ -360,22 +362,22 @@ public class ProbabilityModel
       Object toAdd = ReflexionUtils.getFieldValue(field, o);
       if (toAdd == null) continue;
       
-      if (toAdd instanceof Factor)
+      if (toAdd instanceof LogScaleFactor)
       {
-        Factor factor = (Factor) toAdd;
+        LogScaleFactor factor = (LogScaleFactor) toAdd;
         FieldPath path = fieldsPath.extendBy(field);
         addFactor(factor, path);
         parse(factor, path);
       }
-      else if (toAdd instanceof List || toAdd instanceof Factor[])
+      else if (toAdd instanceof List || toAdd instanceof LogScaleFactor[])
       {
         @SuppressWarnings({ "rawtypes", "unchecked" })
-        List<Factor> factorList = (toAdd instanceof List ? 
+        List<LogScaleFactor> factorList = (toAdd instanceof List ? 
             (List) toAdd :
-            Arrays.asList((Factor[]) toAdd));
+            Arrays.asList((LogScaleFactor[]) toAdd));
         for (int i = 0; i < factorList.size(); i++)
         {
-          Factor factor = factorList.get(i);
+          LogScaleFactor factor = factorList.get(i);
           FieldPath path = fieldsPath.extendBy(field, i);
           addFactor(factor, path);
           parse(factor, path);
@@ -416,7 +418,7 @@ public class ProbabilityModel
     }
   }
   
-  private Node factorNode(Factor f) 
+  private Node factorNode(LogScaleFactor f) 
   {
     return new Node(f, true);
   }
@@ -426,9 +428,9 @@ public class ProbabilityModel
     return new Node(variable, false);
   }
   
-  private List<Factor> allFactors()
+  private List<LogScaleFactor> allFactors()
   {
-    List<Factor> result = Lists.newArrayList();
+    List<LogScaleFactor> result = Lists.newArrayList();
     for (Node n : factors)
       result.add(n.getAsFactor());
     return result;
@@ -476,11 +478,11 @@ public class ProbabilityModel
       this.isFactor = isFactor;
     }
 
-    public Factor getAsFactor()
+    public LogScaleFactor getAsFactor()
     {
       if (!isFactor)
         throw new RuntimeException();
-      return (Factor) getPayload();
+      return (LogScaleFactor) getPayload();
     }
     
     public Object getAsVariable()

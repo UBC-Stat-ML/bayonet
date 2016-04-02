@@ -3,14 +3,15 @@ package blang.prototype;
 import java.util.Arrays;
 import java.util.Collection;
 
-import blang.core.HasChildrenFactors;
+import blang.core.CompositeFactors;
 import blang.core.SupportFactor;
 import blang.core.SupportFactor.Support;
 import blang.factors.Factor;
+import blang.factors.LogScaleFactor;
 
 
 
-public class Categorical implements Factor, HasChildrenFactors
+public class Categorical implements LogScaleFactor, CompositeFactors
 {
   public static interface CategoricalParams
   {
@@ -55,7 +56,7 @@ public class Categorical implements Factor, HasChildrenFactors
   }
 
   @Override
-  public Collection<Factor> factors()
+  public Collection<Factor> componentFactors()
   {
     return Arrays.asList(supportFactor);
   }

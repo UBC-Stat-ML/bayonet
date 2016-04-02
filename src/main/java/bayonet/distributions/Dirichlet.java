@@ -5,11 +5,12 @@ import java.util.Random;
 import blang.annotations.FactorArgument;
 import blang.annotations.FactorComponent;
 import blang.factors.GenerativeFactor;
+import blang.factors.LogScaleFactor;
 import blang.variables.ProbabilitySimplex;
 import blang.variables.RealVariable;
 import blang.variables.RealVector;
 
-public class Dirichlet<P extends Dirichlet.Parameters> implements GenerativeFactor 
+public class Dirichlet<P extends Dirichlet.Parameters> implements GenerativeFactor, LogScaleFactor
 {
 	@FactorArgument(makeStochastic=true)
 	public final ProbabilitySimplex realization; 

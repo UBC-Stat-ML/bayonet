@@ -3,7 +3,7 @@ package blang.core;
 import java.util.List;
 import java.util.Random;
 
-import blang.factors.Factor;
+import blang.factors.LogScaleFactor;
 import blang.mcmc.ConnectedFactor;
 import blang.mcmc.SampledVariable;
 
@@ -18,7 +18,7 @@ public abstract class MHSampler<T> implements Sampler
   protected List<SupportFactor> supportFactors;
   
   @ConnectedFactor
-  protected List<Factor> numericFactors;
+  protected List<LogScaleFactor> numericFactors;
   
   public void execute(Random random)
   {
@@ -52,7 +52,7 @@ public abstract class MHSampler<T> implements Sampler
         return Double.NEGATIVE_INFINITY;
     
     double sum = 0.0;
-    for (Factor numericFactor : numericFactors)
+    for (LogScaleFactor numericFactor : numericFactors)
       sum += numericFactor.logDensity();
     
     return sum;

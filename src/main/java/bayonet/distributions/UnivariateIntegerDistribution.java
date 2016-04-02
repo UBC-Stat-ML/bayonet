@@ -1,9 +1,9 @@
 package bayonet.distributions;
 
-import blang.factors.Factor;
+import blang.factors.LogScaleFactor;
 import blang.variables.IntegerVariable;
 
-public interface UnivariateIntegerDistribution extends Factor
+public interface UnivariateIntegerDistribution extends LogScaleFactor
 {
   public IntegerVariable getRealization();
 }
