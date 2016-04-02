@@ -31,12 +31,6 @@ import com.google.common.collect.LinkedHashMultimap;
  */
 public class GraphAnalysis
 {
-//  /*
-//   * This will typically be based on annotations, but perhaps additional hooks 
-//   * needed for built-in types?
-//   */
-//  private static final Predicate<Class<?>> isVariablePredicate = c -> c.isAnnotationPresent(Samplers.class);
-  
   public static class Inputs
   {
     public final AccessibilityGraph accessibilityGraph = new AccessibilityGraph();
@@ -150,7 +144,6 @@ public class GraphAnalysis
     return result;
   }
         
-  
   public LinkedHashSet<ObjectNode<Factor>> getConnectedFactor(ObjectNode<?> latentVariable)
   {
     LinkedHashSet<ObjectNode<Factor>> result = new LinkedHashSet<>();
@@ -158,6 +151,18 @@ public class GraphAnalysis
         .filter(node -> unobservedMutableNodes.contains(node))
         .forEachOrdered(node -> result.addAll(mutableToFactorCache.get(node)));
     return result;
+  }
+  
+  public String toStringSummary()
+  {
+    StringBuilder result = new StringBuilder();
+    for (ObjectNode<?> latentVar : latentVariables)
+    {
+      result.append(latentVar.toStringSummary() + "\n");
+      for (ObjectNode<Factor> connectedFactor : getConnectedFactor(latentVar))
+        result.append("\t" + connectedFactor.toStringSummary() + "\n");
+    }
+    return result.toString();
   }
   
   /**
