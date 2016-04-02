@@ -6,7 +6,7 @@ import blang.factors.Factor;
 
 
 
-public interface CompositeFactors
+public interface FactorComposite
 {
   public Collection<Factor> componentFactors();
 }

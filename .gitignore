@@ -33,3 +33,5 @@ doc/factor-graph.dot
 doc/hmm-accessibility.dot
 doc/hmm-factor-graph.dot
 doc/hmm.dot
+doc/hmm-accessibility-2.dot
+doc/hmm-factor-graph-2.dot

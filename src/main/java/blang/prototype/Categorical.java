@@ -3,7 +3,7 @@ package blang.prototype;
 import java.util.Arrays;
 import java.util.Collection;
 
-import blang.core.CompositeFactors;
+import blang.core.FactorComposite;
 import blang.core.SupportFactor;
 import blang.core.SupportFactor.Support;
 import blang.factors.Factor;
@@ -11,7 +11,7 @@ import blang.factors.LogScaleFactor;
 
 
 
-public class Categorical implements LogScaleFactor, CompositeFactors
+public class Categorical implements LogScaleFactor, FactorComposite
 {
   public static interface CategoricalParams
   {
