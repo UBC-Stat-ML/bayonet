@@ -5,7 +5,7 @@ import java.util.Collection;
 import java.util.List;
 
 import blang.core.FactorComposite;
-import blang.factors.Factor;
+import blang.core.ModelComponent;
 import blang.factors.FactorUtils;
 import blang.prototype.Categorical.CategoricalParams;
 
@@ -13,6 +13,7 @@ import blang.prototype.Categorical.CategoricalParams;
 
 public class HMMLib implements FactorComposite
 {
+  
   public static interface HMMLibParams
   {
     public int length();
@@ -31,14 +32,14 @@ public class HMMLib implements FactorComposite
   }
 
   @Override
-  public Collection<Factor> componentFactors()
+  public Collection<ModelComponent> components()
   {
-    List<Factor> result = new ArrayList<>();
+    List<ModelComponent> result = new ArrayList<>();
     
     {
       CategoricalParams param = new CategoricalParams_0(params);
       Categorical factor = new Categorical(hiddenStates.entry(0), param);
-      FactorUtils.addFactorsRecursively(factor, result);
+      FactorUtils.addModelComponentsRecursively(factor, result);
     }
     
     for (int t = 1; t < params.length(); t++)
@@ -46,7 +47,7 @@ public class HMMLib implements FactorComposite
       {
         CategoricalParams param = new CategoricalParams_1(params, hiddenStates.entry(t-1));
         Categorical factor = new Categorical(hiddenStates.entry(t), param);
-        FactorUtils.addFactorsRecursively(factor, result);
+        FactorUtils.addModelComponentsRecursively(factor, result);
       }
     }
     

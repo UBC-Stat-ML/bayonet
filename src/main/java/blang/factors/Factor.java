@@ -1,5 +1,7 @@
 package blang.factors;
 
+import blang.core.ModelComponent;
+
 
 /**
  * A factor in a factor graph.
@@ -8,6 +10,6 @@ package blang.factors;
  * @author Alexandre Bouchard (alexandre.bouchard@gmail.com)
  *
  */
-public interface Factor
+public interface Factor extends ModelComponent
 {
 }

@@ -56,7 +56,7 @@ public class Categorical implements LogScaleFactor, FactorComposite
   }
 
   @Override
-  public Collection<Factor> componentFactors()
+  public Collection<Factor> components()
   {
     return Arrays.asList(supportFactor);
   }
