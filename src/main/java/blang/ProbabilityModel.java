@@ -26,12 +26,11 @@ import blang.annotations.DefineFactor;
 import blang.annotations.FactorArgument;
 import blang.annotations.FactorComponent;
 import blang.factors.Factor;
+import blang.mcmc.Move;
+import blang.mcmc.NodeMoveUtils;
 import briefj.BriefLists;
 import briefj.BriefStrings;
 import briefj.ReflexionUtils;
-
-
-
 
 //import com.esotericsoftware.kryo.Kryo;
 //import com.esotericsoftware.kryo.Registration;
@@ -95,6 +94,13 @@ public class ProbabilityModel
     Object clonedSpec = cloner.deepClone(specification);
     // use the standard parser on the cloned specifications
     return new ProbabilityModel(clonedSpec);
+  }
+  
+  public Move instantiateOperator(
+      Object variable,
+      @SuppressWarnings("rawtypes") Class moveType)
+  {
+    return NodeMoveUtils.instantiateOperator(variable, neighborFactors(variable), moveType);
   }
   
   private void addFactor(Factor f, FieldPath fieldsPath)

@@ -2,6 +2,7 @@ package blang.mcmc;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.ParameterizedType;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
@@ -22,6 +23,50 @@ import com.google.common.collect.Lists;
  */
 public class NodeMoveUtils
 {
+  @SuppressWarnings("rawtypes")
+  public static Move instantiateOperator(
+      Object variable,
+      List<Factor> neighborFactors,
+      Class moveType)
+  {
+    List<Field> fieldsToPopulate = ReflexionUtils.getAnnotatedDeclaredFields(moveType, ConnectedFactor.class, true);
+    if (!NodeMoveUtils.isFactorAssignmentCompatible(neighborFactors, fieldsToPopulate))
+      return null;
+    
+    // instantiate via empty constructor
+    @SuppressWarnings("unchecked")
+    Operator instantiated = (Operator) ReflexionUtils.instantiate(moveType);
+    
+    // fill the fields via annotations
+    NodeMoveUtils.assignFactorConnections(instantiated, neighborFactors, fieldsToPopulate);
+    
+    // fill the variable node too; make sure there is only one such field
+    NodeMoveUtils.assignVariable(instantiated, variable);
+    
+    // check if MHProposal or Move, act accordingly; make sure it is not both
+    boolean isMHProposal = instantiated instanceof MHProposalDistribution;
+    boolean isSingleNodeMove = instantiated instanceof NodeMove;
+    
+    if ((isMHProposal && isSingleNodeMove) || (!isMHProposal && !isSingleNodeMove))
+      throw new RuntimeException("" + moveType.getSimpleName() + " should be exactly one of " 
+          + MHProposalDistribution.class.getSimpleName() + " or " + NodeMove.class.getSimpleName());
+    
+    if (isMHProposal)
+    {
+      MHProposalDistribution proposal = (MHProposalDistribution) instantiated;
+      return new MHMove(proposal, neighborFactors, Collections.singletonList(variable));
+    }
+    else if (isSingleNodeMove)
+    {
+      NodeMove move = (NodeMove) instantiated;
+      move.setVariable(variable);
+      return move;
+    }
+    else
+      throw new RuntimeException();
+  }
+  
+  
   /**
    * An operator (move or proposal) specifies a list of factors that are 
    * expected to be connected to the variable that
