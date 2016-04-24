@@ -54,10 +54,6 @@ public class RealVariableOverRelaxedSlice extends NodeMove
     @Override
     public void execute(Random rand)
     {
-      if (true)
-        throw new RuntimeException("The implementation of RealVariableOverRelaxedSlice appears not to be invariant in certain cases. "
-          + "See rejectionfree commit cbda4bea68b09fca449c7e153cbf08a916041b2d");
-      
         double originalValue = variable.getValue(); 
         double originalLogUnnormalizedPotential = computeLogUnnormalizedPotentials(originalValue);
         double auxVariable = originalLogUnnormalizedPotential + Math.log(rand.nextDouble());
