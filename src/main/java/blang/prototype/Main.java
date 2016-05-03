@@ -11,7 +11,7 @@ import java.util.ServiceLoader;
 
 import blang.accessibility.GraphAnalysis;
 import blang.accessibility.GraphAnalysis.Inputs;
-import blang.core.FactorComposite;
+import blang.core.Model;
 import blang.core.ModelComponent;
 import blang.core.Sampler;
 import blang.core.SamplerBuilder;
@@ -29,7 +29,7 @@ import com.google.common.collect.Multimap;
 
 public class Main implements Runnable
 {
-  private final FactorComposite model;
+  private final Model model;
   
   @Option
   private Random random = new Random(1);
@@ -37,7 +37,7 @@ public class Main implements Runnable
   @Option
   private int nIterations = 1000;
   
-  public Main(FactorComposite model)
+  public Main(Model model)
   {
     this.model = model;
   }
@@ -77,8 +77,8 @@ public class Main implements Runnable
         try { inputs.addVariable(f.get(model)); } 
         catch (Exception e) { throw new RuntimeException(e); }
     for (ModelComponent c : modelComponents)
-      if (c instanceof FactorComposite)
-        inputs.addVariable((FactorComposite) c);
+      if (c instanceof Model)
+        inputs.addVariable((Model) c);
     
     // analyze the object graph
     GraphAnalysis graphAnalysis = GraphAnalysis.create(inputs);
@@ -127,7 +127,7 @@ public class Main implements Runnable
       exitOnBadKeyError(loader, "Specify a model from: ");
     
     final String modelName = args.get(0);
-    Optional<Class<? extends FactorComposite>> theClass = loader.load(modelName);
+    Optional<Class<? extends Model>> theClass = loader.load(modelName);
     
     if (theClass.isPresent())
       Mains.instrumentedRun(
@@ -147,15 +147,15 @@ public class Main implements Runnable
   
   public static class ModelLoader
   {
-    public final Multimap<String, Class<? extends FactorComposite>> simpleNameToClass;
+    public final Multimap<String, Class<? extends Model>> simpleNameToClass;
     
     public ModelLoader()
     {
       this.simpleNameToClass = LinkedHashMultimap.create();
-      ServiceLoader<FactorComposite> loader = ServiceLoader.load(FactorComposite.class);
-      for (FactorComposite fcInstance : loader)
+      ServiceLoader<Model> loader = ServiceLoader.load(Model.class);
+      for (Model fcInstance : loader)
       {
-        Class<? extends FactorComposite> theClass = fcInstance.getClass();
+        Class<? extends Model> theClass = fcInstance.getClass();
         simpleNameToClass.put(theClass.getSimpleName(), theClass);
       }
     }
@@ -166,7 +166,7 @@ public class Main implements Runnable
       
       for (String key : simpleNameToClass.keySet())
       {
-        Collection<Class<? extends FactorComposite>> collection = simpleNameToClass.get(key);
+        Collection<Class<? extends Model>> collection = simpleNameToClass.get(key);
         if (collection.size() == 1)
           result.add(BriefCollections.pick(collection).getSimpleName());
         else
@@ -176,28 +176,28 @@ public class Main implements Runnable
       return result;
     }
     
-    public Optional<Class<? extends FactorComposite>> load(String simpleOrQualifiedName)
+    public Optional<Class<? extends Model>> load(String simpleOrQualifiedName)
     {
       return isQualified(simpleOrQualifiedName) ? 
           loadFromQualifiedName(simpleOrQualifiedName) : 
           loadFromSimpleName(simpleOrQualifiedName);
     }
 
-    private Optional<Class<? extends FactorComposite>> loadFromSimpleName(
+    private Optional<Class<? extends Model>> loadFromSimpleName(
         String simpleName)
     {
-      Collection<Class<? extends FactorComposite>> collection = simpleNameToClass.get(simpleName);
+      Collection<Class<? extends Model>> collection = simpleNameToClass.get(simpleName);
       return collection.size() == 1 ? 
           Optional.of(BriefCollections.pick(collection)) :
           Optional.absent();
     }
 
-    private Optional<Class<? extends FactorComposite>> loadFromQualifiedName(String qualifiedName)
+    private Optional<Class<? extends Model>> loadFromQualifiedName(String qualifiedName)
     {
       try
       {
         @SuppressWarnings("unchecked")
-        Class<? extends FactorComposite> fc = (Class<? extends FactorComposite>) Class.forName(qualifiedName);
+        Class<? extends Model> fc = (Class<? extends Model>) Class.forName(qualifiedName);
         return Optional.of(fc);
       } catch (ClassNotFoundException e)
       {

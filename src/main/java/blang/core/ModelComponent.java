@@ -2,7 +2,7 @@ package blang.core;
 
 
 /**
- * Either a Factor, or a FactorComposite
+ * Either a Factor, or a Model
  * 
  * @author Alexandre Bouchard (alexandre.bouchard@gmail.com)
  *

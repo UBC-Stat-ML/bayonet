@@ -4,14 +4,14 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-import blang.core.FactorComposite;
+import blang.core.Model;
 import blang.core.ModelComponent;
 import blang.factors.FactorUtils;
 import blang.prototype.Categorical.CategoricalParams;
 
 
 
-public class HMMLib implements FactorComposite
+public class HMMLib implements Model
 {
   
   public static interface HMMLibParams
