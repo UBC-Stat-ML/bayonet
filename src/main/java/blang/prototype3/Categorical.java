@@ -1,19 +1,20 @@
-package blang.prototype2;
+package blang.prototype3;
 
 import java.util.Collection;
 import java.util.function.Supplier;
 
 import blang.core.Model;
 import blang.core.ModelComponent;
-import blang.prototype2.Scratch.HMM.Simplex;
 
 
 
 public class Categorical implements Model
 {
   
+  @SuppressWarnings("unused")
   private final Supplier<Simplex> probabilities;
   
+  @SuppressWarnings("unused")
   private final Int realization;
   
   public Categorical(Int realization, Supplier<Simplex> probabilities)

@@ -6,7 +6,6 @@ import java.util.function.Supplier;
 
 import blang.core.Model;
 import blang.core.ModelComponent;
-import blang.prototype2.Real;
 
 
 /**
@@ -59,10 +58,10 @@ public class SimpleNormalModel
   //       In fact, we may want to automate creation of a Factory/Builders instead?
   //       Should also think of including named arguments Normal(mean = mu, variance = .. )?
   //       However, all this can wait until this new prototype is ready.
-  public SimpleNormalModel(Real mu, Real y)
+  public SimpleNormalModel()
   {
-    this.mu = mu;
-    this.y = y;
+    this.mu = new RealScalar();
+    this.y = new RealScalar();
   }
   
   /**
@@ -94,14 +93,17 @@ public class SimpleNormalModel
   {
     ArrayList<ModelComponent> components = new ArrayList<>();
     
-    // Definition of mu skipped for briefness.
-    // skipped
-    
     // y | Real mean = mu ~ Normal(mean, [mean.doubleValue ** 2])
     components.add(
         new Normal(y, 
             $generated_setupSubModel0Param0(mu), // One supplier for each of the two arguments (parameters) of Normal.
             $generated_setupSubModel0Param1(mu)));
+    
+    // mu ~ Normal(0, 1)
+    components.add(
+        new Normal(mu,
+            $generated_setupSubModel1Param0(),
+            $generated_setupSubModel1Param1()));
     
     return components;
   }
@@ -139,6 +141,30 @@ public class SimpleNormalModel
                                       ^^^^^^^^^^^^^^^^^^^^^^^
          */ 
         return () -> Math.pow(mean.doubleValue(), 2);
+      }
+    };
+  }
+  
+  private static Supplier<Real> $generated_setupSubModel1Param0()
+  {
+    return new Supplier<Real>() 
+    {
+      @Override
+      public Real get()
+      {
+        return () -> 0.0;
+      }
+    };
+  }
+  
+  private static Supplier<Real> $generated_setupSubModel1Param1()
+  {
+    return new Supplier<Real>() 
+    {
+      @Override
+      public Real get()
+      {
+        return () -> 1.0;
       }
     };
   }

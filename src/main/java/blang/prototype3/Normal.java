@@ -9,7 +9,6 @@ import blang.core.ModelComponent;
 import blang.core.SupportFactor;
 import blang.core.SupportFactor.Support;
 import blang.factors.LogScaleFactor;
-import blang.prototype2.Real;
 import static java.lang.Math.*;
 
 

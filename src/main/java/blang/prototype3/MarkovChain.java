@@ -7,10 +7,6 @@ import java.util.function.Supplier;
 
 import blang.core.Model;
 import blang.core.ModelComponent;
-import blang.prototype2.Categorical;
-import blang.prototype2.Int;
-import blang.prototype2.Scratch.HMM.Simplex;
-import blang.prototype2.Scratch.HMM.Vec;
 
 
 /**

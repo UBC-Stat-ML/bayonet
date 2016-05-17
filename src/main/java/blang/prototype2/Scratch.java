@@ -8,7 +8,10 @@ import blang.core.Model;
 import blang.core.ModelComponent;
 import blang.factors.Factor;
 import blang.factors.LogScaleFactor;
-import blang.prototype2.Scratch.HMM.Simplex;
+import blang.prototype3.Int;
+import blang.prototype3.Real;
+import blang.prototype3.Simplex;
+import blang.prototype3.Vec;
 
 
 
@@ -20,12 +23,6 @@ public class Scratch
     private Vec<Int> intVector;
     private TransitionCalculator calc;
     
-    public static interface Vec<T>
-    {
-      public T get(int i); 
-      public int size();
-    }
-    
     public static interface TransitionCalculator
     {
       public TransitionProbability transitionsProbabilities(int index);
@@ -34,10 +31,6 @@ public class Scratch
     public static interface TransitionProbability
     {
       public Simplex probabilitiesFrom(int state);
-    }
-    
-    public static interface Simplex extends Vec<Real>
-    {
     }
     
     public HMM HetHMM(Vec<Int> intVec, int length, TransitionCalculator calculator)
