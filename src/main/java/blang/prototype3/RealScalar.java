@@ -22,7 +22,7 @@ public class RealScalar implements Real
     this.value = v;
   }
   
-  private static class NaiveMHSampler extends MHSampler<RealScalar>
+  static class NaiveMHSampler extends MHSampler<RealScalar>
   {
     @Override
     public void propose(Random random, Callback callback)

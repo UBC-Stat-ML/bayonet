@@ -2,7 +2,7 @@ package blang;
 
 //import org.inferred.freebuilder.FreeBuilder;
 
-import briefmain.Main;
+//import briefmain.Main;
 
 
 public interface Test
@@ -15,7 +15,7 @@ public interface Test
 //    /** Builder of {@link Person} instances. */
 //    class Builder extends Test_Builder { }     
 //    
-    @Main(scriptName = "XYZ")   
+//    @Main(scriptName = "XYZ")   
     public static void main(String [] args)
     {
       System.out.println("recompile!..");
