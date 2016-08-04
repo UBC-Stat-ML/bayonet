@@ -48,7 +48,7 @@ public class Main implements Runnable
   
   private void sample(Random rand, int nIterations)
   {
-    List<Sampler> samplers = samplers();
+    List<Sampler> samplers = samplers(model);
     for (int i = 0; i < nIterations; i++)
     {
       Collections.shuffle(samplers, rand);
@@ -58,7 +58,7 @@ public class Main implements Runnable
         System.out.println("Iteration " + (i+1));
     }
   }
-  
+   
   private static List<Factor> factors(ModelComponent root)
   {
     LinkedList<ModelComponent> queue = new LinkedList<>();
@@ -83,7 +83,7 @@ public class Main implements Runnable
   }
  
   
-  private List<Sampler> samplers()
+  private static List<Sampler> samplers(Model model)
   {
     Inputs inputs = new Inputs();
     
