@@ -26,7 +26,7 @@ repositories {
     url "https://ubc-stat-ml.github.io/artifacts/"
   }
   maven {
-    url "http://www.stat.ubc.ca/~bouchard/maven/"
+    url "https://www.stat.ubc.ca/~bouchard/maven/"
   }
 }
 
