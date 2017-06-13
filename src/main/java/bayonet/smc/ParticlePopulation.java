@@ -1,11 +1,13 @@
 package bayonet.smc;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
 import java.util.stream.DoubleStream;
 
+import bayonet.distributions.ExhaustiveDebugRandom;
 import bayonet.distributions.Multinomial;
 
 
@@ -105,8 +107,23 @@ public final class ParticlePopulation<P> implements Serializable
       final Random random, 
       final ResamplingScheme resamplingScheme)
   {
-    final List<P> resampled = resamplingScheme.resample(random, normalizedWeights, particles);
-    return ParticlePopulation.buildEquallyWeighted(resampled, logScaling);
+    if (random instanceof ExhaustiveDebugRandom)
+    {
+      // If we're using an ExhaustiveDebugRandom, use only discrete random generation
+      ExhaustiveDebugRandom debugRandom = (ExhaustiveDebugRandom) random;
+      double [] prs = new double[nParticles()];
+      for (int i = 0; i < nParticles(); i++)
+        prs[i] = getNormalizedWeight(i);
+      List<P> resampled = new ArrayList<>();
+      for (int i = 0; i < nParticles(); i++)
+        resampled.add(particles.get(debugRandom.nextCategorical(prs)));
+      return ParticlePopulation.buildEquallyWeighted(resampled, logScaling); 
+    }
+    else
+    {
+      final List<P> resampled = resamplingScheme.resample(random, normalizedWeights, particles);
+      return ParticlePopulation.buildEquallyWeighted(resampled, logScaling);
+    }
   }
 
   public double getESS()

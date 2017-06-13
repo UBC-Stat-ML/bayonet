@@ -3,38 +3,15 @@ package bayonet.distributions;
 import java.util.Random;
 
 import bayonet.math.NumericalUtils;
-import bayonet.math.SpecialFunctions;
 
 /**
- * Utilities for Multinomial distributions.
+ * Utilities on probability vectors.
  * 
  * @author Alexandre Bouchard (alexandre.bouchard@gmail.com)
  *
  */
 public class Multinomial //implements GenerativeFactor, LogScaleFactor
 {
-	
-
-	/**
-	 * Returns double array but really contains only the integers
-	 * @param random
-	 * @param N
-	 * @param probs
-	 * @return
-	 */
-	public static double [] generate(Random random, int N, double [] probs)
-	{
-		double [] values = new double[probs.length];
-		for (int i = 0; i < N; i++)
-		{
-			int index = sampleMultinomial(random, probs);
-			values[index] += 1;
-		}
-		return values;
-	}
-
-
-	
   /**
    * Sample a single sample from a multinomial and the provided probabilities.
    * 
@@ -116,6 +93,4 @@ public class Multinomial //implements GenerativeFactor, LogScaleFactor
     }
     return sum;
   }
-  
- 
 }
