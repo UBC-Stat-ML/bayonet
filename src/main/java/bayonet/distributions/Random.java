@@ -63,7 +63,7 @@ public class Random extends RandomAdaptor
       if (current < 0.0)
         throw new IllegalArgumentException("Parameter should be a probability vector; index " + i + " = " + current);
       sum += current; 
-      if (v < sum) 
+      if (v < sum && sample == -1) 
         sample = i;
     }
     if (sample == -1) 
