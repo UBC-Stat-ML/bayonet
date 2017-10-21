@@ -12,6 +12,12 @@ import bayonet.math.NumericalUtils;
 /**
  * A no-nonsense replacement for Random which by default uses under the hood 
  * the Math Commons implementation of MarsenneTwister. 
+ * 
+ * Can also be used in Math Commons whenever a RandomGenerator is used. 
+ * But much less awkward to use than Math Commons adaptors.
+ * 
+ * Also allows facilitates testing in some applications via the 
+ * ExhaustiveDebugRandom superclass.
  */
 public class Random extends RandomAdaptor
 {
@@ -43,18 +49,28 @@ public class Random extends RandomAdaptor
 
   public boolean nextBernoulli(double p)
   {
+    return nextBernoulli(this, p);
+  }
+  
+  public static boolean nextBernoulli(java.util.Random random, double p)
+  {
     if (p < 0.0 || p > 1.0)
       throw new IllegalArgumentException("Parameter should be a probability: " + p);
-    return nextDouble() < p ? true : false;
+    return random.nextDouble() < p ? true : false;
+  }
+  
+  public int nextCategorical(double [] probabilities)
+  {
+    return nextCategorical(this, probabilities);
   }
   
   /**
    * For repeated sampling, use instead ResamplingScheme which has a better 
    * amortized cost.
    */
-  public int nextCategorical(double [] probabilities)
+  public static int nextCategorical(java.util.Random random, double [] probabilities)
   {
-    double v = nextDouble();
+    double v = random.nextDouble();
     double sum = 0; 
     int sample = -1;
     for (int i = 0; i < probabilities.length; i++) 
