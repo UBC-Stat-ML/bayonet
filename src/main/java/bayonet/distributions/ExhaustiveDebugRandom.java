@@ -31,6 +31,7 @@ public class ExhaustiveDebugRandom extends Random
   
   public ExhaustiveDebugRandom()
   {
+    super(1);
   }
   
   public boolean hasNext()
@@ -223,24 +224,6 @@ public class ExhaustiveDebugRandom extends Random
 
   @Override
   public long nextLong()
-  {
-    throw new UnsupportedOperationException(MESSAGE);
-  }
-
-  @Override
-  public void setSeed(int seed)
-  {
-    throw new UnsupportedOperationException(MESSAGE);
-  }
-
-  @Override
-  public void setSeed(int[] seed)
-  {
-    throw new UnsupportedOperationException(MESSAGE);
-  }
-
-  @Override
-  public void setSeed(long seed)
   {
     throw new UnsupportedOperationException(MESSAGE);
   }
