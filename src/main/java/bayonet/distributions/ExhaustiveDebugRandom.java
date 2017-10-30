@@ -31,7 +31,6 @@ public class ExhaustiveDebugRandom extends Random
   
   public ExhaustiveDebugRandom()
   {
-    super();
   }
   
   public boolean hasNext()
