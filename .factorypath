@@ -1,0 +1,6 @@
+<factorypath>
+    <factorypathentry kind="WKSPJAR" id="/bayonet/build/install/bayonet/lib/auto-service-1.0-rc1.jar" enabled="false" runInBatchMode="false"/>
+    <factorypathentry kind="WKSPJAR" id="/bayonet/build/install/bayonet/lib/freebuilder-1.7.jar" enabled="false" runInBatchMode="false"/>
+    <factorypathentry kind="WKSPJAR" id="/bayonet/build/install/bayonet/lib/guava-18.0.jar" enabled="false" runInBatchMode="false"/>
+    <factorypathentry kind="WKSPJAR" id="/briefmain/build/libs/briefmain.jar" enabled="false" runInBatchMode="false"/>
+</factorypath>

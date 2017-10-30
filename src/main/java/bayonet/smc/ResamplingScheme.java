@@ -49,7 +49,6 @@ public enum ResamplingScheme
       Collections.sort(darts);
       return Doubles.toArray(darts);
     }
-    
   };
   
   /**
