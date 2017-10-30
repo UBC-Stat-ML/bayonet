@@ -3,8 +3,11 @@ package bayonet.graphs;
 import java.io.File;
 import java.io.PrintWriter;
 import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.PriorityQueue;
 import java.util.Set;
 
 import org.apache.commons.lang3.tuple.Pair;
@@ -14,6 +17,7 @@ import org.jgrapht.Graph;
 import org.jgrapht.Graphs;
 import org.jgrapht.UndirectedGraph;
 import org.jgrapht.alg.ConnectivityInspector;
+import org.jgrapht.alg.CycleDetector;
 import org.jgrapht.event.ConnectedComponentTraversalEvent;
 import org.jgrapht.event.EdgeTraversalEvent;
 import org.jgrapht.event.TraversalListener;
@@ -218,15 +222,46 @@ public class GraphUtils
   /**
    * Return the linearization or topological order of a given directed graph.
    * 
+   * In contrast to TopologicalOrderIterator, order is always deterministic and 
+   * cycle are detected first.
    */
   public static <V,E> List<V> linearization(
       DirectedGraph<V, E> graph)
   {
-    GraphIterator<V, E> iter = new TopologicalOrderIterator<V, E>(graph);
+    // check for cycles first
+    CycleDetector<V, E> cycleDetector = new CycleDetector<>(graph);
+    if (cycleDetector.detectCycles())
+      throw new RuntimeException("Linearization undefined when cycles are present.");
+    
+    // Used to break ties according to the order the vertices appear in the vertex set LinkedHashSet
+    PriorityQueue<V> appearenceOrdering = new PriorityQueue<>(new AppearanceOrderComparator<>(graph.vertexSet()));
+    GraphIterator<V, E> iter = new TopologicalOrderIterator<V, E>(graph, appearenceOrdering);
     List<V> result = Lists.newArrayList();
     while (iter.hasNext())
       result.add(iter.next());
     return result;
+  }
+  
+  private static class AppearanceOrderComparator<T> implements Comparator<T>
+  {
+    private Map<T, Integer> order = new IdentityHashMap<>();
+    
+    public AppearanceOrderComparator(Iterable<T> objects) 
+    {
+      int i = 0;
+      for (T object : objects) 
+        if (!order.containsKey(object))
+          order.put(object, i);
+    }
+
+    @Override
+    public int compare(T o1, T o2)
+    {
+      Integer 
+        i1 = order.get(o1),
+        i2 = order.get(o2);
+      return i1.compareTo(i2);
+    }
   }
   
   /**

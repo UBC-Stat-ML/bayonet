@@ -2,6 +2,9 @@ package bayonet.distributions;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.DoubleStream;
+import java.util.stream.IntStream;
+import java.util.stream.LongStream;
 
 /**
  * A non standard implementation of a Random generator for debugging fully 
@@ -122,4 +125,126 @@ public class ExhaustiveDebugRandom extends Random
       prs[i] = 1.0 / ((double) n);
     return nextCategorical(prs);
   }
+
+  @Override
+  protected int next(int bits)
+  {
+    throw new UnsupportedOperationException(MESSAGE);
+  }
+
+  @Override
+  public IntStream ints(long streamSize)
+  {
+    throw new UnsupportedOperationException(MESSAGE);
+  }
+
+  @Override
+  public IntStream ints()
+  {
+    throw new UnsupportedOperationException(MESSAGE);
+  }
+
+  @Override
+  public LongStream longs(long streamSize)
+  {
+    throw new UnsupportedOperationException(MESSAGE);
+  }
+
+  @Override
+  public LongStream longs()
+  {
+    throw new UnsupportedOperationException(MESSAGE);
+  }
+
+  @Override
+  public LongStream longs(long streamSize, long randomNumberOrigin, long randomNumberBound)
+  {
+    throw new UnsupportedOperationException(MESSAGE);
+  }
+
+  @Override
+  public LongStream longs(long randomNumberOrigin, long randomNumberBound)
+  {
+    throw new UnsupportedOperationException(MESSAGE);
+  }
+
+  @Override
+  public DoubleStream doubles(long streamSize)
+  {
+    throw new UnsupportedOperationException(MESSAGE);
+  }
+
+  @Override
+  public DoubleStream doubles()
+  {
+    throw new UnsupportedOperationException(MESSAGE);
+  }
+
+  @Override
+  public DoubleStream doubles(long streamSize, double randomNumberOrigin, double randomNumberBound)
+  {
+    throw new UnsupportedOperationException(MESSAGE);
+  }
+
+  @Override
+  public DoubleStream doubles(double randomNumberOrigin, double randomNumberBound)
+  {
+    throw new UnsupportedOperationException(MESSAGE);
+  }
+
+  @Override
+  public void nextBytes(byte[] bytes)
+  {
+    throw new UnsupportedOperationException(MESSAGE);
+  }
+
+  @Override
+  public double nextDouble()
+  {
+    throw new UnsupportedOperationException(MESSAGE);
+  }
+
+  @Override
+  public float nextFloat()
+  {
+    throw new UnsupportedOperationException(MESSAGE);
+  }
+
+  @Override
+  public double nextGaussian()
+  {
+    throw new UnsupportedOperationException(MESSAGE);
+  }
+
+  @Override
+  public int nextInt()
+  {
+    throw new UnsupportedOperationException(MESSAGE);
+  }
+
+  @Override
+  public long nextLong()
+  {
+    throw new UnsupportedOperationException(MESSAGE);
+  }
+
+  @Override
+  public void setSeed(int seed)
+  {
+    throw new UnsupportedOperationException(MESSAGE);
+  }
+
+  @Override
+  public void setSeed(int[] seed)
+  {
+    throw new UnsupportedOperationException(MESSAGE);
+  }
+
+  @Override
+  public void setSeed(long seed)
+  {
+    throw new UnsupportedOperationException(MESSAGE);
+  }
+  
+  private static String MESSAGE = "ExhaustiveDebugRandom only works with a subset of the random generation methods, essentially discrete ones having a bounded support.";
 }
