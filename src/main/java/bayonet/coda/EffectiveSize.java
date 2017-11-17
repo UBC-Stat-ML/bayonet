@@ -12,7 +12,9 @@ import briefj.BriefFiles;
 import briefj.BriefStrings;
 
 
-
+/**
+ * @deprecated Use EffectiveSampleSize instead
+ */
 public class EffectiveSize extends RJavaBridge
 {
   private final File inputChain, inputIndex;

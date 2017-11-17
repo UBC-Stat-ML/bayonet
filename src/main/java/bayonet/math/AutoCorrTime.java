@@ -14,8 +14,7 @@ import com.google.common.collect.Lists;
 /**
  * Note: this implementation does not currently use FFT.
  * 
- * @author Alexandre Bouchard (alexandre.bouchard@gmail.com)
- *
+ * @deprecated Use EffectiveSampleSize instead
  */
 public class AutoCorrTime
 {
