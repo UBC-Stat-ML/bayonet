@@ -37,6 +37,12 @@ public class ExhaustiveDebugRandom extends Random
   public boolean hasNext()
   {
     boolean oldHasNext = hasNext;
+    init();
+    return oldHasNext;
+  }
+  
+  private void init() 
+  {
     hasNext = false;
     
     oldDecisions = newDecisions;
@@ -48,13 +54,16 @@ public class ExhaustiveDebugRandom extends Random
     currentDepth = 0;
     
     pr = 1.0;
-    
-    return oldHasNext;
   }
   
   public double lastProbability()
   {
     return pr;
+  }
+  
+  public int lastDepth()
+  {
+    return newDecisions.size();
   }
   
   @Override
