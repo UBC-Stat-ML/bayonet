@@ -7,7 +7,7 @@ apply plugin: 'application'
 uploadArchives {
   repositories.mavenDeployer {
     repository(url: "file:///${System.properties['user.home']}/artifacts/")
-    pom.version = "4.0.10"
+    pom.version = "4.0.11"
     pom.artifactId = "bayonet"
     pom.groupId = "ca.ubc.stat"
   }
@@ -61,6 +61,11 @@ artifacts {
     archives javadocJar
 }
 
+configurations.archives.with {
+    artifacts.remove artifacts.find { it.archiveTask.is distZip }
+    artifacts.remove artifacts.find { it.archiveTask.is distTar }
+}
+
 
 if (JavaVersion.current().isJava8Compatible()) {
     allprojects {
@@ -72,5 +77,7 @@ if (JavaVersion.current().isJava8Compatible()) {
         }
     }
 }
+
+
 
 mainClassName = 'blang.prototype.Main'
