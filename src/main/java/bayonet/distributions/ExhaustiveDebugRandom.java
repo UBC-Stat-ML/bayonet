@@ -69,8 +69,8 @@ public class ExhaustiveDebugRandom extends Random
   @Override
   public boolean nextBernoulli(double p)
   {
-    if (p < 0.0 || p > 1.0)
-      throw new RuntimeException();
+    if (!(p >= 0.0 && p <= 1.0))
+      throw new IllegalArgumentException("Parameter should be a probability: " + p);
     double [] prs = new double[]{1.0 - p, p};
     return nextCategorical(prs) == 1 ? true : false;
   }
