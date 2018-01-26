@@ -54,7 +54,7 @@ public class Random extends RandomAdaptor
   
   public static boolean nextBernoulli(java.util.Random random, double p)
   {
-    if (!(p >= 0.0 || p <= 1.0))
+    if (!(p >= 0.0 && p <= 1.0))
       throw new IllegalArgumentException("Parameter should be a probability: " + p);
     return random.nextDouble() < p ? true : false;
   }
