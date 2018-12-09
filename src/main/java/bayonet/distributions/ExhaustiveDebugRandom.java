@@ -6,6 +6,8 @@ import java.util.stream.DoubleStream;
 import java.util.stream.IntStream;
 import java.util.stream.LongStream;
 
+import org.apache.commons.math3.random.RandomGenerator;
+
 /**
  * A non standard implementation of a Random generator for debugging fully 
  * discrete probability models. The idea is that the (transition) probabilities of 
@@ -29,9 +31,10 @@ public class ExhaustiveDebugRandom extends Random
 {
   private static final long serialVersionUID = -6477347343344095215L;
   
+  private static final RandomGenerator dummy = null;
   public ExhaustiveDebugRandom()
   {
-    super(1);
+    super(dummy);
   }
   
   public boolean hasNext()
