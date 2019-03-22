@@ -10,7 +10,8 @@ import org.apache.commons.math3.stat.descriptive.SummaryStatistics;
 import com.google.common.collect.Lists;
 
 /**
- * Computes the ESS based on batch estimators. Generally more stable than the 
+ * Computes the ESS based on sqrt(n) size batch estimators. See James Flegal, 2008. 
+ * Generally more stable than the 
  * ACT-based methods (e.g. in AutoCorrTime.java) or those based on fitting an AR 
  * model (e.g. in EffectiveSize.java)
  */
@@ -18,7 +19,11 @@ public class EffectiveSampleSize
 {
   public static double ess(List<Double> samples)
   {
-    int nBlocks = 1 + (int) Math.sqrt((double) samples.size());
+    SummaryStatistics globalStats = new SummaryStatistics();
+    for (double sample : samples)
+      globalStats.addValue(sample);
+    
+    int nBlocks = 1 + (int) Math.sqrt(samples.size());
     int partitionSize = 1 + samples.size() / nBlocks;
     List<List<Double>> split = Lists.partition(samples, partitionSize);
     
@@ -26,8 +31,7 @@ public class EffectiveSampleSize
     for (List<Double> block : split)
       blockStats.addValue(average(block.stream()));
     
-    double squareIntegral = average(samples.stream(), x -> x*x);
-    return ess(squareIntegral, blockStats);
+    return ess(split.size(), globalStats.getVariance(), blockStats.getVariance());
   }
   
   public static double ess(List<Double> samples, Function<Double, Double> transformation)
@@ -35,15 +39,20 @@ public class EffectiveSampleSize
     return ess(samples.stream().map(transformation).collect(Collectors.toList()));
   }
   
+  /**
+   * Correct but numerically inferior to the above.
+   */
+  @Deprecated
   public static double ess(double squareIntegral, SummaryStatistics blockStats) 
   {
-    double variance = squareIntegral - Math.pow(blockStats.getMean(), 2);
-    return blockStats.getN() * variance / blockStats.getVariance();
+    double mean = blockStats.getMean();
+    double sampleVariance = squareIntegral - mean * mean;
+    return ess((int) blockStats.getN(), sampleVariance, blockStats.getVariance());
   }
   
-  private static double average(Stream<Double> stream, Function<Double, Double> f)
+  private static double ess(int numberOfBlocks, double sampleVariance, double blockVariance)
   {
-    return average(stream.map(f));
+    return numberOfBlocks * sampleVariance / blockVariance;
   }
 
   private static double average(Stream<Double> stream)

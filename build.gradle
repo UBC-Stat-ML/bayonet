@@ -7,7 +7,7 @@ apply plugin: 'application'
 uploadArchives {
   repositories.mavenDeployer {
     repository(url: "file:///${System.properties['user.home']}/artifacts/")
-    pom.version = "4.1.1"
+    pom.version = "4.1.2"
     pom.artifactId = "bayonet"
     pom.groupId = "ca.ubc.stat"
   }
