@@ -19,9 +19,9 @@ public class EffectiveSampleSize
 {
   public static double ess(List<Double> samples)
   {
-    SummaryStatistics globalStats = new SummaryStatistics();
-    for (double sample : samples)
-      globalStats.addValue(sample);
+    SummaryStatistics globalStats = summaryStatistics(samples.stream());
+    double mean = globalStats.getMean();
+    double sd = globalStats.getStandardDeviation();
     
     int nBlocks = 1 + (int) Math.sqrt(samples.size());
     int partitionSize = 1 + samples.size() / nBlocks;
@@ -29,9 +29,9 @@ public class EffectiveSampleSize
     
     SummaryStatistics blockStats = new SummaryStatistics();
     for (List<Double> block : split)
-      blockStats.addValue(average(block.stream()));
+      blockStats.addValue(average(block.stream().map(x -> (x - mean)/sd))); 
     
-    return ess(split.size(), globalStats.getVariance(), blockStats.getVariance());
+    return ess(split.size(), 1.0, blockStats.getVariance());
   }
   
   public static double ess(List<Double> samples, Function<Double, Double> transformation)
@@ -57,6 +57,13 @@ public class EffectiveSampleSize
 
   private static double average(Stream<Double> stream)
   {
-    return stream.mapToDouble(a -> a).average().orElseGet(() -> Double.NaN);
+    return summaryStatistics(stream).getMean();
+  }
+  
+  private static SummaryStatistics summaryStatistics(Stream<Double> stream) 
+  {
+    SummaryStatistics result = new SummaryStatistics();
+    stream.forEachOrdered(x -> result.addValue(x));
+    return result;
   }
 }
