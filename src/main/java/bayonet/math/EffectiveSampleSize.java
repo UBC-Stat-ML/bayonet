@@ -17,12 +17,21 @@ import com.google.common.collect.Lists;
  */
 public class EffectiveSampleSize
 {
+  
   public static double ess(List<Double> samples)
   {
     SummaryStatistics globalStats = summaryStatistics(samples.stream());
     double mean = globalStats.getMean();
     double sd = globalStats.getStandardDeviation();
-    
+    return ess(samples, mean, sd);
+  }
+  
+  /**
+   * Compute an ESS for a random variable with a known mean and sd.
+   * E.g. this could be on toy data, or when a much longer run is available. 
+   */
+  public static double ess(List<Double> samples, double mean, double sd)
+  {
     int nBlocks = 1 + (int) Math.sqrt(samples.size());
     int partitionSize = 1 + samples.size() / nBlocks;
     List<List<Double>> split = Lists.partition(samples, partitionSize);
