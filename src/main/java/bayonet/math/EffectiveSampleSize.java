@@ -38,9 +38,9 @@ public class EffectiveSampleSize
     
     SummaryStatistics blockStats = new SummaryStatistics();
     for (List<Double> block : split)
-      blockStats.addValue(average(block.stream().map(x -> (x - mean)/sd))); 
+      blockStats.addValue(Math.pow(average(block.stream().map(x -> (x - mean)/sd)), 2.0)); 
     
-    return ess(split.size(), 1.0, blockStats.getVariance());
+    return ess(split.size(), 1.0, blockStats.getMean());
   }
   
   public static double ess(List<Double> samples, Function<Double, Double> transformation)
