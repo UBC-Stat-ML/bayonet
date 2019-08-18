@@ -5,6 +5,7 @@ import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.IdentityHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.PriorityQueue;
@@ -25,6 +26,8 @@ import org.jgrapht.event.VertexTraversalEvent;
 import org.jgrapht.ext.DOTExporter;
 import org.jgrapht.ext.IntegerNameProvider;
 import org.jgrapht.ext.StringNameProvider;
+import org.jgrapht.graph.AbstractBaseGraph;
+import org.jgrapht.graph.EdgeSetFactory;
 import org.jgrapht.graph.SimpleDirectedGraph;
 import org.jgrapht.graph.SimpleGraph;
 import org.jgrapht.traverse.DepthFirstIterator;
@@ -55,14 +58,35 @@ import com.google.common.collect.Maps;
 public class GraphUtils 
 {
   /**
-   * A reasonable default implementation for undirected graphs.
-   * @param <V>
-   * @return
+   * A reasonable default implementation for undirected graphs. Self-loop or repeated edges not permitted.
+   * 
+   * Fix some performance issues in jgrapht, avoiding when possible costs proportional 
+   * to the degree. 
    */
   public static <V> UndirectedGraph<V,UnorderedPair<V, V>> newUndirectedGraph()
   {
     EdgeFactory<V, UnorderedPair<V, V>> factory = undirectedEdgeFactory();
-    return new SimpleGraph<V, UnorderedPair<V, V>>(factory);
+    SimpleGraph<V,UnorderedPair<V, V>> result =  new SimpleGraph<V, UnorderedPair<V, V>>(factory) {
+      private static final long serialVersionUID = 1170402040454757448L;
+      @Override
+      public UnorderedPair<V, V> getEdge(V sourceVertex, V targetVertex) {
+        // Default implementation is O(degree), avoid that problem.
+        // Important since addEdge calls this.
+        if (!containsVertex(sourceVertex) || !containsVertex(targetVertex))
+          return null;
+        UnorderedPair<V, V> e = UnorderedPair.of(sourceVertex, targetVertex);
+        if (containsEdge(e))
+          return e;
+        else 
+          return null;
+      }
+    };
+    fixEdgeMapImplementation(result);
+    return result;
+  }
+  
+  public static <V,E> boolean hasEdge(Graph<V,E> graph, V v1, V v2) {
+    return graph.getEdge(v1, v2) != null;
   }
 
   /**
@@ -80,15 +104,52 @@ public class GraphUtils
   }
   
   /**
-   * A reasonable default implementation for directed graphs..
+   * A reasonable default implementation for directed graphs. Self-loop or repeated edges not permitted.
    * 
-   * @param <V>
-   * @return
+   * Fix some performance issues in jgrapht, avoiding when possible costs proportional 
+   * to the degree. 
    */
   public static <V> DirectedGraph<V, Pair<V, V>> newDirectedGraph()
   {
     EdgeFactory<V, Pair<V, V>> factory = directedEdgeFactory();
-    return new SimpleDirectedGraph<V, Pair<V,V>>(factory);
+    // NB: switch from SimpleGraph to DirectedPseudograph has critical performance implications
+    // beyond the superficial corner cases of allowing loops and multiple edges:
+    // This is a workaround to prevent addEdge from calling getEdge which has cost 
+    // proportional to the degree which is unacceptable e.g. for large graphical models 
+    // with static parameters. See https://github.com/UBC-Stat-ML/blangSDK/issues/71
+    SimpleDirectedGraph<V, Pair<V, V>> result = new SimpleDirectedGraph<V, Pair<V,V>>(factory) {
+      private static final long serialVersionUID = 8322272935312664834L;
+      @Override
+      public Pair<V, V> getEdge(V sourceVertex, V targetVertex) {
+        // Default implementation is O(degree), avoid that problem.
+        // Important since addEdge calls this.
+        if (!containsVertex(sourceVertex) || !containsVertex(targetVertex))
+          return null;
+        Pair<V,V> e = Pair.of(sourceVertex, targetVertex);
+        if (outgoingEdgesOf(sourceVertex).contains(e))
+          return e;
+        else 
+          return null;
+      }
+    };
+    fixEdgeMapImplementation(result);
+    return result;
+  }
+  
+  /**
+   * Remove bad default in the library, which uses ArrayUnenforcedSet which 
+   * saves a constant amount of space at the cost of edge sets having linear 
+   * instead of constant access! see https://github.com/UBC-Stat-ML/blangSDK/issues/71 
+   * for an example where this becomes a serious performance issue
+   */
+  public static <V,E> void fixEdgeMapImplementation(AbstractBaseGraph<V, E> graph) 
+  {
+    graph.setEdgeSetFactory(new EdgeSetFactory<V, E>() {
+      @Override
+      public Set<E> createEdgeSet(V vertex) {
+        return new LinkedHashSet<>(4); // still try to be conscientious regarding to space
+      }
+    });
   }
   
   /**
