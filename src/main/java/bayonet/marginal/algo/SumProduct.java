@@ -34,9 +34,9 @@ import com.google.common.collect.Maps;
  */
 public class SumProduct<V>
 {
-  private final FactorGraph<V> factorGraph;
-  private final Map<Pair<V, V>, UnaryFactor<V>> cachedMessages = Maps.newHashMap();
-  private final FactorOperations<V> factorOperations;
+  public final FactorGraph<V> factorGraph;
+  public final Map<Pair<V, V>, UnaryFactor<V>> cachedMessages = Maps.newHashMap();
+  public final FactorOperations<V> factorOperations;
   
   /**
    * @param factorGraph The model on which the sum product algorithm should be ran on.

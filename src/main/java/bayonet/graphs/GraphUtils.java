@@ -261,7 +261,8 @@ public class GraphUtils
   }
   
   /**
-   * Return all (np to n1) st. np not equal to n2
+   * Given e = (n1, n2), 
+   * return all (np to n1) st. np not equal to n2
    */
   public static <V,E> List<Pair<V,V>> distinctIncoming(UndirectedGraph<V,E> f, Pair<V,V> e)
   {
