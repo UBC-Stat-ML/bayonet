@@ -105,6 +105,13 @@ public class DiscreteFactorGraph<V> implements FactorGraph<V>
     unaries.put(node, cast);
   }
   
+  public void removeUnary(V node) 
+  {
+    if (!unaries.containsKey(node))
+      throw new RuntimeException();
+    unaries.remove(node);
+  }
+  
   /**
    * Get the unary attached to the given node label, or null if none
    * have been defined.
@@ -170,6 +177,14 @@ public class DiscreteFactorGraph<V> implements FactorGraph<V>
     if (binaries.containsKey(key))
       throw new RuntimeException("Overwriting factors is forbidden");
     binaries.put(key, (DiscreteBinaryFactor<V>) factor);
+  }
+  
+  public void removeBinary(V marginalizedNode, V otherNode)
+  {
+    Pair<V,V> key = Pair.of(marginalizedNode, otherNode);
+    if (!binaries.containsKey(key))
+      throw new RuntimeException("Removing inexisting binary");
+    binaries.remove(key);
   }
   
   /**
@@ -409,6 +424,7 @@ public class DiscreteFactorGraph<V> implements FactorGraph<V>
       final BinaryFactor<V> _binary,
       final List<UnaryFactor<V>> unariesOnMarginalized)
   {
+    
     /* This method supports up to two unaries on the node to be marginalized.
      * 
      * But if there are more, we call marginalizeOnReducedUnariesDegree()
@@ -426,6 +442,9 @@ public class DiscreteFactorGraph<V> implements FactorGraph<V>
       final int [] 
         scales0 = degree >= 1 ? dbf0.scales : null,
         scales1 = degree == 2 ? dbf1.scales : null;
+        
+      if (degree >= 1 && nSites == -1) 
+        checkNSites(dbf0.nSites);
       
       final DiscreteBinaryFactor<V> binary = (DiscreteBinaryFactor) _binary;
       
