@@ -7,7 +7,7 @@ apply plugin: 'application'
 uploadArchives {
   repositories.mavenDeployer {
     repository(url: "file:///${System.properties['user.home']}/artifacts/")
-    pom.version = "4.1.9"
+    pom.version = "4.1.10"
     pom.artifactId = "bayonet"
     pom.groupId = "com.github.UBC-Stat-ML"
   }
@@ -31,7 +31,7 @@ dependencies {
   compile group: 'com.google.guava', name: 'guava', version: '18.0'
   testCompile group: 'junit', name: 'junit', version: '4.12'
   compile group: 'junit', name: 'junit', version: '4.12'
-  compile group: 'com.github.UBC-Stat-ML', name: 'briefj', version: '2.6.1'
+  compile group: 'com.github.UBC-Stat-ML', name: 'briefj', version: '2.6.2'
   compile group: 'com.github.UBC-Stat-ML', name: 'binc', version: '2.0.5'
   compile 'net.sf.opencsv:opencsv:2.3'
   compile 'com.googlecode.efficient-java-matrix-library:ejml:0.24'
