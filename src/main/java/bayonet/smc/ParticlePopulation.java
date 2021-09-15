@@ -79,6 +79,17 @@ public final class ParticlePopulation<P> implements Serializable
     this.logScaling = logScaling;
   }
 
+  public double [] getLogWeights()
+  {
+    double [] result = normalizedWeights.clone();
+    int i = 0;
+    for (double normalizedWeight : result) {
+      result[i] = Math.log(normalizedWeight) + logScaling;
+      i++;
+    }
+    return result;
+  }
+
   public double getNormalizedWeight(final int index)
   {
     if (equallyWeighted())
