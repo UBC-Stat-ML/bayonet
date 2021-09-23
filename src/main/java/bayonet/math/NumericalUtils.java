@@ -56,7 +56,7 @@ public class NumericalUtils
    * @param y A number (in log scale)
    * @return logAdded value
    */
-  public static double logDifference(double x, double y) {
+  public static double logAbsDifference(double x, double y) {
     // make x the max
     if (y > x) {
       double temp = x;
