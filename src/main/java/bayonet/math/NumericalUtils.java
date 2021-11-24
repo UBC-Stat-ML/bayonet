@@ -48,6 +48,27 @@ public class NumericalUtils
   }
   
   /**
+   * Equivalent, but more numerically resilient to underflows:
+   *
+   * Math.log(|Math.exp(x) - Math.exp(y)|);
+   *
+   * @param x A number (in log scale)
+   * @param y A number (in log scale)
+   * @return logAdded value
+   */
+  public static double logAbsDifference(double x, double y) {
+    // make x the max
+    if (y > x) {
+      double temp = x;
+      x = y;
+      y = temp;
+    }
+    // now x is bigger
+    double negDiff = y - x;
+    return x + java.lang.Math.log(1.0 - java.lang.Math.exp(negDiff));
+  }
+
+  /**
    * Equivalent, but more numerically resilient to underflows and faster than:
    * 
    * Math.log(Math.exp(x) + Math.exp(y));

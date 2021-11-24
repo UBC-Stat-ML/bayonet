@@ -9,6 +9,7 @@ import java.util.stream.DoubleStream;
 
 import bayonet.distributions.ExhaustiveDebugRandom;
 import bayonet.distributions.Multinomial;
+import bayonet.smc.ResamplingScheme.ResampledContext;
 
 
 
@@ -17,6 +18,7 @@ public final class ParticlePopulation<P> implements Serializable
   private static final long serialVersionUID = 1L;
   
   public final List<P> particles;
+  public final List<Integer> ancestors;
   private final double [] normalizedWeights;
   
   /**
@@ -48,29 +50,44 @@ public final class ParticlePopulation<P> implements Serializable
   public static <P> ParticlePopulation<P> buildDestructivelyFromLogWeights(
       double [] logWeights, 
       final List<P> particles, 
+      final List<Integer> ancestors,
       final double logScaling)
   {
     if (logWeights.length != particles.size())
       throw new RuntimeException("Dimensionality of weights should match the dim of particles");
     double logWeightsScaling = Multinomial.expNormalize(logWeights);
-    return new ParticlePopulation<>(particles, logWeights, logScaling + logWeightsScaling);
+    return new ParticlePopulation<>(particles, ancestors, logWeights, logScaling + logWeightsScaling);
   }
   
   public static <P> ParticlePopulation<P> buildEquallyWeighted(
       final List<P> particles, 
+      final List<Integer> ancestors,
       final double logScaling)
   {
-    return new ParticlePopulation<>(particles, null, logScaling);
+    return new ParticlePopulation<>(particles, ancestors, null, logScaling);
   }
   
   private ParticlePopulation(
       final List<P> particles, 
+      final List<Integer> ancestors,
       final double[] normalizedWeights,
       final double logScaling)
   {
+    this.ancestors = ancestors;
     this.particles = particles;
     this.normalizedWeights = normalizedWeights;
     this.logScaling = logScaling;
+  }
+
+  public double [] getLogWeights()
+  {
+    double [] result = normalizedWeights.clone();
+    int i = 0;
+    for (double normalizedWeight : result) {
+      result[i] = Math.log(normalizedWeight) + logScaling;
+      i++;
+    }
+    return result;
   }
 
   public double getNormalizedWeight(final int index)
@@ -115,14 +132,20 @@ public final class ParticlePopulation<P> implements Serializable
       for (int i = 0; i < nParticles(); i++)
         prs[i] = getNormalizedWeight(i);
       List<P> resampled = new ArrayList<>();
-      for (int i = 0; i < nParticles(); i++)
-        resampled.add(particles.get(debugRandom.nextCategorical(prs)));
-      return ParticlePopulation.buildEquallyWeighted(resampled, logScaling); 
+      List<Integer> ancestors = new ArrayList<>();
+      for (int i = 0; i < nParticles(); i++) {
+        int particleIdx = debugRandom.nextCategorical(prs);
+        ancestors.add(particleIdx);
+        resampled.add(particles.get(particleIdx));
+      }
+      return ParticlePopulation.buildEquallyWeighted(resampled, ancestors, logScaling);
     }
     else
     {
-      final List<P> resampled = resamplingScheme.resample(random, normalizedWeights, particles);
-      return ParticlePopulation.buildEquallyWeighted(resampled, logScaling);
+      ResampledContext<P> resampledContext = resamplingScheme.resample(random, normalizedWeights, particles);
+      final List<P> resampled = resampledContext.particles;
+      final List<Integer> ancestors = resampledContext.ancestors;
+      return ParticlePopulation.buildEquallyWeighted(resampled, ancestors, logScaling);
     }
   }
 
