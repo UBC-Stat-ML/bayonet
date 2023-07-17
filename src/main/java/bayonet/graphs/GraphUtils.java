@@ -313,7 +313,7 @@ public class GraphUtils
       int i = 0;
       for (T object : objects) 
         if (!order.containsKey(object))
-          order.put(object, i);
+          order.put(object, i++);
     }
 
     @Override
